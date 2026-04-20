@@ -25,15 +25,25 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+## Folder Structure
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+src/
+├── assets/          # Images, fonts, and static files
+├── components/      # Reusable UI components (buttons, cards, etc.)
+│   ├── common/      # Global shared components
+│   └── ui/          # Low-level UI primitives
+├── constants/       # App-wide constants (colors, spacing, config)
+├── hooks/           # Custom React hooks for logic reuse
+├── navigation/      # Navigation configurations (Stacks, Tabs)
+├── screens/         # Page-level components
+├── services/        # API calls and external services (Axios/React Query)
+├── store/           # Zustand state management
+│   ├── slices/      # Optional: Modular store parts (e.g., authSlice.ts)
+│   └── useStore.ts  # Main store definition or entry point
+├── types/           # Global TypeScript interfaces and types
+└── utils/           # Helper functions (formatting, validation)
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
 ## Learn more
 
