@@ -1,15 +1,33 @@
-import { Text, View } from "react-native";
+import { Redirect } from "expo-router";
+import { ActivityIndicator, Text, View } from "react-native";
 
-export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+import { t } from "@/src/i18n";
+import { colors } from "@/src/theme";
+import { useOnboardingStore } from "@/src/store/onboardingStore";
+import { getDraftResumePath, getPublicResumePath } from "@/src/utils/onboarding";
+
+export default function IndexScreen() {
+  const hydrated = useOnboardingStore((state) => state.hydrated);
+  const publicFlowStep = useOnboardingStore((state) => state.publicFlowStep);
+  const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
+  const draft = useOnboardingStore((state) => state.draft);
+
+  if (!hydrated) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+        <Text style={{ color: "white", marginTop: 20 }}>{t.app.initializing}</Text>
+      </View>
+    );
+  }
+
+  if (hasCompletedOnboarding) {
+    return <Redirect href="/(tabs)/home" />;
+  }
+
+  if (publicFlowStep !== "done") {
+    return <Redirect href={getPublicResumePath(publicFlowStep)} />;
+  }
+
+  return <Redirect href={getDraftResumePath(draft)} />;
 }

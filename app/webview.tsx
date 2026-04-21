@@ -1,0 +1,47 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
+
+import { GradientButton } from "@/src/components/buttons/GradientButton";
+import { SurfaceCard } from "@/src/components/common/SurfaceCard";
+import { t } from "@/src/i18n";
+import { SafeScreen } from "@/src/components/layout/SafeScreen";
+import { colors, spacing, typography } from "@/src/theme";
+
+export default function WebviewPlaceholderScreen() {
+  const params = useLocalSearchParams<{ title?: string; url?: string }>();
+
+  return (
+    <SafeScreen>
+      <View style={styles.screen}>
+        <Text style={styles.title}>{params.title ?? t.webview.title}</Text>
+        <SurfaceCard>
+          <Text style={styles.cardTitle}>{t.webview.cardTitle}</Text>
+          <Text style={styles.cardBody}>{t.webview.url(params.url ?? t.common.none)}</Text>
+          <Text style={styles.cardBody}>{t.webview.description}</Text>
+        </SurfaceCard>
+        <GradientButton label={t.common.back} onPress={() => router.back()} />
+      </View>
+    </SafeScreen>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    justifyContent: "center",
+    gap: spacing.lg,
+  },
+  title: {
+    ...typography.display,
+    color: colors.textPrimary,
+  },
+  cardTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
+  cardBody: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+  },
+});
