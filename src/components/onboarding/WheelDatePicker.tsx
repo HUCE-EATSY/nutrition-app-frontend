@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { t } from "@/src/i18n";
-import { colors, radius, spacing, typography } from "@/src/theme";
-import { clamp } from "@/src/utils/date";
+import { colors, radius } from "@/src/theme";
+
+import { RollingWheelPicker } from "./RollingWheelPicker";
 
 type WheelDatePickerProps = {
   day: number;
@@ -18,101 +18,81 @@ function getDaysInMonth(month: number, year: number) {
   return new Date(year, month, 0).getDate();
 }
 
-function WheelColumn({
-  label,
-  value,
-  onDecrement,
-  onIncrement,
-}: {
-  label: string;
-  value: string;
-  onDecrement: () => void;
-  onIncrement: () => void;
-}) {
-  return (
-    <View style={styles.column}>
-      <Text style={styles.columnLabel}>{label}</Text>
-      <Pressable onPress={onDecrement} style={styles.arrowButton}>
-        <Ionicons color={colors.textPrimary} name="chevron-up" size={18} />
-      </Pressable>
-      <View style={styles.valueFrame}>
-        <Text style={styles.valueText}>{value}</Text>
-      </View>
-      <Pressable onPress={onIncrement} style={styles.arrowButton}>
-        <Ionicons color={colors.textPrimary} name="chevron-down" size={18} />
-      </Pressable>
-    </View>
-  );
-}
-
 export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }: WheelDatePickerProps) {
+  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const maxDay = getDaysInMonth(month, year);
+  const days = Array.from({ length: maxDay }, (_, i) => i + 1);
+
+  const ITEM_HEIGHT = 54;
+  const VISIBLE_ITEMS = 5;
 
   return (
-    <View style={styles.wrap}>
-      <WheelColumn
-        label={t.onboarding.wheelDate.day}
-        value={`${day}`.padStart(2, "0")}
-        onDecrement={() => onChange({ day: clamp(day - 1, 1, maxDay), month, year })}
-        onIncrement={() => onChange({ day: clamp(day + 1, 1, maxDay), month, year })}
+    <View style={styles.container}>
+      {/* Selection Highlight Bar */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.highlightBar,
+          {
+            height: ITEM_HEIGHT,
+            top: Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT,
+          },
+        ]}
       />
-      <WheelColumn
-        label={t.onboarding.wheelDate.month}
-        value={`${month}`.padStart(2, "0")}
-        onDecrement={() => {
-          const nextMonth = clamp(month - 1, 1, 12);
-          onChange({ day: clamp(day, 1, getDaysInMonth(nextMonth, year)), month: nextMonth, year });
-        }}
-        onIncrement={() => {
-          const nextMonth = clamp(month + 1, 1, 12);
-          onChange({ day: clamp(day, 1, getDaysInMonth(nextMonth, year)), month: nextMonth, year });
-        }}
-      />
-      <WheelColumn
-        label={t.onboarding.wheelDate.year}
-        value={`${year}`}
-        onDecrement={() => onChange({ day, month, year: clamp(year - 1, minYear, maxYear) })}
-        onIncrement={() => onChange({ day, month, year: clamp(year + 1, minYear, maxYear) })}
-      />
+
+      <View style={styles.pickerWrap}>
+        <RollingWheelPicker
+          data={days}
+          itemHeight={ITEM_HEIGHT}
+          onValueChange={(d) => onChange({ day: d, month, year })}
+          selectedValue={day}
+          visibleItems={VISIBLE_ITEMS}
+        />
+        <RollingWheelPicker
+          data={months}
+          formatLabel={(m) => `${t.onboarding.wheelDate.month} ${m}`}
+          itemHeight={ITEM_HEIGHT}
+          onValueChange={(m) => {
+            const nextMaxDay = getDaysInMonth(m, year);
+            onChange({ day: Math.min(day, nextMaxDay), month: m, year });
+          }}
+          selectedValue={month}
+          visibleItems={VISIBLE_ITEMS}
+        />
+        <RollingWheelPicker
+          data={years}
+          itemHeight={ITEM_HEIGHT}
+          onValueChange={(y) => {
+            const nextMaxDay = getDaysInMonth(month, y);
+            onChange({ day: Math.min(day, nextMaxDay), month, year: y });
+          }}
+          selectedValue={year}
+          visibleItems={VISIBLE_ITEMS}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  column: {
-    flex: 1,
+  container: {
+    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
     borderRadius: radius.xl,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    alignItems: "center",
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
+    overflow: "hidden",
+    position: "relative",
   },
-  columnLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
+  pickerWrap: {
+    flexDirection: "row",
+    paddingHorizontal: 10,
   },
-  arrowButton: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-  valueFrame: {
-    minHeight: 92,
-    minWidth: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  valueText: {
-    ...typography.h1,
-    color: colors.textPrimary,
+  highlightBar: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: radius.md,
+    zIndex: 0,
   },
 });

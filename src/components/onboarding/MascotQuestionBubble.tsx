@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { colors, radius, spacing, typography } from "@/src/theme";
+import { WelcomeHeroIllustration } from "@/src/features/auth/components/WelcomeHeroIllustration";
 
 type MascotQuestionBubbleProps = {
   text: string;
@@ -8,12 +9,12 @@ type MascotQuestionBubbleProps = {
 };
 
 export function MascotQuestionBubble({ text, size = "lg" }: MascotQuestionBubbleProps) {
-  const emojiSize = size === "sm" ? 18 : size === "md" ? 22 : 28;
+  const illustrationSize = size === "sm" ? 28 : size === "md" ? 34 : 40;
 
   return (
     <View style={styles.row}>
       <View style={styles.avatar}>
-        <Text style={[styles.emoji, { fontSize: emojiSize }]}>🐱</Text>
+        <WelcomeHeroIllustration size={illustrationSize} />
       </View>
       <View style={styles.bubbleWrap}>
         <View style={styles.bubble}>

@@ -46,7 +46,7 @@ export const diarySummary: DiaryDaySummary = {
                 id: "breakfast",
                 dateISO: baseDateISO,
                 hour,
-                title: "Overnight oats với chuối",
+                title: "Chuối",
                 calories: 340,
                 proteinGram: 18,
                 carbGram: 46,

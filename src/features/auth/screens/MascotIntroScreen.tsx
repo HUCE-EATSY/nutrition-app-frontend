@@ -1,8 +1,9 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 import { GradientButton } from "@/src/components/buttons/GradientButton";
 import { SafeScreen } from "@/src/components/layout/SafeScreen";
+import { WelcomeHeroIllustration } from "@/src/features/auth/components/WelcomeHeroIllustration";
 import { t } from "@/src/i18n";
 import { useOnboardingStore } from "@/src/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/src/theme";
@@ -28,11 +29,11 @@ export function MascotIntroScreen() {
   return (
     <SafeScreen>
       <View style={[styles.screen, isCompactLayout && styles.screenCompact]}>
-        <Pressable 
+        <Pressable
           onPress={() => {
             setPublicFlowStep("social-login");
             router.replace("/(public)/social-login");
-          }} 
+          }}
           style={styles.closeButton}
         >
           <Text style={styles.closeText}>×</Text>
@@ -48,7 +49,7 @@ export function MascotIntroScreen() {
             <View style={[styles.iconChipTop, { top: chipOffset * 0.5, right: chipOffset * 0.5, width: chipSize, height: chipSize }]}>
               <Text style={styles.iconText}>{t.auth.mascot.topBadge}</Text>
             </View>
-            
+
             {/* Main Badge 2 */}
             <View style={[styles.iconChipBottom, { bottom: chipOffset * 0.5, left: chipOffset * 0.5, width: chipSize, height: chipSize }]}>
               <Text style={styles.iconText}>{t.auth.mascot.bottomBadge}</Text>
@@ -56,7 +57,7 @@ export function MascotIntroScreen() {
 
             {/* Additional floating badges */}
             {t.auth.mascot.badges.map((emoji, index) => {
-              const positions = [
+              const positions: ViewStyle[] = [
                 { top: '15%', left: '-10%' },
                 { bottom: '20%', right: '-15%' },
                 { top: '-5%', left: '30%' },
@@ -64,15 +65,15 @@ export function MascotIntroScreen() {
               ];
               const pos = positions[index % positions.length];
               const size = chipSize * 0.8;
-              
+
               return (
-                <View 
+                <View
                   key={index}
                   style={[
-                    styles.secondaryChip, 
-                    { 
-                      ...pos, 
-                      width: size, 
+                    styles.secondaryChip,
+                    {
+                      ...pos,
+                      width: size,
                       height: size,
                       opacity: 0.8
                     }
@@ -83,7 +84,7 @@ export function MascotIntroScreen() {
               );
             })}
 
-            <Text style={[styles.heroEmoji, { fontSize: isNarrowWidth ? 92 : 116 }]}>{t.auth.mascot.heroEmoji}</Text>
+            <WelcomeHeroIllustration size={heroBounds * 0.8} />
           </View>
         </View>
 

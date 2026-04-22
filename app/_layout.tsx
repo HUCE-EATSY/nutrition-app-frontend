@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import * as SystemUI from "expo-system-ui";
 
 import { colors } from "@/src/theme";
+import { useOnboardingStore } from "@/src/store/onboardingStore";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -23,18 +24,24 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
   });
+  
+  const hydrated = useOnboardingStore((state) => state.hydrated);
 
   useEffect(() => {
-    if (loaded || error) {
+    if ((loaded || error) && hydrated) {
       SplashScreen.hideAsync().catch(() => undefined);
     }
-  }, [loaded, error]);
+  }, [loaded, error, hydrated]);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(colors.bgBase).catch(() => undefined);
   }, []);
 
   if (!loaded && !error) {
+    return null;
+  }
+  
+  if (!hydrated) {
     return null;
   }
 

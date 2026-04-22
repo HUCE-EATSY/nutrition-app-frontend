@@ -1,5 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  FlatList,
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { colors, radius, spacing, typography } from "@/src/theme";
 import { clamp, roundToStep } from "@/src/utils/date";
@@ -15,6 +25,9 @@ type HorizontalRulerPickerProps = {
   onChange: (value: number) => void;
 };
 
+const TICK_WIDTH = 10; // Distance between ticks
+const CENTER_LINE_WIDTH = 3;
+
 export function HorizontalRulerPicker({
   min,
   max,
@@ -25,37 +38,143 @@ export function HorizontalRulerPicker({
   decimalPlaces = 0,
   onChange,
 }: HorizontalRulerPickerProps) {
+  const flatListRef = useRef<FlatList>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+  const [internalValue, setInternalValue] = useState(value);
+
+  // Generate all possible values
+  const data = useMemo(() => {
+    const items = [];
+    // Use a small epsilon to avoid floating point issues
+    for (let i = min; i <= max + step / 10; i = roundToStep(i + step, step)) {
+      items.push(roundToStep(i, step));
+    }
+    return items;
+  }, [min, max, step]);
+
   const safeValue = clamp(value, min, max);
-  const values = Array.from({ length: 11 }, (_, index) => roundToStep(safeValue + (index - 5) * step, step)).filter(
-    (next) => next >= min && next <= max,
-  );
+
+  // Sync internal value when prop changes (from external buttons)
+  useEffect(() => {
+    if (Math.abs(value - internalValue) > step / 4) {
+      setInternalValue(value);
+      if (isReady && flatListRef.current && containerWidth > 0) {
+        const index = data.indexOf(roundToStep(value, step));
+        if (index !== -1) {
+          flatListRef.current.scrollToOffset({
+            offset: index * TICK_WIDTH,
+            animated: true,
+          });
+        }
+      }
+    }
+  }, [value, isReady, containerWidth, data, step]);
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width;
+    setContainerWidth(width);
+    setIsReady(true);
+  };
+
+  // Initial scroll to current value
+  useEffect(() => {
+    if (isReady && containerWidth > 0 && flatListRef.current) {
+      const index = data.indexOf(roundToStep(safeValue, step));
+      if (index !== -1) {
+        flatListRef.current.scrollToOffset({
+          offset: index * TICK_WIDTH,
+          animated: false,
+        });
+      }
+    }
+  }, [isReady, containerWidth]);
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / TICK_WIDTH);
+    const newValue = data[clamp(index, 0, data.length - 1)];
+
+    if (newValue !== undefined && newValue !== internalValue) {
+      setInternalValue(newValue);
+      onChange(newValue);
+    }
+  };
+
+  const renderItem = ({ item }: { item: number }) => {
+    const diff = Math.round((item - min) / step);
+    const isMajor = diff % majorTickEvery === 0;
+    const isSelected = Math.abs(item - internalValue) < step / 4;
+
+    return (
+      <View style={[styles.tickContainer, { width: TICK_WIDTH }]}>
+        <View
+          style={[
+            styles.tick,
+            isMajor ? styles.majorTick : styles.minorTick,
+            isSelected && styles.selectedTick,
+          ]}
+        />
+        {isMajor && (
+          <Text style={[styles.tickLabel, isSelected && styles.selectedLabel]}>
+            {item.toFixed(item % 1 === 0 ? 0 : 1)}
+          </Text>
+        )}
+      </View>
+    );
+  };
+
+  const spacerWidth = containerWidth / 2 - TICK_WIDTH / 2;
 
   return (
     <View style={styles.wrap}>
       <Text style={styles.value}>
-        {safeValue.toFixed(decimalPlaces)}
+        {internalValue.toFixed(decimalPlaces)}
         <Text style={styles.unit}> {unit}</Text>
       </Text>
-      <Text style={styles.subtle}>Chon bang ruler tung buoc, uu tien thao tac mot tay.</Text>
+      <Text style={styles.subtle}>Vuốt thước để chọn hoặc dùng nút bấm</Text>
 
       <View style={styles.controls}>
-        <Pressable onPress={() => onChange(roundToStep(clamp(safeValue - step, min, max), step))} style={styles.controlButton}>
+        <Pressable
+          onPress={() => onChange(roundToStep(clamp(internalValue - step, min, max), step))}
+          style={styles.controlButton}
+        >
           <Ionicons color={colors.textPrimary} name="remove" size={20} />
         </Pressable>
-        <View style={styles.ruler}>
-          {values.map((tickValue) => {
-            const selected = Math.abs(tickValue - safeValue) < step / 2;
-            const major = Math.round((tickValue - min) / step) % majorTickEvery === 0;
 
-            return (
-              <Pressable key={tickValue} onPress={() => onChange(tickValue)} style={styles.tickWrap}>
-                <View style={[styles.tick, major && styles.majorTick, selected && styles.selectedTick]} />
-                <Text style={[styles.tickLabel, selected && styles.selectedLabel]}>{tickValue.toFixed(decimalPlaces)}</Text>
-              </Pressable>
-            );
-          })}
+        <View onLayout={onLayout} style={styles.rulerContainer}>
+          {isReady && containerWidth > 0 && (
+            <>
+              {/* Central Indicator */}
+              <View style={styles.centerIndicator} />
+
+              <FlatList
+                ref={flatListRef}
+                ListFooterComponent={<View style={{ width: spacerWidth }} />}
+                ListHeaderComponent={<View style={{ width: spacerWidth }} />}
+                data={data}
+                decelerationRate="fast"
+                getItemLayout={(_, index) => ({
+                  length: TICK_WIDTH,
+                  offset: TICK_WIDTH * index,
+                  index,
+                })}
+                horizontal
+                keyExtractor={(item) => item.toString()}
+                onScroll={onScroll}
+                renderItem={renderItem}
+                scrollEventThrottle={16}
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={TICK_WIDTH}
+              />
+            </>
+          )}
         </View>
-        <Pressable onPress={() => onChange(roundToStep(clamp(safeValue + step, min, max), step))} style={styles.controlButton}>
+
+        <Pressable
+          onPress={() => onChange(roundToStep(clamp(internalValue + step, min, max), step))}
+          style={styles.controlButton}
+        >
           <Ionicons color={colors.textPrimary} name="add" size={20} />
         </Pressable>
       </View>
@@ -86,54 +205,78 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
+    height: 140,
   },
   controlButton: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
     borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: "rgba(255, 255, 255, 0.1)",
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10,
   },
-  ruler: {
+  rulerContainer: {
     flex: 1,
-    minHeight: 124,
+    height: 120,
+    backgroundColor: "rgba(20, 20, 30, 0.4)",
     borderRadius: radius.xl,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.lg,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    overflow: "hidden",
+    justifyContent: "center",
   },
-  tickWrap: {
+  centerIndicator: {
+    position: "absolute",
+    left: "50%",
+    top: 20,
+    bottom: 40,
+    width: CENTER_LINE_WIDTH,
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    marginLeft: -CENTER_LINE_WIDTH / 2,
+    zIndex: 5,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  tickContainer: {
+    height: 100,
     alignItems: "center",
     justifyContent: "flex-end",
-    gap: 8,
+    paddingBottom: 25,
   },
   tick: {
-    width: 2,
-    height: 24,
+    width: 1.5,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: radius.pill,
-    backgroundColor: "#746E90",
+  },
+  minorTick: {
+    height: 12,
   },
   majorTick: {
-    height: 42,
+    height: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
   selectedTick: {
-    height: 64,
-    width: 3,
-    backgroundColor: colors.primary,
+    opacity: 0, // Hide behind center indicator
   },
   tickLabel: {
     ...typography.caption,
+    position: "absolute",
+    bottom: 2,
     color: colors.textMuted,
+    fontSize: 10,
+    width: 40,
+    textAlign: "center",
   },
   selectedLabel: {
     color: colors.textPrimary,
+    fontWeight: "bold",
+    transform: [{ scale: 1.1 }],
   },
 });

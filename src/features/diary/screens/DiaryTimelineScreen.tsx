@@ -1,158 +1,250 @@
+import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { SurfaceCard } from "@/src/components/common/SurfaceCard";
-import { TimelineHourRow } from "@/src/components/diary/TimelineHourRow";
-import { SafeScreen } from "@/src/components/layout/SafeScreen";
-import { t } from "@/src/i18n";
 import { diarySummary } from "@/src/mocks/data";
-import { colors, radius, spacing, typography } from "@/src/theme";
+import { theme, spacing, radius, typography } from "@/src/theme";
 import { useResponsiveLayout } from "@/src/theme/responsive";
-import { formatShortDate, hourLabel } from "@/src/utils/date";
+
+type MacroInfo = {
+  label: string;
+  value: number;
+  target: number;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+};
+
+const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 to 23:00
 
 export function DiaryTimelineScreen() {
-  const { isCompact, isNarrowWidth } = useResponsiveLayout();
+  const { horizontalPadding } = useResponsiveLayout();
+  const currentHour = new Date().getHours();
+
+  const macros: MacroInfo[] = [
+    { label: "Calories", value: diarySummary.consumedCalories, target: diarySummary.targetCalories, icon: "flame", color: theme.colors.primary },
+    { label: "Protein", value: diarySummary.consumedProteinGram, target: diarySummary.targetProteinGram, icon: "flash", color: theme.colors.protein },
+    { label: "Carbs", value: diarySummary.consumedCarbGram, target: diarySummary.targetCarbGram, icon: "leaf", color: theme.colors.carbs },
+    { label: "Fat", value: diarySummary.consumedFatGram, target: diarySummary.targetFatGram, icon: "water", color: theme.colors.fat },
+  ];
 
   return (
-    <SafeScreen>
-      <View style={styles.screen}>
-        <View style={[styles.header, isCompact && styles.headerCompact]}>
-          <View>
-            <Text style={styles.kicker}>{t.diary.kicker}</Text>
-            <Text style={[styles.date, isNarrowWidth && styles.dateCompact]}>{formatShortDate(diarySummary.dateISO)}</Text>
-          </View>
-          <Pressable onPress={() => router.push("/quick-add")} style={[styles.quickAdd, isCompact && styles.quickAddCompact]}>
-            <Text style={styles.quickAddLabel}>{t.diary.add}</Text>
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+      <StatusBar style="light" />
+      
+      <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
+        <Pressable hitSlop={12}>
+          <Ionicons color={theme.colors.textPrimary} name="menu-outline" size={26} />
+        </Pressable>
+        
+        <View style={styles.dateSelector}>
+          <Pressable hitSlop={12}>
+            <Ionicons color={theme.colors.textPrimary} name="chevron-back" size={20} />
+          </Pressable>
+          <Text style={styles.dateText}>Hôm qua</Text>
+          <Pressable hitSlop={12}>
+            <Ionicons color={theme.colors.textPrimary} name="chevron-forward" size={20} />
           </Pressable>
         </View>
 
-        <SurfaceCard style={styles.summaryCard}>
-          <MacroMini
-            label={t.diary.calories}
-            progress={diarySummary.consumedCalories / diarySummary.targetCalories}
-            value={`${diarySummary.consumedCalories}/${diarySummary.targetCalories}`}
-          />
-          <MacroMini
-            label={t.diary.protein}
-            progress={diarySummary.consumedProteinGram / diarySummary.targetProteinGram}
-            value={`${diarySummary.consumedProteinGram}g`}
-          />
-          <MacroMini
-            label={t.diary.carb}
-            progress={diarySummary.consumedCarbGram / diarySummary.targetCarbGram}
-            value={`${diarySummary.consumedCarbGram}g`}
-          />
-          <MacroMini
-            label={t.diary.fat}
-            progress={diarySummary.consumedFatGram / diarySummary.targetFatGram}
-            value={`${diarySummary.consumedFatGram}g`}
-          />
-        </SurfaceCard>
-
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={diarySummary.slots}
-          keyExtractor={(item) => `${item.hour}`}
-          renderItem={({ item }) => (
-            <TimelineHourRow
-              calories={item.entries[0]?.calories}
-              entriesCount={item.entries.length}
-              hourLabel={hourLabel(item.hour)}
-              isCurrentHour={item.hour === new Date().getHours()}
-              onAdd={() => router.push(`/quick-add?hour=${item.hour}&selectedDate=${diarySummary.dateISO}`)}
-              onPress={() => undefined}
-              title={item.entries[0]?.title}
-            />
-          )}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={{ width: 26 }} />
       </View>
-    </SafeScreen>
+
+      <View style={[styles.macrosRow, { paddingHorizontal: horizontalPadding }]}>
+        {macros.map((macro) => {
+          const progress = Math.min((macro.value / macro.target) * 100, 100);
+          return (
+            <View key={macro.label} style={styles.macroItem}>
+              <View style={styles.macroTop}>
+                <Ionicons color={macro.color} name={macro.icon} size={14} />
+                <Text style={styles.macroValue}>{macro.value} / {macro.target}</Text>
+              </View>
+              <View style={styles.progressBarBackground}>
+                <View 
+                  style={[
+                    styles.progressBarFill, 
+                    { backgroundColor: macro.color, width: `${progress}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: horizontalPadding,
+            paddingBottom: spacing.xxxl,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.timelineContainer}>
+          {hours.map((hour) => {
+            const isCurrentHour = hour === currentHour;
+            const timeString = `${hour.toString().padStart(2, "0")}:00`;
+            const slot = diarySummary.slots.find(s => s.hour === hour);
+            const hasEntries = !!(slot && slot.entries.length > 0);
+            
+            return (
+              <View key={hour} style={styles.timelineRow}>
+                <View style={styles.timeWrapper}>
+                  <Text style={[
+                    styles.timeText,
+                    isCurrentHour && styles.timeTextActive
+                  ]}>
+                    {timeString}
+                  </Text>
+                </View>
+                
+                <View style={styles.lineContentWrapper}>
+                  <View style={[
+                    styles.timelineLine,
+                    isCurrentHour && styles.timelineLineActive
+                  ]} />
+                  
+                  {hasEntries ? (
+                    <View style={styles.entryPreview}>
+                      {slot.entries.map((entry, idx) => (
+                        <Text key={entry.id} numberOfLines={1} style={styles.entryText}>
+                          {idx > 0 ? " \u2022 " : ""}{entry.title}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
+                
+                <Pressable
+                  hitSlop={8}
+                  onPress={() => router.push(`/quick-add?hour=${hour}`)}
+                  style={styles.addButton}
+                >
+                  <Ionicons color={theme.colors.textMuted} name="add" size={24} />
+                </Pressable>
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-function MacroMini({ label, value, progress }: { label: string; value: string; progress: number }) {
-  return (
-    <View style={styles.macroItem}>
-      <Text style={styles.macroLabel}>{label}</Text>
-      <Text style={styles.macroValue}>{value}</Text>
-      <View style={styles.track}>
-        <View style={[styles.fill, { width: `${Math.min(progress, 1) * 100}%` }]} />
-      </View>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
-  screen: {
+  safeArea: {
     flex: 1,
-    paddingTop: spacing.lg,
+    backgroundColor: theme.colors.bgBase,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.lg,
+    paddingVertical: spacing.md,
   },
-  headerCompact: {
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  kicker: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  date: {
-    ...typography.h1,
-    color: colors.textPrimary,
-  },
-  dateCompact: {
-    ...typography.h2,
-  },
-  quickAdd: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: "rgba(165,108,255,0.18)",
-  },
-  quickAddCompact: {
-    alignSelf: "flex-start",
-  },
-  quickAddLabel: {
-    ...typography.caption,
-    color: colors.textPrimary,
-    fontWeight: "700",
-  },
-  summaryCard: {
+  dateSelector: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     gap: spacing.md,
-    marginBottom: spacing.lg,
+  },
+  dateText: {
+    ...typography.h3,
+    color: theme.colors.textPrimary,
+    fontSize: 18,
+  },
+  macrosRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.05)",
   },
   macroItem: {
-    width: "47%",
+    flex: 1,
     gap: 8,
   },
-  macroLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
+  macroTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   macroValue: {
-    ...typography.h3,
-    color: colors.textPrimary,
+    ...typography.caption,
+    color: theme.colors.textSecondary,
+    fontSize: 10,
   },
-  track: {
-    height: 6,
-    borderRadius: radius.pill,
-    backgroundColor: "#3A3453",
+  progressBarBackground: {
+    height: 3,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 1.5,
     overflow: "hidden",
   },
-  fill: {
+  progressBarFill: {
     height: "100%",
-    backgroundColor: colors.primary,
+    borderRadius: 1.5,
   },
-  listContent: {
-    paddingBottom: spacing.xxxl,
+  scrollContent: {
+    paddingTop: spacing.lg,
+  },
+  timelineContainer: {
+    gap: spacing.sm,
+  },
+  timelineRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 48,
+  },
+  timeWrapper: {
+    width: 50,
+  },
+  timeText: {
+    ...typography.bodyStrong,
+    color: theme.colors.textMuted,
+    fontSize: 14,
+  },
+  timeTextActive: {
+    color: theme.colors.primary,
+  },
+  lineContentWrapper: {
+    flex: 1,
+    height: "100%",
+    justifyContent: "center",
+    marginHorizontal: spacing.sm,
+  },
+  timelineLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  timelineLineActive: {
+    backgroundColor: "rgba(165,108,255,0.15)",
+  },
+  entryPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  entryText: {
+    ...typography.caption,
+    color: theme.colors.textPrimary,
+    fontSize: 12,
+  },
+  addButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

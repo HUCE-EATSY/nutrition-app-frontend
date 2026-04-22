@@ -36,6 +36,7 @@ export function BirthDateScreen() {
         router.replace(getNextOnboardingPath("BirthDate"));
       }}
       question={t.onboarding.questions.BirthDate}
+      scrollable={false}
       step={meta.step}
       totalSteps={meta.totalSteps}
     >

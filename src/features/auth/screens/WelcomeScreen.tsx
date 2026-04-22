@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { GradientButton } from "@/src/components/buttons/GradientButton";
 import { SafeScreen } from "@/src/components/layout/SafeScreen";
+import { WelcomeHeroIllustration } from "@/src/features/auth/components/WelcomeHeroIllustration";
 import { t } from "@/src/i18n";
 import { useOnboardingStore } from "@/src/store/onboardingStore";
 import { colors, spacing, typography } from "@/src/theme";
@@ -10,7 +11,7 @@ import { useResponsiveLayout } from "@/src/theme/responsive";
 import { trackEvent } from "@/src/utils/analytics";
 
 const BRAND = "Nutrition";
-const TITLE = "Ứng dụng dinh dưỡng ";
+const TITLE = "Ứng dụng dinh dưỡng";
 const DESCRIPTION = "Ứng dụng cá nhân hoá món ăn, thói quen và lối sống dành cho người Việt.";
 const CTA = "Bắt đầu ngay";
 
@@ -35,10 +36,7 @@ export function WelcomeScreen() {
           <Text style={[styles.logo, isNarrowWidth && styles.logoCompact]}>{BRAND}</Text>
 
           <View style={[styles.heroWrap, isCompactLayout && styles.heroWrapCompact]}>
-            <View style={[styles.emojiContainer, { width: heroSize, height: heroSize }]}>
-               <Text style={[styles.emoji, { fontSize: heroSize * 0.65 }]}>{t.auth.welcome.heroEmoji}</Text>
-               <View style={styles.emojiShadow} />
-            </View>
+            <WelcomeHeroIllustration size={heroSize} />
           </View>
 
           <View style={styles.copyWrap}>
@@ -73,7 +71,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 56,
     lineHeight: 64,
-    fontWeight: "900",
     letterSpacing: -3.5,
     marginTop: spacing.sm,
   },

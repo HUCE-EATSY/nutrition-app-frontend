@@ -1,35 +1,56 @@
-import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { GradientButton } from "@/src/components/buttons/GradientButton";
 import { SurfaceCard } from "@/src/components/common/SurfaceCard";
 import { SafeScreen } from "@/src/components/layout/SafeScreen";
 import { t } from "@/src/i18n";
-import { useOnboardingStore } from "@/src/store/onboardingStore";
 import { colors, spacing, typography } from "@/src/theme";
+import { HomeHeader, DateScroller } from "@/src/components/dashboard/HomeHeader";
+import { CalorieOverview } from "@/src/components/dashboard/CalorieOverview";
+import { MacroProgressRow } from "@/src/components/dashboard/MacroProgressRow";
+import { ActivityGrid } from "@/src/components/dashboard/ActivityGrid";
+import { SmallStatRow } from "@/src/components/dashboard/SmallStatRow";
+import { WaterIntakeCard } from "@/src/components/dashboard/WaterIntakeCard";
+import { WeightChartCard } from "@/src/components/dashboard/WeightChartCard";
 
 export function HomeScreen() {
-  const nickname = useOnboardingStore((state) => state.draft.nickname ?? t.home.defaultNickname);
-
   return (
     <SafeScreen scrollable>
       <View style={styles.screen}>
-        <Text style={styles.kicker}>{t.home.kicker}</Text>
-        <Text style={styles.title}>{t.home.title(nickname)}</Text>
+        <HomeHeader />
+        <DateScroller />
 
-        <SurfaceCard>
-          <Text style={styles.cardTitle}>{t.home.focusTitle}</Text>
-          <Text style={styles.cardBody}>{t.home.focusBody}</Text>
+        <CalorieOverview 
+          remaining={1925} 
+          goal={1925} 
+          consumed={0} 
+          burned={0} 
+          percentage={0} 
+        />
+
+        <SurfaceCard style={styles.macroCard}>
+          <MacroProgressRow />
+          <View style={styles.paginationDots}>
+            <View style={[styles.dot, styles.dotActive]} />
+            <View style={styles.dot} />
+          </View>
         </SurfaceCard>
 
-        <SurfaceCard>
-          <Text style={styles.cardTitle}>{t.home.actionsTitle}</Text>
-          <Text style={styles.cardBody}>{t.home.actionOne}</Text>
-          <Text style={styles.cardBody}>{t.home.actionTwo}</Text>
-          <Text style={styles.cardBody}>{t.home.actionThree}</Text>
-        </SurfaceCard>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t.home.recentLog}</Text>
+          <View style={styles.emptyRecent}>
+             <MaterialCommunityIcons name="basket-plus-outline" size={32} color={colors.textMuted} />
+             <Text style={styles.emptyText}>{t.home.noData}</Text>
+          </View>
+        </View>
 
-        <GradientButton label={t.home.cta} onPress={() => router.push("/(tabs)/diary")} />
+        <ActivityGrid />
+        
+        <SmallStatRow />
+
+        <WaterIntakeCard />
+
+        <WeightChartCard />
       </View>
     </SafeScreen>
   );
@@ -39,23 +60,42 @@ const styles = StyleSheet.create({
   screen: {
     gap: spacing.lg,
     paddingVertical: spacing.lg,
+    paddingBottom: spacing.xxl * 2,
   },
-  kicker: {
-    ...typography.caption,
-    color: colors.warning,
-    textTransform: "uppercase",
+  macroCard: {
+    padding: spacing.md,
+    gap: spacing.md,
   },
-  title: {
-    ...typography.display,
-    color: colors.textPrimary,
+  paginationDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: spacing.sm,
   },
-  cardTitle: {
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  dotActive: {
+    backgroundColor: colors.primary,
+  },
+  section: {
+    gap: spacing.md,
+  },
+  sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
   },
-  cardBody: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
+  emptyRecent: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.xl,
+    gap: spacing.sm,
+  },
+  emptyText: {
+    ...typography.caption,
+    color: colors.textMuted,
   },
 });
