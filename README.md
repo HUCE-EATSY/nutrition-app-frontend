@@ -28,21 +28,32 @@ You can start developing by editing the files inside the **app** directory. This
 ## Folder Structure
 
 ```text
-src/
-├── assets/          # Images, fonts, and static files
-├── components/      # Reusable UI components (buttons, cards, etc.)
-│   ├── common/      # Global shared components
-│   └── ui/          # Low-level UI primitives
-├── constants/       # App-wide constants (colors, spacing, config)
-├── hooks/           # Custom React hooks for logic reuse
-├── navigation/      # Navigation configurations (Stacks, Tabs)
-├── screens/         # Page-level components
-├── services/        # API calls and external services (Axios/React Query)
-├── store/           # Zustand state management
-│   ├── slices/      # Optional: Modular store parts (e.g., authSlice.ts)
-│   └── useStore.ts  # Main store definition or entry point
-├── types/           # Global TypeScript interfaces and types
-└── utils/           # Helper functions (formatting, validation)
+.
+├── app/                 # Expo Router routes (File-based routing)
+│   ├── (onboarding)/    # Onboarding flow routes (A3-A14)
+│   ├── (public)/        # Public routes (A0-A2: Welcome, Login)
+│   ├── (tabs)/          # Main app navigation tabs (Home, Diary, Meal Plan, Account)
+│   ├── _layout.tsx      # Root layout and providers
+│   ├── quick-add.tsx    # Quick action modal
+│   └── webview.tsx      # WebView container
+├── assets/              # Images, fonts, and static resources
+└── src/                 # Application source code
+    ├── components/      # Reusable UI components organized by domain
+    │   ├── buttons/     # Custom buttons (GradientButton, etc.)
+    │   ├── layout/      # Layout components (ScreenBackground, SafeScreen)
+    │   └── ...          # Feature-specific shared components
+    ├── domain/          # Business logic (calculators, validators, models)
+    ├── features/        # Screen containers and feature-specific logic
+    │   ├── auth/
+    │   ├── onboarding/
+    │   ├── diary/
+    │   └── ...
+    ├── i18n/            # Internationalization (multi-language support)
+    ├── mocks/           # Mock data for development and testing
+    ├── store/           # State management (Zustand)
+    ├── theme/           # Design system (tokens, colors, typography)
+    ├── types/           # TypeScript interfaces and contracts
+    └── utils/           # Helper functions and formatting
 ```
 
 ## Learn more
