@@ -14,6 +14,18 @@ import { View, ActivityIndicator, Text } from "react-native";
 
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { PaperProvider, MD3DarkTheme } from "react-native-paper";
+
+const paperTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: colors.primary,
+    secondary: colors.primaryDark,
+    background: colors.bgBase,
+    surface: colors.surface,
+  },
+};
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -58,7 +70,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <PaperProvider theme={paperTheme}>
       <StatusBar style="light" />
       <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
         <Stack.Screen name="index" />
@@ -68,6 +80,6 @@ export default function RootLayout() {
         <Stack.Screen name="quick-add" options={{ presentation: "modal" }} />
         <Stack.Screen name="webview" options={{ presentation: "modal" }} />
       </Stack>
-    </>
+    </PaperProvider>
   );
 }
