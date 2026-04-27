@@ -1,11 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
-import { GradientButton } from "@/src/components/buttons/GradientButton";
-import { SurfaceCard } from "@/src/components/common/SurfaceCard";
-import { t } from "@/src/i18n";
-import { SafeScreen } from "@/src/components/layout/SafeScreen";
-import { colors, spacing, typography } from "@/src/theme";
+import { GradientButton } from "@/components/buttons/GradientButton";
+import { SurfaceCard } from "@/components/common/SurfaceCard";
+import { t } from "@/constants/i18n";
+import { SafeScreen } from "@/components/layout/SafeScreen";
+import { colors, spacing, typography } from "@/constants";
 
 export default function QuickAddModal() {
   const params = useLocalSearchParams<{ selectedDate?: string; hour?: string }>();

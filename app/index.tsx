@@ -1,10 +1,10 @@
 import { Redirect } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
 
-import { t } from "@/src/i18n";
-import { colors } from "@/src/theme";
-import { useOnboardingStore } from "@/src/store/onboardingStore";
-import { getDraftResumePath, getPublicResumePath } from "@/src/utils/onboarding";
+import { t } from "@/constants/i18n";
+import { colors } from "@/constants";
+import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { getDraftResumePath, getPublicResumePath } from "@/hooks/utils/onboarding";
 
 export default function IndexScreen() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
@@ -25,9 +25,11 @@ export default function IndexScreen() {
     return <Redirect href="/(tabs)/home" />;
   }
 
-  if (publicFlowStep !== "done") {
-    return <Redirect href={getPublicResumePath(publicFlowStep)} />;
-  }
-
-  return <Redirect href={getDraftResumePath(draft)} />;
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
+       <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
+       <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
+       <ActivityIndicator color={colors.primary} />
+    </View>
+  );
 }

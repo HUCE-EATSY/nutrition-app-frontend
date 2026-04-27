@@ -3,9 +3,9 @@ import { Tabs, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { t } from "@/src/i18n";
-import { colors, radius } from "@/src/theme";
-import { useResponsiveLayout } from "@/src/theme/responsive";
+import { t } from "@/constants/i18n";
+import { colors, radius } from "@/constants";
+import { useResponsiveLayout } from "@/constants/responsive";
 
 function TabIcon({ color, name }: { color: string; name: keyof typeof Ionicons.glyphMap }) {
   return <Ionicons color={color} name={name} size={22} />;

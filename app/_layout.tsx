@@ -10,11 +10,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import * as SystemUI from "expo-system-ui";
+import { View, ActivityIndicator, Text } from "react-native";
 
-import { colors } from "@/src/theme";
-import { useOnboardingStore } from "@/src/store/onboardingStore";
+import { colors } from "@/constants";
+import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
@@ -25,24 +25,36 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
   
-  const hydrated = useOnboardingStore((state) => state.hydrated);
+  const hydrated = useOnboardingStore((state: any) => state.hydrated);
 
   useEffect(() => {
-    if ((loaded || error) && hydrated) {
+    if (loaded || error) {
       SplashScreen.hideAsync().catch(() => undefined);
     }
-  }, [loaded, error, hydrated]);
+  }, [loaded, error]);
 
   useEffect(() => {
-    SystemUI.setBackgroundColorAsync(colors.bgBase).catch(() => undefined);
+    if (colors && colors.bgBase) {
+      SystemUI.setBackgroundColorAsync(colors.bgBase).catch(() => undefined);
+    }
   }, []);
 
   if (!loaded && !error) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
+        <Text style={{ color: 'white', marginTop: 10 }}>Loading fonts...</Text>
+      </View>
+    );
   }
   
   if (!hydrated) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
+        <Text style={{ color: 'white', marginTop: 10 }}>Hydrating store...</Text>
+      </View>
+    );
   }
 
   return (

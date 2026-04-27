@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext", "dom"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "paths": {
+      "react": ["../nutrition-app-frontend/node_modules/@types/react"],
+      "react-native": ["../nutrition-app-frontend/node_modules/@types/react-native"],
+      "expo-linear-gradient": ["../nutrition-app-frontend/node_modules/expo-linear-gradient"],
+      "react/jsx-runtime": ["../nutrition-app-frontend/node_modules/@types/react/jsx-runtime"]
+    },
+    "typeRoots": [
+      "../nutrition-app-frontend/node_modules/@types"
+    ]
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}
