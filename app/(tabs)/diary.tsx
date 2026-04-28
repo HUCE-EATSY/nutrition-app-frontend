@@ -4,9 +4,14 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { diarySummary } from "@/constants/mocks/data";
 import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
+import {
+  useDiaryStore,
+  getSlotsForDate,
+  getTotalsForDate,
+} from "@/hooks/store/diaryStore";
+import { addDays } from "@/hooks/utils/date";
 
 type MacroInfo = {
   label: string;
@@ -18,16 +23,54 @@ type MacroInfo = {
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 to 23:00
 
+function formatDateLabel(dateISO: string): string {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = addDays(today, -1).slice(0, 10);
+  if (dateISO === today) return "Hôm nay";
+  if (dateISO === yesterday) return "Hôm qua";
+  return new Date(dateISO).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "short",
+  });
+}
+
 export default function DiaryTimelineScreen() {
   const { horizontalPadding } = useResponsiveLayout();
   const currentHour = new Date().getHours();
 
+  // ─── Store ───────────────────────────────────────────────────────────────
+  const selectedDateISO = useDiaryStore((s) => s.selectedDateISO);
+  const setSelectedDate = useDiaryStore((s) => s.setSelectedDate);
+  const entriesByDate = useDiaryStore((s) => s.entriesByDate);
+  const targetCalories = useDiaryStore((s) => s.targetCalories);
+  const targetProteinGram = useDiaryStore((s) => s.targetProteinGram);
+  const targetCarbGram = useDiaryStore((s) => s.targetCarbGram);
+  const targetFatGram = useDiaryStore((s) => s.targetFatGram);
+
+  const totals = getTotalsForDate(entriesByDate, selectedDateISO);
+  const slots = getSlotsForDate(entriesByDate, selectedDateISO);
+
+  const handlePrevDay = () => {
+    const prev = addDays(selectedDateISO, -1).slice(0, 10);
+    setSelectedDate(prev);
+  };
+
+  const handleNextDay = () => {
+    const next = addDays(selectedDateISO, 1).slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
+    // Không cho scroll quá hôm nay
+    if (next <= today) setSelectedDate(next);
+  };
+
+  // ─── Macros ───────────────────────────────────────────────────────────────
   const macros: MacroInfo[] = [
-    { label: "Calories", value: diarySummary.consumedCalories, target: diarySummary.targetCalories, icon: "flame", color: theme.colors.primary },
-    { label: "Protein", value: diarySummary.consumedProteinGram, target: diarySummary.targetProteinGram, icon: "flash", color: theme.colors.protein },
-    { label: "Carbs", value: diarySummary.consumedCarbGram, target: diarySummary.targetCarbGram, icon: "leaf", color: theme.colors.carbs },
-    { label: "Fat", value: diarySummary.consumedFatGram, target: diarySummary.targetFatGram, icon: "water", color: theme.colors.fat },
+    { label: "Calories", value: totals.calories, target: targetCalories, icon: "flame", color: theme.colors.primary },
+    { label: "Protein", value: totals.proteinGram, target: targetProteinGram, icon: "flash", color: theme.colors.protein },
+    { label: "Carbs", value: totals.carbGram, target: targetCarbGram, icon: "leaf", color: theme.colors.carbs },
+    { label: "Fat", value: totals.fatGram, target: targetFatGram, icon: "water", color: theme.colors.fat },
   ];
+
+  const isToday = selectedDateISO === new Date().toISOString().slice(0, 10);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -39,11 +82,11 @@ export default function DiaryTimelineScreen() {
         </Pressable>
         
         <View style={styles.dateSelector}>
-          <Pressable hitSlop={12}>
+          <Pressable hitSlop={12} onPress={handlePrevDay}>
             <Ionicons color={theme.colors.textPrimary} name="chevron-back" size={20} />
           </Pressable>
-          <Text style={styles.dateText}>Hôm qua</Text>
-          <Pressable hitSlop={12}>
+          <Text style={styles.dateText}>{formatDateLabel(selectedDateISO)}</Text>
+          <Pressable hitSlop={12} onPress={handleNextDay} style={{ opacity: isToday ? 0.3 : 1 }}>
             <Ionicons color={theme.colors.textPrimary} name="chevron-forward" size={20} />
           </Pressable>
         </View>
@@ -85,9 +128,9 @@ export default function DiaryTimelineScreen() {
       >
         <View style={styles.timelineContainer}>
           {hours.map((hour) => {
-            const isCurrentHour = hour === currentHour;
+            const isCurrentHour = isToday && hour === currentHour;
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const slot = diarySummary.slots.find(s => s.hour === hour);
+            const slot = slots.find(s => s.hour === hour);
             const hasEntries = !!(slot && slot.entries.length > 0);
             
             return (
@@ -120,7 +163,7 @@ export default function DiaryTimelineScreen() {
                 
                 <Pressable
                   hitSlop={8}
-                  onPress={() => router.push(`/quick-add?hour=${hour}`)}
+                  onPress={() => router.push(`/quick-add?hour=${hour}&selectedDate=${selectedDateISO}`)}
                   style={styles.addButton}
                 >
                   <Ionicons color={theme.colors.textMuted} name="add" size={24} />
@@ -133,6 +176,7 @@ export default function DiaryTimelineScreen() {
     </SafeAreaView>
   );
 }
+
 
 
 const styles = StyleSheet.create({
