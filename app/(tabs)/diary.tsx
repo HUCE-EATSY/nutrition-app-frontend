@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { diarySummary } from "@/constants/mocks/data";
-import { theme, spacing, radius, typography } from "@/constants";
+import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 
 type MacroInfo = {

@@ -42,7 +42,7 @@ export function RollingWheelPicker<T extends string | number>({
       });
       setInternalSelectedValue(selectedValue);
     }
-  }, [initialIndex, itemHeight, selectedValue]);
+  }, [initialIndex, itemHeight, selectedValue, isScrolling]);
 
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = event.nativeEvent.contentOffset.y;

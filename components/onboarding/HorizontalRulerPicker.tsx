@@ -69,7 +69,7 @@ export function HorizontalRulerPicker({
         }
       }
     }
-  }, [value, isReady, containerWidth, data, step]);
+  }, [value, isReady, containerWidth, data, step, internalValue]);
 
   const onLayout = (event: LayoutChangeEvent) => {
     const width = event.nativeEvent.layout.width;
@@ -88,7 +88,7 @@ export function HorizontalRulerPicker({
         });
       }
     }
-  }, [isReady, containerWidth]);
+  }, [isReady, containerWidth, data, safeValue, step]);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;

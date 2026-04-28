@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
+import { colors, spacing, typography } from "@/constants";
 
 interface MacroItemProps {
   label: string;

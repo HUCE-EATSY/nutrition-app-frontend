@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { WelcomeHeroIllustration } from "@/components/WelcomeHeroIllustration";
-import { t } from "@/constants/i18n";
+
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";

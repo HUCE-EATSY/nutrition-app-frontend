@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from "react-nati
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
+import { colors, spacing, typography } from "@/constants";
 
 export function HomeHeader() {
   return (

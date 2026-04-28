@@ -8,13 +8,13 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/constants";
-import { useResponsiveLayout } from "@/constants/responsive";
+
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 
 export default function AccountScreen() {
   const draft = useOnboardingStore((state) => state.draft);
   const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 15;
-  const { isCompact } = useResponsiveLayout();
+
 
   const nickname = draft.nickname ?? "KIEN";
   const joinedDate = "19 Thg 04, 2026"; // In a real app, this would come from a user object

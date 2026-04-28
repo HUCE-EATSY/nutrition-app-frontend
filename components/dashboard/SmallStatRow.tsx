@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
+import { colors, spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
 
 export function SmallStatRow() {

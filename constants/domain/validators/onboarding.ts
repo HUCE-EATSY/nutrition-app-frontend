@@ -1,6 +1,6 @@
 import { GoalType } from "@/constants/types/contracts";
 import { t } from "@/constants/i18n";
-import { clamp, getAgeFromBirthDate } from "@/hooks/utils/date";
+import { clamp } from "@/hooks/utils/date";
 
 export function validateNickname(value: string) {
   const trimmed = value.trim();

@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { t } from "@/constants/i18n";
-import { colors, radius } from "@/constants";
+import { radius } from "@/constants";
 
 import { RollingWheelPicker } from "./RollingWheelPicker";
 

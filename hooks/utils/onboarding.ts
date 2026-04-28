@@ -8,7 +8,7 @@ import {
   PublicFlowStep,
 } from "@/constants/types/contracts";
 import { t } from "@/constants/i18n";
-import { getAgeFromBirthDate } from "@/hooks/utils/date";
+
 
 export const DEFAULT_HEIGHT_CM = 168;
 export const DEFAULT_CURRENT_WEIGHT_KG = 62;
