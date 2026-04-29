@@ -1,12 +1,15 @@
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Svg, { Path, Circle, Line } from "react-native-svg";
+import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography, radius } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
 
 export function WeightChartCard() {
+  const router = useRouter();
+  
   // Simple mock chart line
   const d = "M0 60 L50 60 L100 58 L150 55 L200 55 L250 55 L300 55";
 
@@ -24,7 +27,7 @@ export function WeightChartCard() {
           <Text style={styles.weightValue}>54.3 {t.home.kgSuffix}</Text>
           <Text style={styles.date}>19 Th 04, 2026</Text>
         </View>
-        <TouchableOpacity style={styles.updateBtn}>
+        <TouchableOpacity style={styles.updateBtn} onPress={() => router.push('/log-weight')}>
           <Text style={styles.updateText}>{t.home.update}</Text>
         </TouchableOpacity>
       </View>

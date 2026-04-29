@@ -1,27 +1,26 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { colors, spacing, typography } from "@/constants";
 import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
-
-const ACTIVITIES = [
-  { id: "running", label: "Chạy bộ", icon: "run" },
-  { id: "cycling", label: "Đạp xe", icon: "bike" },
-  { id: "badminton", label: "Cầu lông", icon: "badminton" },
-  { id: "pickleball", label: "Pickleball", icon: "tennis-ball" },
-  { id: "yoga", label: "Yoga", icon: "yoga" },
-  { id: "other", label: "Khác", icon: "dots-horizontal-circle-outline" },
-] as const;
+import { ACTIVITIES } from "@/domain/catalogs/activities";
 
 export function ActivityGrid() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t.home.exerciseActivity}</Text>
       <View style={styles.grid}>
         {ACTIVITIES.map((activity) => (
-          <TouchableOpacity key={activity.id} style={styles.item}>
+          <TouchableOpacity 
+            key={activity.id} 
+            style={styles.item}
+            onPress={() => router.push({ pathname: '/activity/[id]', params: { id: activity.id, name: activity.label } })}
+          >
             <View style={styles.iconCircle}>
-              <MaterialCommunityIcons name={activity.icon as any} size={20} color={colors.textPrimary} />
+              <MaterialCommunityIcons name={activity.icon} size={20} color={colors.textPrimary} />
             </View>
             <Text style={styles.label}>{activity.label}</Text>
           </TouchableOpacity>
