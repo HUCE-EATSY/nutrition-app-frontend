@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Pressable } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
+import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography, radius } from "@/constants";
@@ -13,6 +14,7 @@ interface CalorieOverviewProps {
 }
 
 export function CalorieOverview({ remaining, goal, consumed, burned, percentage }: CalorieOverviewProps) {
+  const router = useRouter();
   const circleRadius = 70;
   const circumference = 2 * Math.PI * circleRadius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -59,29 +61,29 @@ export function CalorieOverview({ remaining, goal, consumed, burned, percentage 
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statItem}>
+        <Pressable style={styles.statItem} onPress={() => router.push('/guide/goal')}>
           <Text style={styles.statValue}>{goal.toLocaleString()}</Text>
           <View style={styles.statLabelRow}>
             <View style={[styles.dot, { backgroundColor: colors.textMuted }]} />
             <Text style={styles.statLabel}>{t.home.goal}</Text>
           </View>
-        </View>
+        </Pressable>
 
-        <View style={styles.statItem}>
+        <Pressable style={styles.statItem} onPress={() => router.push('/guide/consumed')}>
           <Text style={styles.statValue}>{consumed}</Text>
           <View style={styles.statLabelRow}>
             <View style={[styles.dot, { backgroundColor: colors.primary }]} />
             <Text style={styles.statLabel}>{t.home.consumed}</Text>
           </View>
-        </View>
+        </Pressable>
 
-        <View style={styles.statItem}>
+        <Pressable style={styles.statItem} onPress={() => router.push('/guide/exercise')}>
           <Text style={styles.statValue}>{burned}</Text>
           <View style={styles.statLabelRow}>
             <View style={[styles.dot, { backgroundColor: colors.danger }]} />
             <Text style={styles.statLabel}>{t.home.exercise}</Text>
           </View>
-        </View>
+        </Pressable>
       </View>
     </View>
   );

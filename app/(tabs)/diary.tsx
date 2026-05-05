@@ -42,7 +42,9 @@ export default function DiaryTimelineScreen() {
           <Pressable hitSlop={12}>
             <Ionicons color={theme.colors.textPrimary} name="chevron-back" size={20} />
           </Pressable>
-          <Text style={styles.dateText}>Hôm qua</Text>
+          <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
+            <Text style={styles.dateText}>Hôm qua</Text>
+          </Pressable>
           <Pressable hitSlop={12}>
             <Ionicons color={theme.colors.textPrimary} name="chevron-forward" size={20} />
           </Pressable>

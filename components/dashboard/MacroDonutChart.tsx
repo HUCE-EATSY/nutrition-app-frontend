@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Pressable } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
+import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
@@ -51,6 +52,7 @@ export function MacroDonutChart({
   carbGram,
   fatGram,
 }: MacroDonutChartProps) {
+  const router = useRouter();
   const radius = 46;
   const circumference = 2 * Math.PI * radius;
   const proteinLength = (proteinPct / 100) * circumference;
@@ -86,9 +88,15 @@ export function MacroDonutChart({
       </View>
 
       <View style={styles.legend}>
-        <Text style={styles.legendItem}>{t.macros.protein} {proteinGram}g</Text>
-        <Text style={[styles.legendItem, { color: colors.carbs }]}>{t.macros.carb} {carbGram}g</Text>
-        <Text style={[styles.legendItem, { color: colors.fat }]}>{t.macros.fat} {fatGram}g</Text>
+        <Pressable onPress={() => router.push('/guide/protein')}>
+          <Text style={styles.legendItem}>{t.macros.protein} {proteinGram}g</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/guide/carb')}>
+          <Text style={[styles.legendItem, { color: colors.carbs }]}>{t.macros.carb} {carbGram}g</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push('/guide/fat')}>
+          <Text style={[styles.legendItem, { color: colors.fat }]}>{t.macros.fat} {fatGram}g</Text>
+        </Pressable>
       </View>
     </View>
   );

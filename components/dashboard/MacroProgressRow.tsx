@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
@@ -9,13 +10,15 @@ interface MacroItemProps {
   target: number;
   color: string;
   icon: string;
+  type: string;
 }
 
-function ProgressItem({ label, current, target, color, icon }: MacroItemProps) {
+function ProgressItem({ label, current, target, color, icon, type }: MacroItemProps) {
   const percentage = Math.min((current / target) * 100, 100);
+  const router = useRouter();
 
   return (
-    <View style={styles.item}>
+    <Pressable style={styles.item} onPress={() => router.push(`/guide/${type}`)}>
       <View style={styles.itemHeader}>
         <Text style={styles.icon}>{icon}</Text>
         <Text style={styles.label}>{label}</Text>
@@ -28,7 +31,7 @@ function ProgressItem({ label, current, target, color, icon }: MacroItemProps) {
         <Text style={styles.current}>{current}</Text>
         <Text style={styles.target}>{` / ${target}${t.home.gramSuffix}`}</Text>
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -41,6 +44,7 @@ export function MacroProgressRow() {
         icon="⚡"
 		label={t.home.protein}
         target={96}
+        type="protein"
       />
       <ProgressItem
         color={colors.carbs}
@@ -48,6 +52,7 @@ export function MacroProgressRow() {
         icon="🍞"
         label={t.home.carbs}
         target={241}
+        type="carb"
       />
       <ProgressItem
         color={colors.fat}
@@ -55,6 +60,7 @@ export function MacroProgressRow() {
         icon="🥑"
         label={t.home.fat}
         target={64}
+        type="fat"
       />
     </View>
   );
