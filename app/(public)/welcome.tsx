@@ -107,7 +107,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(165, 108, 255, 0.2)',
     borderRadius: 100,
     transform: [{ scaleX: 2 }],
-    filter: 'blur(15px)',
     zIndex: 1,
   },
   copyWrap: {

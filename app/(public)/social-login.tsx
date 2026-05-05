@@ -1,5 +1,6 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import { useEffect } from "react";
 
 import { SocialAuthButton } from "@/components/buttons/SocialAuthButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -8,15 +9,29 @@ import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { trackEvent } from "@/hooks/utils/analytics";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 export default function SocialLoginScreen() {
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const { isNarrowWidth, isShortHeight } = useResponsiveLayout();
+  const { signIn, userInfo, loading, error } = useGoogleAuth();
+
+  useEffect(() => {
+    if (userInfo) {
+      setPublicFlowStep("mascot-intro");
+      router.push("/(public)/mascot-intro");
+    }
+  }, [userInfo]);
 
   const handleContinue = (provider: "google" | "facebook") => {
     trackEvent("social_login_clicked", { provider, screen_name: "social-login" });
-    setPublicFlowStep("mascot-intro");
-    router.push("/(public)/mascot-intro");
+    if (provider === "google") {
+      signIn();
+    } else {
+      // Facebook logic or just fallback for demo
+      setPublicFlowStep("mascot-intro");
+      router.push("/(public)/mascot-intro");
+    }
   };
 
   return (
@@ -35,11 +50,18 @@ export default function SocialLoginScreen() {
         <View style={styles.copy}>
           <Text style={[styles.title, isNarrowWidth && styles.titleCompact]}>{t.auth.social.title}</Text>
           <Text style={styles.description}>{t.auth.social.description}</Text>
+          {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
 
         <View style={styles.actions}>
-          <SocialAuthButton label={t.auth.social.google} onPress={() => handleContinue("google")} provider="google" />
-          <SocialAuthButton label={t.auth.social.facebook} onPress={() => handleContinue("facebook")} provider="facebook" />
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.primary500} />
+          ) : (
+            <>
+              <SocialAuthButton label={t.auth.social.google} onPress={() => handleContinue("google")} provider="google" />
+              <SocialAuthButton label={t.auth.social.facebook} onPress={() => handleContinue("facebook")} provider="facebook" />
+            </>
+          )}
         </View>
 
         <Text style={styles.legal}>{t.auth.social.legal}</Text>
@@ -94,5 +116,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: "center",
     marginTop: spacing.lg,
+  },
+  errorText: {
+    ...typography.caption,
+    color: "#FF5A5F",
+    textAlign: "center",
+    marginTop: spacing.sm,
   },
 });

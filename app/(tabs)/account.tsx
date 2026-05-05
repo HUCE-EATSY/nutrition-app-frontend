@@ -1,221 +1,263 @@
+import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
+import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { colors, radius, spacing, typography } from "@/constants";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 
 export default function AccountScreen() {
   const draft = useOnboardingStore((state) => state.draft);
+  const resetOnboarding = useOnboardingStore((state) => state.reset);
+  const { logout } = useGoogleAuth();
+  
   const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 15;
-
 
   const nickname = draft.nickname ?? "KIEN";
   const joinedDate = "19 Thg 04, 2026"; // In a real app, this would come from a user object
 
+  const [visible, setVisible] = React.useState(false);
+  const showDialog = () => setVisible(true);
+  const hideDialog = () => setVisible(false);
+
+  const handleLogout = async () => {
+    try {
+      console.log("Logout confirmed in dialog");
+      hideDialog();
+      await logout();
+      console.log("Auth cleared");
+      resetOnboarding();
+      console.log("Onboarding reset");
+      useOnboardingStore.getState().setPublicFlowStep("social-login");
+      console.log("Navigating to social-login...");
+      router.replace("/(public)/social-login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      Alert.alert("Lỗi", "Không thể đăng xuất. Vui lòng thử lại.");
+    }
+  };
+
   return (
-    <SafeScreen>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t.account.profileTitle}</Text>
-          <Pressable style={styles.settingsButton}>
-            <Ionicons color={colors.textSecondary} name="settings-outline" size={24} />
+    <SafeScreen scrollable contentContainerStyle={styles.scrollContent}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{t.account.profileTitle}</Text>
+        <Pressable 
+          onPress={showDialog} 
+          style={styles.settingsButton}
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+        >
+          <Ionicons color={colors.textSecondary} name="settings-outline" size={24} />
+        </Pressable>
+      </View>
+
+      {/* Logout Confirmation Dialog */}
+      <Portal>
+        <Dialog onDismiss={hideDialog} visible={visible} style={styles.dialog}>
+          <Dialog.Title style={styles.dialogTitle}>{t.account.logoutConfirmTitle}</Dialog.Title>
+          <Dialog.Content>
+            <Text style={styles.dialogContent}>{t.account.logoutConfirmMessage}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog} textColor={colors.textSecondary}>{t.common.cancel}</Button>
+            <Button onPress={handleLogout} textColor="#FF5A5F">{t.account.logout}</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* Profile Section */}
+      <View style={styles.profileSection}>
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{nickname.charAt(0).toUpperCase()}</Text>
+          </View>
+          <Pressable style={styles.addAvatarButton}>
+            <Ionicons color={colors.textSecondary} name="add" size={16} />
           </Pressable>
         </View>
+        <Text style={styles.profileName}>{nickname.toUpperCase()}</Text>
+        <Text style={styles.joinedText}>{t.account.joinedDate(joinedDate)}</Text>
+      </View>
 
-        {/* Profile Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{nickname.charAt(0).toUpperCase()}</Text>
-            </View>
-            <Pressable style={styles.addAvatarButton}>
-              <Ionicons color={colors.textSecondary} name="add" size={16} />
-            </Pressable>
-          </View>
-          <Text style={styles.profileName}>{nickname.toUpperCase()}</Text>
-          <Text style={styles.joinedText}>{t.account.joinedDate(joinedDate)}</Text>
+      {/* Premium Banner */}
+      <LinearGradient
+        colors={["#FFFFFF", "#FFF5D1", "#FFD28D"]}
+        end={{ x: 1, y: 0.5 }}
+        start={{ x: 0, y: 0.5 }}
+        style={styles.premiumBanner}
+      >
+        <View style={styles.premiumContent}>
+          <Text style={styles.premiumTitle}>{t.account.premium.bannerTitle}</Text>
+          <Pressable style={styles.premiumButton}>
+            <Text style={styles.premiumButtonText}>{t.account.premium.cta}</Text>
+          </Pressable>
         </View>
+        <View style={styles.premiumIconContainer}>
+          <Ionicons color="#FF9500" name="flame" size={64} />
+        </View>
+      </LinearGradient>
 
-        {/* Premium Banner */}
+      {/* Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statChip}>
+          <Ionicons color={colors.textSecondary} name="calendar-outline" size={18} />
+          <Text style={styles.statChipText}>{age} {t.account.age.toLowerCase()}</Text>
+        </View>
+        <View style={styles.statChip}>
+          <Ionicons color={colors.textSecondary} name="man-outline" size={18} />
+          <Text style={styles.statChipText}>{draft.heightCm ?? 225} cm</Text>
+        </View>
+        <View style={styles.statChip}>
+          <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
+          <Text style={styles.statChipText}>{draft.currentWeightKg ?? 54.3} kg</Text>
+        </View>
+      </View>
+
+      {/* Physical Profile Button */}
+      <Pressable style={styles.physicalProfileButton}>
+        <Text style={styles.physicalProfileButtonText}>{t.account.physicalProfile}</Text>
+      </Pressable>
+
+      {/* Your Journey Section */}
+      <SectionHeader title={t.account.yourJourney} />
+      <View style={styles.journeyCard}>
         <LinearGradient
-          colors={["#FFFFFF", "#FFF5D1", "#FFD28D"]}
-          end={{ x: 1, y: 0.5 }}
-          start={{ x: 0, y: 0.5 }}
-          style={styles.premiumBanner}
+          colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
+          style={styles.journeyCardGradient}
         >
-          <View style={styles.premiumContent}>
-            <Text style={styles.premiumTitle}>{t.account.premium.bannerTitle}</Text>
-            <Pressable style={styles.premiumButton}>
-              <Text style={styles.premiumButtonText}>{t.account.premium.cta}</Text>
-            </Pressable>
+          <View style={styles.journeyIconBg}>
+            <Ionicons color={colors.primary} name="locate" size={32} />
           </View>
-          <View style={styles.premiumIconContainer}>
-            <Ionicons color="#FF9500" name="flame" size={64} />
+          <Text style={styles.journeyTitle}>{t.account.maintainingWeight}</Text>
+          <Text style={styles.journeySubtitle}>{t.account.updateWeightHint}</Text>
+
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: "40%" }]} />
+              <View style={[styles.progressKnob, { left: "40%" }]} />
+            </View>
+            <View style={styles.progressLabels}>
+              <Text style={styles.progressLabel}>{draft.currentWeightKg ?? 54.3} kg</Text>
+              <Text style={styles.progressLabel}>{draft.targetWeightKg ?? 53.9} kg</Text>
+            </View>
           </View>
         </LinearGradient>
+      </View>
 
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statChip}>
-            <Ionicons color={colors.textSecondary} name="calendar-outline" size={18} />
-            <Text style={styles.statChipText}>{age} {t.account.age.toLowerCase()}</Text>
+      {/* Nutrition Goals Section */}
+      <SectionHeader title={t.account.nutritionGoals} />
+      <View style={styles.macroCard}>
+        <View style={styles.macroContent}>
+          <View style={styles.chartContainer}>
+            <Svg height="120" width="120">
+              <Circle
+                cx="60"
+                cy="60"
+                fill="transparent"
+                r="50"
+                stroke={colors.surfaceAlt}
+                strokeWidth="8"
+              />
+              <Circle
+                cx="60"
+                cy="60"
+                fill="transparent"
+                r="50"
+                stroke={colors.warning}
+                strokeDasharray={`${(2 * Math.PI * 50) * 0.75} ${2 * Math.PI * 50}`}
+                strokeLinecap="round"
+                strokeWidth="8"
+                transform="rotate(-90 60 60)"
+              />
+            </Svg>
+            <View style={styles.chartCenter}>
+              <Ionicons color={colors.warning} name="flame" size={20} />
+              <Text style={styles.calorieValue}>1.925</Text>
+            </View>
           </View>
-          <View style={styles.statChip}>
-            <Ionicons color={colors.textSecondary} name="man-outline" size={18} />
-            <Text style={styles.statChipText}>{draft.heightCm ?? 225} cm</Text>
-          </View>
-          <View style={styles.statChip}>
-            <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
-            <Text style={styles.statChipText}>{draft.currentWeightKg ?? 54.3} kg</Text>
+
+          <View style={styles.macroList}>
+            <MacroItem color={colors.protein} label={t.home.protein} percentage="20%" value="96g" />
+            <MacroItem color={colors.carbs} label={t.home.carbs} percentage="50%" value="241g" />
+            <MacroItem color={colors.fat} label={t.home.fat} percentage="30%" value="144g" />
           </View>
         </View>
 
-        {/* Physical Profile Button */}
-        <Pressable style={styles.physicalProfileButton}>
-          <Text style={styles.physicalProfileButtonText}>{t.account.physicalProfile}</Text>
+        <Pressable style={styles.customizeGoalButton}>
+          <Text style={styles.customizeGoalText}>{t.account.customizeGoal}</Text>
         </Pressable>
+      </View>
 
-        {/* Your Journey Section */}
-        <SectionHeader title={t.account.yourJourney} />
-        <View style={styles.journeyCard}>
-          <LinearGradient
-            colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
-            style={styles.journeyCardGradient}
-          >
-            <View style={styles.journeyIconBg}>
-              <Ionicons color={colors.primary} name="locate" size={32} />
-            </View>
-            <Text style={styles.journeyTitle}>{t.account.maintainingWeight}</Text>
-            <Text style={styles.journeySubtitle}>{t.account.updateWeightHint}</Text>
+      {/* Statistic Reports Section */}
+      <SectionHeader title={t.account.testReports} />
+      <View style={styles.statsIconRow}>
+        <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} />
+        <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} />
+        <StatIconButton color="#C6FFD0" icon="walk" label={t.account.stats.steps} />
+        <StatIconButton color="#85E6FF" icon="speedometer" label={t.account.stats.weight} />
+      </View>
 
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: "40%" }]} />
-                <View style={[styles.progressKnob, { left: "40%" }]} />
-              </View>
-              <View style={styles.progressLabels}>
-                <Text style={styles.progressLabel}>{draft.currentWeightKg ?? 54.3} kg</Text>
-                <Text style={styles.progressLabel}>{draft.targetWeightKg ?? 53.9} kg</Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* Nutrition Goals Section */}
-        <SectionHeader title={t.account.nutritionGoals} />
-        <View style={styles.macroCard}>
-          <View style={styles.macroContent}>
-            <View style={styles.chartContainer}>
-              <Svg height="120" width="120">
-                <Circle
-                  cx="60"
-                  cy="60"
-                  fill="transparent"
-                  r="50"
-                  stroke={colors.surfaceAlt}
-                  strokeWidth="8"
-                />
-                <Circle
-                  cx="60"
-                  cy="60"
-                  fill="transparent"
-                  r="50"
-                  stroke={colors.warning}
-                  strokeDasharray={`${(2 * Math.PI * 50) * 0.75} ${2 * Math.PI * 50}`}
-                  strokeLinecap="round"
-                  strokeWidth="8"
-                  transform="rotate(-90 60 60)"
-                />
-              </Svg>
-              <View style={styles.chartCenter}>
-                <Ionicons color={colors.warning} name="flame" size={20} />
-                <Text style={styles.calorieValue}>1.925</Text>
-              </View>
-            </View>
-
-            <View style={styles.macroList}>
-              <MacroItem color={colors.protein} label={t.home.protein} percentage="20%" value="96g" />
-              <MacroItem color={colors.carbs} label={t.home.carbs} percentage="50%" value="241g" />
-              <MacroItem color={colors.fat} label={t.home.fat} percentage="30%" value="144g" />
-            </View>
-          </View>
-
-          <Pressable style={styles.customizeGoalButton}>
-            <Text style={styles.customizeGoalText}>{t.account.customizeGoal}</Text>
-          </Pressable>
-        </View>
-
-        {/* Statistic Reports Section */}
-        <SectionHeader title={t.account.testReports} />
-        <View style={styles.statsIconRow}>
-          <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} />
-          <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} />
-          <StatIconButton color="#C6FFD0" icon="walk" label={t.account.stats.steps} />
-          <StatIconButton color="#85E6FF" icon="speedometer" label={t.account.stats.weight} />
-        </View>
-
-        {/* Community Section */}
-        <SectionHeader title={t.account.community.title} />
-        <View style={styles.communityCard}>
-          <LinearGradient
-            colors={["#4A1F76", "#2D1B4D"]}
-            style={styles.communityGradient}
-          >
-            <View style={styles.communityInfo}>
-              <View style={styles.communityBadge}>
-                <Text style={styles.communityBadgeText}>{t.account.community.joinGroup}</Text>
-              </View>
-              <View style={styles.communityBadgeAlt}>
-                <Text style={styles.communityBadgeTextAlt}>{t.account.community.companion}</Text>
-              </View>
-            </View>
-
-            <Text style={styles.communityJoinTitle}>{t.account.community.joinNow}</Text>
-
-            <Pressable style={styles.communityButton}>
-              <Text style={styles.communityButtonText}>{t.account.community.joinCta}</Text>
-            </Pressable>
-          </LinearGradient>
-        </View>
-
-        {/* Social Links */}
-        <View style={styles.socialSection}>
-          <Text style={styles.socialTitle}>{t.account.social.search}</Text>
-          <View style={styles.socialRow}>
-            <SocialButton icon="logo-tiktok" label={t.account.social.tiktok} />
-            <SocialButton icon="logo-facebook" label={t.account.social.facebook} />
-            <SocialButton icon="logo-instagram" label={t.account.social.instagram} />
-          </View>
-        </View>
-
-        {/* Support Center */}
-        <Pressable
-          onPress={() => router.push("/webview")}
-          style={styles.supportButton}
+      {/* Community Section */}
+      <SectionHeader title={t.account.community.title} />
+      <View style={styles.communityCard}>
+        <LinearGradient
+          colors={["#4A1F76", "#2D1B4D"]}
+          style={styles.communityGradient}
         >
-          <View style={styles.supportLeft}>
-            <Ionicons color={colors.textSecondary} name="help-buoy-outline" size={24} />
-            <Text style={styles.supportText}>{t.account.supportLabel}</Text>
+          <View style={styles.communityInfo}>
+            <View style={styles.communityBadge}>
+              <Text style={styles.communityBadgeText}>{t.account.community.joinGroup}</Text>
+            </View>
+            <View style={styles.communityBadgeAlt}>
+              <Text style={styles.communityBadgeTextAlt}>{t.account.community.companion}</Text>
+            </View>
           </View>
-          <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
-        </Pressable>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerLogo}></Text>
-          <Text style={styles.versionText}>{t.account.version("1.12.14 (257)", "01c227f7eb7ecaae")}</Text>
-          <Text style={styles.copyrightText}>© 2026 All rights reserved.</Text>
-          <Text style={styles.disclaimerText}>{t.account.footerDisclaimer}</Text>
+          <Text style={styles.communityJoinTitle}>{t.account.community.joinNow}</Text>
+
+          <Pressable style={styles.communityButton}>
+            <Text style={styles.communityButtonText}>{t.account.community.joinCta}</Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+
+      {/* Social Links */}
+      <View style={styles.socialSection}>
+        <Text style={styles.socialTitle}>{t.account.social.search}</Text>
+        <View style={styles.socialRow}>
+          <SocialButton icon="logo-tiktok" label={t.account.social.tiktok} />
+          <SocialButton icon="logo-facebook" label={t.account.social.facebook} />
+          <SocialButton icon="logo-instagram" label={t.account.social.instagram} />
         </View>
-      </ScrollView>
+      </View>
+
+      {/* Support Center */}
+      <Pressable
+        onPress={() => router.push("/webview")}
+        style={styles.supportButton}
+      >
+        <View style={styles.supportLeft}>
+          <Ionicons color={colors.textSecondary} name="help-buoy-outline" size={24} />
+          <Text style={styles.supportText}>{t.account.supportLabel}</Text>
+        </View>
+        <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
+      </Pressable>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.footerLogo}></Text>
+        <Text style={styles.versionText}>{t.account.version("1.12.14 (257)", "01c227f7eb7ecaae")}</Text>
+        <Text style={styles.copyrightText}>© 2026 All rights reserved.</Text>
+        <Text style={styles.disclaimerText}>{t.account.footerDisclaimer}</Text>
+      </View>
     </SafeScreen>
   );
 }
@@ -676,5 +718,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 14,
     marginTop: spacing.sm,
+  },
+  dialog: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+  },
+  dialogTitle: {
+    color: colors.textPrimary,
+    ...typography.h3,
+  },
+  dialogContent: {
+    color: colors.textSecondary,
+    ...typography.body,
   },
 });

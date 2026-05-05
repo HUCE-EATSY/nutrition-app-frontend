@@ -30,6 +30,7 @@ export const vi = {
     today: "Hôm nay",
     none: "Không có",
     loadingConnection: "Đang kết nối...",
+    cancel: "Hủy",
   },
   app: {
     initializing: "Đang khởi tạo ứng dụng...",
@@ -182,6 +183,9 @@ export const vi = {
       instagram: "Instagram",
     },
     version: (v: string, id: string) => `Phiên bản: ${v}\nMã thiết bị: ${id}`,
+    logout: "Đăng xuất",
+    logoutConfirmTitle: "Đăng xuất tài khoản?",
+    logoutConfirmMessage: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?",
     footerDisclaimer:
       "Mọi thông tin trên chỉ mang tính chất tham khảo, không thay thế cho đánh giá y tế chuyên môn từ bác sĩ.",
   },

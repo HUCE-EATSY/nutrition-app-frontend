@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -12,6 +11,8 @@ import {
 } from "@/constants/types/contracts";
 import { getTodayISO } from "@/hooks/utils/date";
 import { getDefaultWeeklyGoal } from "@/hooks/utils/onboarding";
+
+import { secureStorage } from "./secureStorage";
 
 const createInitialDraft = (): OnboardingDraft => ({
   nickname: null,
@@ -99,7 +100,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
     }),
     {
       name: "dnt-onboarding-store",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => secureStorage),
       partialize: (state: OnboardingStoreState) => ({
         publicFlowStep: state.publicFlowStep,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
@@ -111,3 +112,4 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
     },
   ),
 );
+
