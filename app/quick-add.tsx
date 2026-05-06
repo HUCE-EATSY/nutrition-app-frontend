@@ -88,7 +88,7 @@ export default function QuickAddModal() {
             <Text style={styles.secondaryText}>Gợi ý công thức</Text>
           </Pressable>
           
-          <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/streaks")}>
+          <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/add-exercise")}>
             <MaterialCommunityIcons name="fire" size={24} color={colors.textPrimary} />
             <Text style={styles.secondaryText}>Ghi hoạt động</Text>
           </Pressable>

@@ -1,51 +1,103 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect } from "react";
 
-import { diarySummary } from "@/constants/mocks/data";
 import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
+import { formatShortDate } from "@/hooks/utils/date";
+
+const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
 type MacroInfo = {
   label: string;
   value: number;
   target: number;
-  icon: keyof typeof Ionicons.glyphMap;
   color: string;
+  icon: "flame" | "flash" | "leaf" | "water";
 };
-
-const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 to 23:00
 
 export default function DiaryTimelineScreen() {
   const { horizontalPadding } = useResponsiveLayout();
   const currentHour = new Date().getHours();
 
+  const {
+    selectedDate,
+    summary,
+    exercises,
+    isLoading,
+    goToPrevDay,
+    goToNextDay,
+    fetchDiary,
+  } = useDiaryStore();
+
+  // Load dữ liệu khi màn hình mount hoặc ngày thay đổi
+  useEffect(() => {
+    fetchDiary(selectedDate);
+  }, [selectedDate]);
+
   const macros: MacroInfo[] = [
-    { label: "Calories", value: diarySummary.consumedCalories, target: diarySummary.targetCalories, icon: "flame", color: theme.colors.primary },
-    { label: "Protein", value: diarySummary.consumedProteinGram, target: diarySummary.targetProteinGram, icon: "flash", color: theme.colors.protein },
-    { label: "Carbs", value: diarySummary.consumedCarbGram, target: diarySummary.targetCarbGram, icon: "leaf", color: theme.colors.carbs },
-    { label: "Fat", value: diarySummary.consumedFatGram, target: diarySummary.targetFatGram, icon: "water", color: theme.colors.fat },
+    {
+      label: "Calo",
+      value: summary?.consumedCalories ?? 0,
+      target: summary?.targetCalories ?? 2000,
+      icon: "flame",
+      color: theme.colors.primary,
+    },
+    {
+      label: "Protein",
+      value: summary?.consumedProteinGram ?? 0,
+      target: summary?.targetProteinGram ?? 120,
+      icon: "flash",
+      color: theme.colors.protein,
+    },
+    {
+      label: "Carbs",
+      value: summary?.consumedCarbGram ?? 0,
+      target: summary?.targetCarbGram ?? 150,
+      icon: "leaf",
+      color: theme.colors.carbs,
+    },
+    {
+      label: "Fat",
+      value: summary?.consumedFatGram ?? 0,
+      target: summary?.targetFatGram ?? 55,
+      icon: "water",
+      color: theme.colors.fat,
+    },
   ];
+
+  // Tổng calo đốt từ bài tập trong ngày
+  const totalBurned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <StatusBar style="light" />
-      
+
+      {/* ── Header ── */}
       <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
         <Pressable hitSlop={12}>
           <Ionicons color={theme.colors.textPrimary} name="menu-outline" size={26} />
         </Pressable>
-        
+
         <View style={styles.dateSelector}>
-          <Pressable hitSlop={12}>
+          <Pressable hitSlop={12} onPress={goToPrevDay}>
             <Ionicons color={theme.colors.textPrimary} name="chevron-back" size={20} />
           </Pressable>
           <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
-            <Text style={styles.dateText}>Hôm qua</Text>
+            <Text style={styles.dateText}>{formatShortDate(selectedDate)}</Text>
           </Pressable>
-          <Pressable hitSlop={12}>
+          <Pressable hitSlop={12} onPress={goToNextDay}>
             <Ionicons color={theme.colors.textPrimary} name="chevron-forward" size={20} />
           </Pressable>
         </View>
@@ -53,6 +105,7 @@ export default function DiaryTimelineScreen() {
         <View style={{ width: 26 }} />
       </View>
 
+      {/* ── Macro bars ── */}
       <View style={[styles.macrosRow, { paddingHorizontal: horizontalPadding }]}>
         {macros.map((macro) => {
           const progress = Math.min((macro.value / macro.target) * 100, 100);
@@ -60,14 +113,16 @@ export default function DiaryTimelineScreen() {
             <View key={macro.label} style={styles.macroItem}>
               <View style={styles.macroTop}>
                 <Ionicons color={macro.color} name={macro.icon} size={14} />
-                <Text style={styles.macroValue}>{macro.value} / {macro.target}</Text>
+                <Text style={styles.macroValue}>
+                  {macro.value} / {macro.target}
+                </Text>
               </View>
               <View style={styles.progressBarBackground}>
-                <View 
+                <View
                   style={[
-                    styles.progressBarFill, 
-                    { backgroundColor: macro.color, width: `${progress}%` }
-                  ]} 
+                    styles.progressBarFill,
+                    { backgroundColor: macro.color, width: `${progress}%` },
+                  ]}
                 />
               </View>
             </View>
@@ -75,13 +130,28 @@ export default function DiaryTimelineScreen() {
         })}
       </View>
 
+      {/* ── Calo đốt từ bài tập ── */}
+      {totalBurned > 0 && (
+        <View style={[styles.burnedRow, { paddingHorizontal: horizontalPadding }]}>
+          <Ionicons color={theme.colors.success} name="flame" size={14} />
+          <Text style={styles.burnedText}>Đốt {totalBurned} kcal từ bài tập</Text>
+        </View>
+      )}
+
+      {/* ── Loading ── */}
+      {isLoading && (
+        <ActivityIndicator
+          color={theme.colors.primary}
+          size="small"
+          style={{ marginVertical: spacing.md }}
+        />
+      )}
+
+      {/* ── Timeline ── */}
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          {
-            paddingHorizontal: horizontalPadding,
-            paddingBottom: spacing.xxxl,
-          },
+          { paddingHorizontal: horizontalPadding, paddingBottom: spacing.xxxl },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -89,40 +159,75 @@ export default function DiaryTimelineScreen() {
           {hours.map((hour) => {
             const isCurrentHour = hour === currentHour;
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const slot = diarySummary.slots.find(s => s.hour === hour);
+            const slot = summary?.slots.find((s) => s.hour === hour);
             const hasEntries = !!(slot && slot.entries.length > 0);
-            
+
+            // Bài tập trong giờ này
+            const hourExercises = exercises.filter((ex) => ex.hour === hour);
+
             return (
               <View key={hour} style={styles.timelineRow}>
+                {/* Giờ */}
                 <View style={styles.timeWrapper}>
-                  <Text style={[
-                    styles.timeText,
-                    isCurrentHour && styles.timeTextActive
-                  ]}>
+                  <Text
+                    style={[styles.timeText, isCurrentHour && styles.timeTextActive]}
+                  >
                     {timeString}
                   </Text>
                 </View>
-                
+
+                {/* Nội dung */}
                 <View style={styles.lineContentWrapper}>
-                  <View style={[
-                    styles.timelineLine,
-                    isCurrentHour && styles.timelineLineActive
-                  ]} />
-                  
-                  {hasEntries ? (
-                    <View style={styles.entryPreview}>
-                      {slot.entries.map((entry, idx) => (
-                        <Text key={entry.id} numberOfLines={1} style={styles.entryText}>
-                          {idx > 0 ? " \u2022 " : ""}{entry.title}
+                  <View
+                    style={[
+                      styles.timelineLine,
+                      isCurrentHour && styles.timelineLineActive,
+                    ]}
+                  />
+
+                  <View style={styles.entriesColumn}>
+                    {/* Bữa ăn */}
+                    {hasEntries && (
+                      <View style={styles.entryChip}>
+                        <Ionicons
+                          color={theme.colors.warning}
+                          name="restaurant-outline"
+                          size={12}
+                        />
+                        <Text numberOfLines={1} style={styles.entryText}>
+                          {slot!.entries.map((e) => e.title).join(", ")}
                         </Text>
-                      ))}
-                    </View>
-                  ) : null}
+                        <Text style={styles.entryCalText}>
+                          {slot!.entries.reduce((s, e) => s + e.calories, 0)} kcal
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Bài tập */}
+                    {hourExercises.map((ex) => (
+                      <View key={ex.id} style={[styles.entryChip, styles.exerciseChip]}>
+                        <Ionicons
+                          color={theme.colors.success}
+                          name="barbell-outline"
+                          size={12}
+                        />
+                        <Text numberOfLines={1} style={styles.entryText}>
+                          {ex.activityLabel} {ex.durationMinutes} phút
+                        </Text>
+                        <Text style={[styles.entryCalText, { color: theme.colors.success }]}>
+                          -{ex.caloriesBurned} kcal
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-                
+
+                {/* Nút thêm bữa ăn */}
                 <Pressable
                   hitSlop={8}
-                  onPress={() => router.push(`/quick-add?hour=${hour}`)}
+                  onPress={() =>
+                    router.push(`/add-entry?hour=${hour}&date=${selectedDate}`)
+                  }
                   style={styles.addButton}
                 >
                   <Ionicons color={theme.colors.textMuted} name="add" size={24} />
@@ -131,17 +236,22 @@ export default function DiaryTimelineScreen() {
             );
           })}
         </View>
+
+        {/* ── Nút ghi bài tập ── */}
+        <Pressable
+          style={styles.exerciseButton}
+          onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
+        >
+          <Ionicons color={theme.colors.success} name="barbell-outline" size={20} />
+          <Text style={styles.exerciseButtonText}>Ghi hoạt động thể dục</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.bgBase,
-  },
+  safeArea: { flex: 1, backgroundColor: theme.colors.bgBase },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -156,7 +266,7 @@ const styles = StyleSheet.create({
   dateText: {
     ...typography.h3,
     color: theme.colors.textPrimary,
-    fontSize: 18,
+    fontSize: 17,
   },
   macrosRow: {
     flexDirection: "row",
@@ -166,15 +276,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.05)",
   },
-  macroItem: {
-    flex: 1,
-    gap: 8,
-  },
-  macroTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
+  macroItem: { flex: 1, gap: 8 },
+  macroTop: { flexDirection: "row", alignItems: "center", gap: 4 },
   macroValue: {
     ...typography.caption,
     color: theme.colors.textSecondary,
@@ -186,35 +289,34 @@ const styles = StyleSheet.create({
     borderRadius: 1.5,
     overflow: "hidden",
   },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 1.5,
-  },
-  scrollContent: {
-    paddingTop: spacing.lg,
-  },
-  timelineContainer: {
-    gap: spacing.sm,
-  },
-  timelineRow: {
+  progressBarFill: { height: "100%", borderRadius: 1.5 },
+  burnedRow: {
     flexDirection: "row",
     alignItems: "center",
-    height: 48,
+    gap: 6,
+    paddingVertical: spacing.xs,
   },
-  timeWrapper: {
-    width: 50,
+  burnedText: {
+    ...typography.caption,
+    color: theme.colors.success,
   },
+  scrollContent: { paddingTop: spacing.lg },
+  timelineContainer: { gap: spacing.sm },
+  timelineRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    minHeight: 48,
+  },
+  timeWrapper: { width: 50, paddingTop: 4 },
   timeText: {
     ...typography.bodyStrong,
     color: theme.colors.textMuted,
-    fontSize: 14,
+    fontSize: 13,
   },
-  timeTextActive: {
-    color: theme.colors.primary,
-  },
+  timeTextActive: { color: theme.colors.primary },
   lineContentWrapper: {
     flex: 1,
-    height: "100%",
+    minHeight: 48,
     justifyContent: "center",
     marginHorizontal: spacing.sm,
   },
@@ -222,25 +324,34 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
+    top: "50%",
     height: 1,
     backgroundColor: "rgba(255,255,255,0.05)",
   },
-  timelineLineActive: {
-    backgroundColor: "rgba(165,108,255,0.15)",
-  },
-  entryPreview: {
+  timelineLineActive: { backgroundColor: "rgba(165,108,255,0.15)" },
+  entriesColumn: { gap: 4 },
+  entryChip: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 5,
+    borderRadius: 8,
+    gap: 6,
     alignSelf: "flex-start",
+    maxWidth: "100%",
   },
+  exerciseChip: { backgroundColor: "rgba(92,214,122,0.12)" },
   entryText: {
     ...typography.caption,
     color: theme.colors.textPrimary,
     fontSize: 12,
+    flex: 1,
+  },
+  entryCalText: {
+    ...typography.caption,
+    color: theme.colors.textMuted,
+    fontSize: 11,
   },
   addButton: {
     width: 32,
@@ -248,5 +359,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 8,
+  },
+  exerciseButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(92,214,122,0.3)",
+    backgroundColor: "rgba(92,214,122,0.08)",
+  },
+  exerciseButtonText: {
+    ...typography.bodyStrong,
+    color: theme.colors.success,
+    fontSize: 15,
   },
 });
