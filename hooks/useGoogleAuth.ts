@@ -1,13 +1,18 @@
-import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import * as AuthSession from 'expo-auth-session';
 import { useAuthStore } from './store/authStore';
+import * as AuthSession from 'expo-auth-session';
 
 WebBrowser.maybeCompleteAuthSession();
 
 // Replace with your own client IDs from Google Cloud Console
-const GOOGLE_CLIENT_ID = '714322223749-0ijdvg2otoh476mp2m01ci4l4dh56qrv.apps.googleusercontent.com';
+// For Expo Go development, you often use the Web Client ID with the Expo Proxy.
+const GOOGLE_WEB_CLIENT_ID = '714322223749-0ijdvg2otoh476mp2m01ci4l4dh56qrv.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = ''; // Thêm iOS Client ID từ Google Console
+const GOOGLE_ANDROID_CLIENT_ID = ''; // Thêm Android Client ID từ Google Console
+
+const redirectUri = AuthSession.makeRedirectUri();
 
 export const useGoogleAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -15,12 +20,11 @@ export const useGoogleAuth = () => {
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: GOOGLE_CLIENT_ID,
-    androidClientId: GOOGLE_CLIENT_ID,
-    webClientId: GOOGLE_CLIENT_ID,
-    redirectUri: AuthSession.makeRedirectUri({
-      preferLocalhost: true,
-    }),
+    clientId: GOOGLE_WEB_CLIENT_ID,
+    iosClientId: GOOGLE_IOS_CLIENT_ID || GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID || GOOGLE_WEB_CLIENT_ID,
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    redirectUri,
   });
 
   useEffect(() => {
@@ -43,10 +47,10 @@ export const useGoogleAuth = () => {
       });
 
       const user = await res.json();
-      
+
       // Store in Zustand (which persists to SecureStore)
       setAuth(token, null, user);
-      
+
     } catch (err) {
       setError('Failed to fetch user info');
       console.error(err);
