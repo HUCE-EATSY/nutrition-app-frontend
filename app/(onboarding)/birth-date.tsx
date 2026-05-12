@@ -3,11 +3,15 @@ import { useMemo, useState } from "react";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { WheelDatePicker } from "@/components/onboarding/WheelDatePicker";
-import { validateAdultBirthDate } from "@/constants/domain/validators/onboarding";
+import {
+  getNextOnboardingPath,
+  getOnboardingMeta,
+  getPreviousOnboardingPath,
+  validateAdultBirthDate,
+} from "@/domain/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { createBirthDateISO, getDateParts } from "@/hooks/utils/date";
-import { getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/hooks/utils/onboarding";
 
 const fallbackDate = { day: 15, month: 8, year: 2000 };
 

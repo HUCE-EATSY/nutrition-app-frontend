@@ -5,11 +5,10 @@ import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPi
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/hooks/utils/onboarding";
+import { DEFAULT_CURRENT_WEIGHT_KG, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
 
 export default function CurrentWeightScreen() {
   const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
-  const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   const setCurrentWeightKg = useOnboardingStore((state) => state.setCurrentWeightKg);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
   const meta = getOnboardingMeta("CurrentWeight");

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -52,17 +52,7 @@ export default function AddEntryScreen() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Search với debounce 400ms ─────────────────────────────────────────────
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (searchQuery.trim().length < 2) {
-      setFoods([]);
-      return;
-    }
-    debounceRef.current = setTimeout(() => searchFoods(searchQuery), 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [searchQuery]);
-
-  async function searchFoods(query: string) {
+  const searchFoods = useCallback(async (query: string) => {
     setIsSearching(true);
     try {
       const res = await fetch(
@@ -77,7 +67,17 @@ export default function AddEntryScreen() {
     } finally {
       setIsSearching(false);
     }
-  }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (searchQuery.trim().length < 2) {
+      setFoods([]);
+      return;
+    }
+    debounceRef.current = setTimeout(() => searchFoods(searchQuery), 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery, searchFoods]);
 
   // ── Tính dinh dưỡng theo gram ─────────────────────────────────────────────
   function calcNutrition(food: FoodItem, g: number) {

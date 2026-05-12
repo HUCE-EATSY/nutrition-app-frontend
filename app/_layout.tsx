@@ -76,7 +76,7 @@ export default function RootLayout() {
       // go back to the index to let it decide where to go (home or onboarding)
       router.replace("/");
     }
-  }, [isAuthenticated, segments, loaded, hydrated, authHydrated]);
+  }, [isAuthenticated, segments, loaded, hydrated, authHydrated, router]);
 
   if (!loaded && !error) {
     return (

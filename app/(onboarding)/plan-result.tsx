@@ -1,21 +1,18 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { MacroDonutChart } from "@/components/dashboard/MacroDonutChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { getWeeklyGoalBounds } from "@/constants/domain/validators/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { NutritionPlan } from "@/constants/types/contracts";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
-import { formatDateForHero, getAgeFromBirthDate } from "@/hooks/utils/date";
-import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/hooks/utils/onboarding";
-import { useUser } from "@/hooks/useUser";
+import { formatDateForHero } from "@/hooks/utils/date";
 
 export default function PlanResultScreen() {
   const draft = useOnboardingStore((state) => state.draft);

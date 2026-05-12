@@ -44,7 +44,7 @@ export default function DiaryTimelineScreen() {
   // Load dữ liệu khi màn hình mount hoặc ngày thay đổi
   useEffect(() => {
     fetchDiary(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, fetchDiary]);
 
   const macros: MacroInfo[] = [
     {

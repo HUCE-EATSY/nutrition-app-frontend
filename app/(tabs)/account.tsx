@@ -2,7 +2,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Alert, Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
 
@@ -14,7 +14,7 @@ import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { colors, radius, spacing, typography } from "@/constants";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
-import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/hooks/utils/onboarding";
+import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
 
 export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();

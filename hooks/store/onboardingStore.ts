@@ -11,7 +11,7 @@ import {
   PublicFlowStep,
 } from "@/constants/types/contracts";
 import { getTodayISO } from "@/hooks/utils/date";
-import { getDefaultWeeklyGoal } from "@/hooks/utils/onboarding";
+import { getDefaultWeeklyGoal } from "@/domain/onboarding";
 
 import { secureStorage } from "./secureStorage";
 

@@ -3,23 +3,22 @@ import { View } from "react-native";
 
 import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPicker";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { validateTargetWeight } from "@/constants/domain/validators/onboarding";
-import { t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
-  DEFAULT_HEIGHT_CM,
   DEFAULT_TARGET_WEIGHT_KG,
   getNextOnboardingPath,
   getOnboardingMeta,
   getPreviousOnboardingPath,
-} from "@/hooks/utils/onboarding";
+  validateTargetWeight,
+} from "@/domain/onboarding";
+import { t } from "@/constants/i18n";
+import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+
 
 export default function TargetWeightScreen() {
   const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
   const targetWeightKg = useOnboardingStore((state) => state.draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG);
   const goalType = useOnboardingStore((state) => state.draft.goalType);
-  const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   const setCurrentWeightKg = useOnboardingStore((state) => state.setCurrentWeightKg);
   const setTargetWeightKg = useOnboardingStore((state) => state.setTargetWeightKg);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);

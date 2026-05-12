@@ -21,7 +21,7 @@ export default function SocialLoginScreen() {
       setPublicFlowStep("mascot-intro");
       router.push("/(public)/mascot-intro");
     }
-  }, [userInfo]);
+  }, [userInfo, setPublicFlowStep]);
 
   const handleContinue = (provider: "google" | "facebook") => {
     trackEvent("social_login_clicked", { provider, screen_name: "social-login" });

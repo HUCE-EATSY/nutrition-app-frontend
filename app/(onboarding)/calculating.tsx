@@ -52,7 +52,7 @@ export default function CalculatingPlanScreen() {
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, []);
+  }, [draft, markStepCompleted, onboardUser, setServerPlan]);
 
   const testimonial = testimonials[stage % testimonials.length];
 

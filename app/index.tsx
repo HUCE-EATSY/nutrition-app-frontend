@@ -5,11 +5,10 @@ import { t } from "@/constants/i18n";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
-import { getDraftResumePath, getPublicResumePath } from "@/hooks/utils/onboarding";
+import { getDraftResumePath, getPublicResumePath } from "@/domain/onboarding";
 
 export default function IndexScreen() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
-  const authHydrated = useAuthStore((state) => state.isAuthenticated !== undefined); // Simple check for hydration if needed, but isAuthenticated is boolean
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   
   const publicFlowStep = useOnboardingStore((state) => state.publicFlowStep);

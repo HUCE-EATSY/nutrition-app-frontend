@@ -3,19 +3,20 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { getWeeklyGoalBounds } from "@/constants/domain/validators/onboarding";
-import { getGoalTypeLabel, t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { colors, spacing, typography } from "@/constants";
-import { useResponsiveLayout } from "@/constants/responsive";
-import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
   DEFAULT_TARGET_WEIGHT_KG,
   getOnboardingMeta,
   getPreviousOnboardingPath,
-} from "@/hooks/utils/onboarding";
+  getWeeklyGoalBounds,
+} from "@/domain/onboarding";
+import { getGoalTypeLabel, t } from "@/constants/i18n";
+import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { colors, spacing, typography } from "@/constants";
+import { useResponsiveLayout } from "@/constants/responsive";
+import { getAgeFromBirthDate } from "@/hooks/utils/date";
+
 
 
 export default function ReviewSummaryScreen() {
@@ -31,13 +32,6 @@ export default function ReviewSummaryScreen() {
   const resolvedTargetWeightKg = draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
   const resolvedWeeklyGoalKg = draft.weeklyGoalKg ?? getWeeklyGoalBounds(draft.goalType).recommended;
   const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
-  const resolvedDraft = {
-    ...draft,
-    heightCm: resolvedHeightCm,
-    currentWeightKg: resolvedCurrentWeightKg,
-    targetWeightKg: resolvedTargetWeightKg,
-    weeklyGoalKg: resolvedWeeklyGoalKg,
-  };
   const { isCompact } = useResponsiveLayout();
 
   return (
@@ -102,7 +96,7 @@ const styles = StyleSheet.create({
   },
   metric: {
     flex: 1,
-    gap: 4,
+     gap: 4,
   },
   metricCompact: {
     flexBasis: "45%",
