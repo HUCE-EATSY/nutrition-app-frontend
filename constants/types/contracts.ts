@@ -24,6 +24,13 @@ export type OnboardingRouteName =
   | "Calculating"
   | "PlanResult";
 
+export interface UserInfo {
+  id: string;
+  email: string;
+  nickname?: string;
+  avatarUrl?: string;
+}
+
 export interface OnboardingDraft {
   nickname: string | null;
   gender: Gender | null;
@@ -70,15 +77,15 @@ export interface MacroSplit {
 }
 
 export interface NutritionPlan {
-  bmi: number;
-  bmiStatus: BMIStatus;
+  targetCalories: number;
+  targetProteinG: number;
+  targetCarbsG: number;
+  targetFatG: number;
   bmrKcal: number;
   tdeeKcal: number;
-  dailyTargetKcal: number;
-  weeklyTargetKcal: number;
-  dailyDeficitOrSurplusKcal: number;
   targetDateISO: string;
-  macroSplit: MacroSplit;
+  bmi?: number;
+  bmiStatus?: BMIStatus;
 }
 
 export interface DiaryEntry {

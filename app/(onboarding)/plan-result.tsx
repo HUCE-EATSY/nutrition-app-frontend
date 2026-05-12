@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
@@ -6,31 +7,41 @@ import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { MacroDonutChart } from "@/components/dashboard/MacroDonutChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { calculateNutritionPlan } from "@/constants/domain/calculators/nutrition";
-import { getWeeklyGoalBounds } from "@/constants/domain/validators/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { NutritionPlan } from "@/constants/types/contracts";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
-import { formatDateForHero, getAgeFromBirthDate } from "@/hooks/utils/date";
-import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/hooks/utils/onboarding";
+import { formatDateForHero } from "@/hooks/utils/date";
 
 export default function PlanResultScreen() {
   const draft = useOnboardingStore((state) => state.draft);
+  const serverPlan = useOnboardingStore((state) => state.serverPlan);
   const completeOnboarding = useOnboardingStore((state) => state.completeOnboarding);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
-  const plan = calculateNutritionPlan(
-    {
-      ...draft,
-      heightCm: draft.heightCm ?? DEFAULT_HEIGHT_CM,
-      currentWeightKg: draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG,
-      targetWeightKg: draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG,
-      weeklyGoalKg: draft.weeklyGoalKg ?? getWeeklyGoalBounds(draft.goalType).recommended,
-    },
-    age,
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dữ liệu từ server trả về trong OnboardUserAsync
+  // { targetCalories, targetProteinG, targetCarbsG, targetFatG, bmrKcal, tdeeKcal, ... }
+  const plan: NutritionPlan = serverPlan || {
+    targetCalories: 0,
+    bmrKcal: 0,
+    tdeeKcal: 0,
+    targetProteinG: 0,
+    targetCarbsG: 0,
+    targetFatG: 0,
+    targetDateISO: new Date().toISOString()
+  };
+
   const { isCompact, isNarrowWidth } = useResponsiveLayout();
+
+  const handleStart = async () => {
+    setIsSubmitting(true);
+    markStepCompleted("PlanResult");
+    completeOnboarding();
+    router.replace("/(tabs)/home");
+    setIsSubmitting(false);
+  };
 
   return (
     <SafeScreen scrollable>
@@ -48,13 +59,13 @@ export default function PlanResultScreen() {
             helper={t.onboarding.planResult.dailyTargetHelper}
             label={t.onboarding.planResult.dailyTarget}
             style={isCompact ? styles.statCardCompact : undefined}
-            value={`${plan.dailyTargetKcal} kcal`}
+            value={`${Math.round(plan.targetCalories)} kcal`}
           />
           <StatCard
             helper={t.onboarding.planResult.weeklyTargetHelper}
             label={t.onboarding.planResult.weeklyTarget}
             style={isCompact ? styles.statCardCompact : undefined}
-            value={`${plan.weeklyTargetKcal} kcal`}
+            value={`${Math.round(plan.targetCalories * 7)} kcal`}
           />
         </View>
 
@@ -63,26 +74,26 @@ export default function PlanResultScreen() {
             helper={t.onboarding.planResult.metabolismHelper}
             label={t.onboarding.planResult.metabolism}
             style={isCompact ? styles.statCardCompact : undefined}
-            value={`${plan.bmrKcal} kcal`}
+            value={`${Math.round(plan.bmrKcal)} kcal`}
           />
           <StatCard
             helper={draft.goalType === "gain_weight" ? t.onboarding.planResult.surplusDaily : t.onboarding.planResult.deltaDaily}
             label={t.onboarding.planResult.adjustment}
             style={isCompact ? styles.statCardCompact : undefined}
-            value={`${plan.dailyDeficitOrSurplusKcal} kcal`}
+            value={`${Math.abs(Math.round(plan.targetCalories - plan.tdeeKcal))} kcal`}
           />
         </View>
 
         <SurfaceCard>
           <Text style={styles.sectionTitle}>{t.onboarding.planResult.macroSplit}</Text>
           <MacroDonutChart
-            calories={plan.dailyTargetKcal}
-            carbGram={plan.macroSplit.carbGram}
-            carbPct={plan.macroSplit.carbPct}
-            fatGram={plan.macroSplit.fatGram}
-            fatPct={plan.macroSplit.fatPct}
-            proteinGram={plan.macroSplit.proteinGram}
-            proteinPct={plan.macroSplit.proteinPct}
+            calories={Math.round(plan.targetCalories)}
+            carbGram={Math.round(plan.targetCarbsG)}
+            carbPct={Math.round((plan.targetCarbsG * 400) / plan.targetCalories)}
+            fatGram={Math.round(plan.targetFatG)}
+            fatPct={Math.round((plan.targetFatG * 900) / plan.targetCalories)}
+            proteinGram={Math.round(plan.targetProteinG)}
+            proteinPct={Math.round((plan.targetProteinG * 400) / plan.targetCalories)}
           />
         </SurfaceCard>
 
@@ -92,12 +103,9 @@ export default function PlanResultScreen() {
         </SurfaceCard>
 
         <GradientButton
+          loading={isSubmitting}
           label={t.onboarding.planResult.cta}
-          onPress={() => {
-            markStepCompleted("PlanResult");
-            completeOnboarding();
-            router.replace("/(tabs)/home");
-          }}
+          onPress={handleStart}
         />
       </View>
     </SafeScreen>

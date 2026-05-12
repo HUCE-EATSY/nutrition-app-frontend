@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getTodayDateISO } from "@/hooks/utils/date";
 import { DiaryDaySummary } from "@/constants/types/contracts";
 import { useAuthStore } from "./authStore";
+import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export interface ExerciseLog {
@@ -54,7 +55,7 @@ interface DiaryState {
 }
 
 // ── API base (sẽ cấu hình từ env sau) ───────────────────────────────────────
-const API_BASE = "http://143.198.110.11:5000"; // Đổi thành địa chỉ backend thật
+// API base đã được cấu hình trong @/constants/api
 
 function getHeaders() {
   const token = useAuthStore.getState().accessToken;
@@ -114,8 +115,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
         const exJson = await exRes.json();
         set({ exercises: exJson.data ?? [] });
       }
-    } catch (e: any) {
-      set({ isLoading: false, error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Không tải được nhật ký";
+      set({ isLoading: false, error: message });
     }
   },
 
@@ -129,8 +131,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       if (!res.ok) throw new Error("Ghi bữa ăn thất bại");
       // Reload diary sau khi thêm thành công
       await get().fetchDiary();
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Ghi bữa ăn thất bại";
+      set({ error: message });
       throw e;
     }
   },
@@ -144,8 +147,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       });
       if (!res.ok) throw new Error("Ghi hoạt động thất bại");
       await get().fetchDiary();
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Ghi hoạt động thất bại";
+      set({ error: message });
       throw e;
     }
   },
@@ -158,8 +162,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       });
       if (!res.ok) throw new Error("Xóa thất bại");
       await get().fetchDiary();
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Xóa thất bại";
+      set({ error: message });
       throw e;
     }
   },

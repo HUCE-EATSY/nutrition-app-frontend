@@ -30,7 +30,7 @@ export default function LogWeightScreen() {
   const decrementWeight = () => setWeight((prev) => parseFloat((prev - 0.1).toFixed(1)));
 
   return (
-    <SafeScreen style={styles.container}>
+    <SafeScreen contentContainerStyle={styles.container}>
       <KeyboardAvoidingView 
         style={styles.flex1} 
         behavior={Platform.OS === "ios" ? "padding" : undefined}

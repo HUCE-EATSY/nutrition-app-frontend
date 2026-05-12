@@ -2,10 +2,16 @@ import { router } from "expo-router";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { WeeklyGoalSlider } from "@/components/onboarding/WeeklyGoalSlider";
-import { getWeeklyGoalBounds, sanitizeWeeklyGoal, validateWeeklyGoal } from "@/constants/domain/validators/onboarding";
+import {
+  getNextOnboardingPath,
+  getOnboardingMeta,
+  getPreviousOnboardingPath,
+  getWeeklyGoalBounds,
+  sanitizeWeeklyGoal,
+  validateWeeklyGoal,
+} from "@/domain/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/hooks/utils/onboarding";
 
 export default function WeeklyGoalScreen() {
   const goalType = useOnboardingStore((state) => state.draft.goalType);

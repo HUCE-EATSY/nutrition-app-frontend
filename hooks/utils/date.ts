@@ -22,9 +22,6 @@ export function formatDateForHero(dateISO: string) {
   });
 }
 
-export function formatNumber(value: number) {
-  return new Intl.NumberFormat("vi-VN").format(Math.round(value));
-}
 
 export function createBirthDateISO(day: number, month: number, year: number) {
   const safeMonth = `${month}`.padStart(2, "0");
@@ -33,6 +30,16 @@ export function createBirthDateISO(day: number, month: number, year: number) {
 }
 
 export function getDateParts(dateISO: string) {
+  // Tránh dùng new Date(iso) vì sẽ bị lệch múi giờ (UTC vs Local)
+  const parts = dateISO.split("T")[0].split("-");
+  if (parts.length === 3) {
+    return {
+      year: parseInt(parts[0], 10),
+      month: parseInt(parts[1], 10),
+      day: parseInt(parts[2], 10),
+    };
+  }
+  // Fallback nếu chuỗi không đúng định dạng
   const date = new Date(dateISO);
   return {
     day: date.getDate(),

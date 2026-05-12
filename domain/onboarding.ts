@@ -8,7 +8,9 @@ import {
   PublicFlowStep,
 } from "@/constants/types/contracts";
 import { t } from "@/constants/i18n";
+import { clamp, getAgeFromBirthDate } from "@/hooks/utils/date";
 
+// ── Constants ────────────────────────────────────────────────────────────────
 
 export const DEFAULT_HEIGHT_CM = 168;
 export const DEFAULT_CURRENT_WEIGHT_KG = 62;
@@ -59,6 +61,8 @@ export const activityOptions: OptionItem<ActivityLevel>[] = [
   { value: "very_active", title: t.onboarding.activityOptions.very_active.title, subtitle: t.onboarding.activityOptions.very_active.subtitle, accent: "#FFAF7B" },
 ];
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 export function getOnboardingMeta(routeName: OnboardingRouteName) {
   const index = ONBOARDING_STEPS.findIndex((step) => step.name === routeName);
   return {
@@ -92,33 +96,15 @@ export function getPublicResumePath(step: PublicFlowStep) {
 }
 
 export function getDraftResumePath(draft: OnboardingDraft): OnboardingRoutePath {
-  if (!draft.nickname) {
-    return "/(onboarding)/nickname";
-  }
-  if (!draft.gender) {
-    return "/(onboarding)/gender";
-  }
-  if (!draft.birthDateISO) {
-    return "/(onboarding)/birth-date";
-  }
-  if (!draft.heightCm) {
-    return "/(onboarding)/height";
-  }
-  if (!draft.goalType) {
-    return "/(onboarding)/goal-type";
-  }
-  if (!draft.currentWeightKg) {
-    return "/(onboarding)/current-weight";
-  }
-  if (!draft.targetWeightKg) {
-    return "/(onboarding)/target-weight";
-  }
-  if (!draft.activityLevel) {
-    return "/(onboarding)/activity-level";
-  }
-  if (draft.weeklyGoalKg === null) {
-    return "/(onboarding)/weekly-goal";
-  }
+  if (!draft.nickname) return "/(onboarding)/nickname";
+  if (!draft.gender) return "/(onboarding)/gender";
+  if (!draft.birthDateISO) return "/(onboarding)/birth-date";
+  if (!draft.heightCm) return "/(onboarding)/height";
+  if (!draft.goalType) return "/(onboarding)/goal-type";
+  if (!draft.currentWeightKg) return "/(onboarding)/current-weight";
+  if (!draft.targetWeightKg) return "/(onboarding)/target-weight";
+  if (!draft.activityLevel) return "/(onboarding)/activity-level";
+  if (draft.weeklyGoalKg === null) return "/(onboarding)/weekly-goal";
   return "/(onboarding)/review-summary";
 }
 
@@ -134,4 +120,50 @@ export function isOnboardingReady(draft: OnboardingDraft) {
       draft.activityLevel &&
       draft.weeklyGoalKg !== null,
   );
+}
+
+// ── Validators ───────────────────────────────────────────────────────────────
+
+export function validateNickname(value: string) {
+  const trimmed = value.trim();
+  if (trimmed.length < 2) return t.validators.nicknameMin;
+  if (trimmed.length > 24) return t.validators.nicknameMax;
+  return null;
+}
+
+export function validateAdultBirthDate(dateISO: string) {
+  const birthDate = new Date(dateISO);
+  if (Number.isNaN(birthDate.getTime())) return t.validators.invalidBirthDate;
+
+  const age = getAgeFromBirthDate(dateISO);
+  if (age < 18) return t.validators.adultOnly;
+  return null;
+}
+
+export function validateTargetWeight(goalType: GoalType | null, currentWeightKg: number | null, targetWeightKg: number | null) {
+  if (!goalType || !currentWeightKg || !targetWeightKg) return t.validators.targetWeightMissing;
+
+  if (goalType === "lose_weight" && targetWeightKg >= currentWeightKg) return t.validators.loseWeightInvalid;
+  if (goalType === "gain_weight" && targetWeightKg <= currentWeightKg) return t.validators.gainWeightInvalid;
+  if (goalType === "maintain_weight" && Math.abs(targetWeightKg - currentWeightKg) > 1) return t.validators.maintainWeightInvalid;
+
+  return null;
+}
+
+export function getWeeklyGoalBounds(goalType: GoalType | null) {
+  if (goalType === "maintain_weight") return { min: 0, max: 0.2, recommended: 0 };
+  return { min: 0.1, max: 1, recommended: goalType === "gain_weight" ? 0.3 : 0.4 };
+}
+
+export function sanitizeWeeklyGoal(goalType: GoalType | null, value: number) {
+  const bounds = getWeeklyGoalBounds(goalType);
+  return Number(clamp(value, bounds.min, bounds.max).toFixed(1));
+}
+
+export function validateWeeklyGoal(goalType: GoalType | null, value: number | null) {
+  if (value === null) return t.validators.weeklyGoalRequired;
+
+  const bounds = getWeeklyGoalBounds(goalType);
+  if (value < bounds.min || value > bounds.max) return t.validators.weeklyGoalRange(bounds.min, bounds.max);
+  return null;
 }

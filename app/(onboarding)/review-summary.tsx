@@ -2,31 +2,22 @@ import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
-import { BMIInfoCard } from "@/components/onboarding/BMIInfoCard";
-import { BMIScaleBar } from "@/components/onboarding/BMIScaleBar";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { calculateBMI, calculateNutritionPlan } from "@/constants/domain/calculators/nutrition";
-import { getWeeklyGoalBounds } from "@/constants/domain/validators/onboarding";
-import { getBmiStatusLabel, getGoalTypeLabel, t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { colors, spacing, typography } from "@/constants";
-import { useResponsiveLayout } from "@/constants/responsive";
-import { BMISegment } from "@/constants/types/contracts";
-import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
   DEFAULT_TARGET_WEIGHT_KG,
   getOnboardingMeta,
   getPreviousOnboardingPath,
-} from "@/hooks/utils/onboarding";
+  getWeeklyGoalBounds,
+} from "@/domain/onboarding";
+import { getGoalTypeLabel, t } from "@/constants/i18n";
+import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { colors, spacing, typography } from "@/constants";
+import { useResponsiveLayout } from "@/constants/responsive";
+import { getAgeFromBirthDate } from "@/hooks/utils/date";
 
-const bmiSegments: BMISegment[] = [
-  { key: "under", label: t.onboarding.bmiSegments.under, min: 0, max: 18.5, color: "#5E7BFF" },
-  { key: "normal", label: t.onboarding.bmiSegments.normal, min: 18.5, max: 23, color: "#5CD67A" },
-  { key: "over", label: t.onboarding.bmiSegments.over, min: 23, max: 25, color: "#F2B437" },
-  { key: "obese", label: t.onboarding.bmiSegments.obese, min: 25, max: 35, color: "#FF7D7D" },
-];
+
 
 export default function ReviewSummaryScreen() {
   const draft = useOnboardingStore((state) => state.draft);
@@ -41,15 +32,6 @@ export default function ReviewSummaryScreen() {
   const resolvedTargetWeightKg = draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
   const resolvedWeeklyGoalKg = draft.weeklyGoalKg ?? getWeeklyGoalBounds(draft.goalType).recommended;
   const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
-  const resolvedDraft = {
-    ...draft,
-    heightCm: resolvedHeightCm,
-    currentWeightKg: resolvedCurrentWeightKg,
-    targetWeightKg: resolvedTargetWeightKg,
-    weeklyGoalKg: resolvedWeeklyGoalKg,
-  };
-  const bmi = calculateBMI(resolvedCurrentWeightKg, resolvedHeightCm);
-  const plan = calculateNutritionPlan(resolvedDraft, age);
   const { isCompact } = useResponsiveLayout();
 
   return (
@@ -84,25 +66,7 @@ export default function ReviewSummaryScreen() {
         </View>
       </SurfaceCard>
 
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>{t.onboarding.reviewCurrentBmi}</Text>
-        <BMIScaleBar segments={bmiSegments} value={bmi.value} />
-      </SurfaceCard>
 
-      <BMIInfoCard
-        bmi={bmi.value}
-        description={bmi.description}
-        sourceLabel={bmi.sourceLabel}
-        statusLabel={getBmiStatusLabel(bmi.status)}
-      />
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>{t.onboarding.reviewQuickPreview}</Text>
-        <Text style={styles.previewText}>{t.onboarding.reviewTargetCalories(plan.dailyTargetKcal)}</Text>
-        <Text style={styles.previewText}>
-          {t.onboarding.reviewMacroSplit(plan.macroSplit.proteinPct, plan.macroSplit.carbPct, plan.macroSplit.fatPct)}
-        </Text>
-      </SurfaceCard>
     </OnboardingStepScaffold>
   );
 }
@@ -132,7 +96,7 @@ const styles = StyleSheet.create({
   },
   metric: {
     flex: 1,
-    gap: 4,
+     gap: 4,
   },
   metricCompact: {
     flexBasis: "45%",

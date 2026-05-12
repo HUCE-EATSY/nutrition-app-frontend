@@ -5,12 +5,13 @@ import {
   ActivityLevel,
   Gender,
   GoalType,
+  NutritionPlan,
   OnboardingDraft,
   OnboardingRouteName,
   PublicFlowStep,
 } from "@/constants/types/contracts";
 import { getTodayISO } from "@/hooks/utils/date";
-import { getDefaultWeeklyGoal } from "@/hooks/utils/onboarding";
+import { getDefaultWeeklyGoal } from "@/domain/onboarding";
 
 import { secureStorage } from "./secureStorage";
 
@@ -33,8 +34,10 @@ type OnboardingStoreState = {
   publicFlowStep: PublicFlowStep;
   hasCompletedOnboarding: boolean;
   draft: OnboardingDraft;
+  serverPlan: NutritionPlan | null;
   setHydrated: (value: boolean) => void;
   setPublicFlowStep: (step: PublicFlowStep) => void;
+  setServerPlan: (plan: NutritionPlan) => void;
   setNickname: (nickname: string) => void;
   setGender: (gender: Gender) => void;
   setBirthDateISO: (birthDateISO: string) => void;
@@ -64,8 +67,10 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       publicFlowStep: "welcome",
       hasCompletedOnboarding: false,
       draft: createInitialDraft(),
+      serverPlan: null,
       setHydrated: (value: boolean) => set(() => ({ hydrated: value })),
       setPublicFlowStep: (step: PublicFlowStep) => set(() => ({ publicFlowStep: step })),
+      setServerPlan: (plan: NutritionPlan) => set(() => ({ serverPlan: plan })),
       setNickname: (nickname) => set((state) => ({ draft: updateDraft(state.draft, { nickname }) })),
       setGender: (gender) => set((state) => ({ draft: updateDraft(state.draft, { gender }) })),
       setBirthDateISO: (birthDateISO) => set((state) => ({ draft: updateDraft(state.draft, { birthDateISO }) })),
@@ -105,8 +110,9 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         publicFlowStep: state.publicFlowStep,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         draft: state.draft,
+        serverPlan: state.serverPlan,
       }),
-      onRehydrateStorage: () => (state: OnboardingStoreState | undefined) => {
+      onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);
       },
     },

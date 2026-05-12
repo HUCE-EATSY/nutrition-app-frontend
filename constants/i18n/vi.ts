@@ -186,6 +186,9 @@ export const vi = {
     logout: "Đăng xuất",
     logoutConfirmTitle: "Đăng xuất tài khoản?",
     logoutConfirmMessage: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?",
+    deleteAccount: "Xóa toàn bộ dữ liệu",
+    deleteConfirmTitle: "Xóa toàn bộ dữ liệu?",
+    deleteConfirmMessage: "Hành động này sẽ xóa vĩnh viễn hồ sơ và lịch sử của bạn để bắt đầu lại từ đầu. Bạn có chắc chắn không?",
     footerDisclaimer:
       "Mọi thông tin trên chỉ mang tính chất tham khảo, không thay thế cho đánh giá y tế chuyên môn từ bác sĩ.",
   },
