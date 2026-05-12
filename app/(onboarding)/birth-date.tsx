@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { WheelDatePicker } from "@/components/onboarding/WheelDatePicker";
@@ -22,6 +22,16 @@ export default function BirthDateScreen() {
   const initial = savedBirthDate ? getDateParts(savedBirthDate) : fallbackDate;
   const [picker, setPicker] = useState(initial);
   const meta = getOnboardingMeta("BirthDate");
+
+  // Đồng bộ picker khi savedBirthDate thay đổi (ví dụ: sau khi hydration hoàn tất)
+  useEffect(() => {
+    if (savedBirthDate) {
+      const parts = getDateParts(savedBirthDate);
+      if (parts.day !== picker.day || parts.month !== picker.month || parts.year !== picker.year) {
+        setPicker(parts);
+      }
+    }
+  }, [savedBirthDate]);
 
   const nextISO = useMemo(() => createBirthDateISO(picker.day, picker.month, picker.year), [picker.day, picker.month, picker.year]);
   const error = validateAdultBirthDate(nextISO);

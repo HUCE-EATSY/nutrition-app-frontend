@@ -12,6 +12,8 @@ import { colors, spacing, typography } from "@/constants";
 import { trackEvent } from "@/hooks/utils/analytics";
 import { useUser } from "@/hooks/useUser";
 
+import { useMutation } from "@tanstack/react-query";
+
 const labels = t.onboarding.calculating.labels;
 
 export default function CalculatingPlanScreen() {
@@ -21,6 +23,26 @@ export default function CalculatingPlanScreen() {
   const draft = useOnboardingStore((state) => state.draft);
   const { onboardUser } = useUser();
 
+  const { mutate: submitOnboarding } = useMutation({
+    mutationFn: () => onboardUser(draft),
+    onSuccess: (result) => {
+      setServerPlan(result);
+      
+      // Chờ ít nhất 2.5s để hiệu ứng đẹp (kể từ lúc bắt đầu)
+      // Lưu ý: timers bên dưới vẫn chạy để cập nhật UI stage
+      setTimeout(() => {
+        markStepCompleted("Calculating");
+        router.replace("/(onboarding)/plan-result");
+      }, 2500);
+    },
+    onError: (error: unknown) => {
+      console.error("Onboarding API failed:", error);
+      Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
+        { text: "Quay lại", onPress: () => router.back() }
+      ]);
+    }
+  });
+
   useEffect(() => {
     trackEvent("plan_calculation_started", { screen_name: "calculating" });
     
@@ -29,30 +51,12 @@ export default function CalculatingPlanScreen() {
       setTimeout(() => setStage(2), 1400),
     ];
 
-    const performOnboarding = async () => {
-      try {
-        const result = await onboardUser(draft);
-        setServerPlan(result);
-        
-        // Chờ ít nhất 2.5s để hiệu ứng đẹp
-        setTimeout(() => {
-          markStepCompleted("Calculating");
-          router.replace("/(onboarding)/plan-result");
-        }, 2500);
-      } catch (error: unknown) {
-        console.error("Onboarding API failed:", error);
-        Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
-          { text: "Quay lại", onPress: () => router.back() }
-        ]);
-      }
-    };
-
-    performOnboarding();
+    submitOnboarding();
 
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [draft, markStepCompleted, onboardUser, setServerPlan]);
+  }, [submitOnboarding]);
 
   const testimonial = testimonials[stage % testimonials.length];
 

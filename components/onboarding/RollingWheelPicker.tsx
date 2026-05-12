@@ -54,6 +54,17 @@ export function RollingWheelPicker<T extends string | number>({
     setIsScrolling(false);
   };
 
+  const onScrollEndDrag = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    // Tự động snap khi kéo thả chậm không có momentum
+    const y = event.nativeEvent.contentOffset.y;
+    const index = Math.round(y / itemHeight);
+    const newValue = data[index];
+    if (newValue !== undefined && newValue !== selectedValue) {
+      onValueChange(newValue);
+    }
+    setIsScrolling(false);
+  };
+
   const onScrollBeginDrag = () => {
     setIsScrolling(true);
   };
@@ -64,6 +75,11 @@ export function RollingWheelPicker<T extends string | number>({
     const newValue = data[index];
     if (newValue !== undefined && newValue !== internalSelectedValue) {
       setInternalSelectedValue(newValue);
+      // Cập nhật lên parent ngay lập tức để nextISO trong BirthDateScreen luôn mới nhất
+      // Dùng if để tránh loop vô tận nếu parent update props
+      if (newValue !== selectedValue) {
+        onValueChange(newValue);
+      }
     }
   };
 
@@ -75,6 +91,7 @@ export function RollingWheelPicker<T extends string | number>({
         onMomentumScrollEnd={onMomentumScrollEnd}
         onScroll={onScroll}
         onScrollBeginDrag={onScrollBeginDrag}
+        onScrollEndDrag={onScrollEndDrag}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         snapToInterval={itemHeight}
