@@ -3,39 +3,51 @@ import * as Google from 'expo-auth-session/providers/google';
 import { useEffect, useState } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import { useAuthStore } from './store/authStore';
+import { useOnboardingStore } from './store/onboardingStore';
 import { API_URLS } from '@/constants/api';
+import Constants from 'expo-constants';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID;
+const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_GOOGLE_CLIENT_ID;
 
 export const useGoogleAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
+  const { completeOnboarding, reset: resetOnboarding } = useOnboardingStore();
+
+  // Tạo redirectUri phù hợp cho cả Expo Go và Standalone app
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: 'nutritionappfrontend',
+  });
+
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: GOOGLE_CLIENT_ID,
-    androidClientId: GOOGLE_CLIENT_ID,
-    webClientId: GOOGLE_CLIENT_ID,
+    // Quan trọng: Khi chạy trên Expo Go, Google Provider thường ưu tiên webClientId
+    webClientId: WEB_CLIENT_ID,
+    androidClientId: ANDROID_CLIENT_ID,
+    // iosClientId: process.env.EXPO_PUBLIC_IOS_GOOGLE_CLIENT_ID,
+    
+    redirectUri,
     scopes: ['openid', 'profile', 'email'],
-    responseType: 'id_token', // Yêu cầu Google trả về ID Token
+    responseType: 'id_token',
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
-      // Trên Web, id_token thường nằm trong params
       const idToken = response.authentication?.idToken || response.params.id_token;
       
       if (idToken) {
         loginToBackend(idToken);
       } else {
-        // Log chi tiết response để debug nếu vẫn không thấy idToken
         console.log('Google Auth Response:', JSON.stringify(response, null, 2));
-        setError('Không tìm thấy ID Token từ Google. Hãy kiểm tra console log.');
+        setError('Không tìm thấy ID Token từ Google.');
       }
     } else if (response?.type === 'error') {
-      setError('Google login failed');
+      console.error('Google Auth Error Response:', response);
+      setError('Google login failed: ' + (response.error?.message || 'Unknown error'));
     }
   }, [response]);
 
@@ -56,16 +68,18 @@ export const useGoogleAuth = () => {
 
       const { data } = await res.json();
       
-      // data: { accessToken, refreshToken, userId, email, isNewUser }
-      // Lưu vào Zustand store
+      if (data.isNewUser === false) {
+        completeOnboarding();
+      }
+
       setAuth(data.accessToken, data.refreshToken, {
         id: data.userId,
         email: data.email,
-        // Có thể bổ sung thêm các thông tin khác từ Google nếu Backend trả về
       });
       
-    } catch (err: any) {
-      setError(err.message || 'Failed to sync with database');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';
+      setError(errorMessage);
       console.error(err);
     } finally {
       setLoading(false);
@@ -74,6 +88,7 @@ export const useGoogleAuth = () => {
 
   const logout = async () => {
     clearAuth();
+    resetOnboarding();
   };
 
   return {
@@ -81,8 +96,16 @@ export const useGoogleAuth = () => {
     isAuthenticated,
     loading,
     error,
-    signIn: () => promptAsync(),
+    signIn: () => {
+      console.log('Attempting sign in with Redirect URI:', redirectUri);
+      return promptAsync();
+    },
     logout,
+    deleteAccount: async () => {
+      clearAuth();
+      resetOnboarding();
+    },
     request,
   };
 };
+

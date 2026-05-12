@@ -5,6 +5,7 @@ import {
   ActivityLevel,
   Gender,
   GoalType,
+  NutritionPlan,
   OnboardingDraft,
   OnboardingRouteName,
   PublicFlowStep,
@@ -33,10 +34,10 @@ type OnboardingStoreState = {
   publicFlowStep: PublicFlowStep;
   hasCompletedOnboarding: boolean;
   draft: OnboardingDraft;
-  serverPlan: any | null;
+  serverPlan: NutritionPlan | null;
   setHydrated: (value: boolean) => void;
   setPublicFlowStep: (step: PublicFlowStep) => void;
-  setServerPlan: (plan: any) => void;
+  setServerPlan: (plan: NutritionPlan) => void;
   setNickname: (nickname: string) => void;
   setGender: (gender: Gender) => void;
   setBirthDateISO: (birthDateISO: string) => void;
@@ -69,7 +70,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       serverPlan: null,
       setHydrated: (value: boolean) => set(() => ({ hydrated: value })),
       setPublicFlowStep: (step: PublicFlowStep) => set(() => ({ publicFlowStep: step })),
-      setServerPlan: (plan: any) => set(() => ({ serverPlan: plan })),
+      setServerPlan: (plan: NutritionPlan) => set(() => ({ serverPlan: plan })),
       setNickname: (nickname) => set((state) => ({ draft: updateDraft(state.draft, { nickname }) })),
       setGender: (gender) => set((state) => ({ draft: updateDraft(state.draft, { gender }) })),
       setBirthDateISO: (birthDateISO) => set((state) => ({ draft: updateDraft(state.draft, { birthDateISO }) })),
@@ -111,7 +112,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         draft: state.draft,
         serverPlan: state.serverPlan,
       }),
-      onRehydrateStorage: () => (state: OnboardingStoreState | undefined) => {
+      onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);
       },
     },

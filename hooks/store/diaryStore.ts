@@ -115,8 +115,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
         const exJson = await exRes.json();
         set({ exercises: exJson.data ?? [] });
       }
-    } catch (e: any) {
-      set({ isLoading: false, error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Không tải được nhật ký";
+      set({ isLoading: false, error: message });
     }
   },
 
@@ -130,8 +131,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       if (!res.ok) throw new Error("Ghi bữa ăn thất bại");
       // Reload diary sau khi thêm thành công
       await get().fetchDiary();
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Ghi bữa ăn thất bại";
+      set({ error: message });
       throw e;
     }
   },
@@ -145,8 +147,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       });
       if (!res.ok) throw new Error("Ghi hoạt động thất bại");
       await get().fetchDiary();
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Ghi hoạt động thất bại";
+      set({ error: message });
       throw e;
     }
   },
@@ -159,8 +162,9 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       });
       if (!res.ok) throw new Error("Xóa thất bại");
       await get().fetchDiary();
-    } catch (e: any) {
-      set({ error: e.message });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Xóa thất bại";
+      set({ error: message });
       throw e;
     }
   },

@@ -66,8 +66,8 @@ export const useUser = () => {
 
       const json = await response.json();
       return json.data;
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
         throw new Error("Kết nối quá hạn. Vui lòng kiểm tra internet hoặc server.");
       }
       throw err;

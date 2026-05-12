@@ -10,6 +10,7 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { getWeeklyGoalBounds } from "@/constants/domain/validators/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { NutritionPlan } from "@/constants/types/contracts";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { formatDateForHero, getAgeFromBirthDate } from "@/hooks/utils/date";
@@ -25,8 +26,8 @@ export default function PlanResultScreen() {
 
   // Dữ liệu từ server trả về trong OnboardUserAsync
   // { targetCalories, targetProteinG, targetCarbsG, targetFatG, bmrKcal, tdeeKcal, ... }
-  const plan = serverPlan || {
-    dailyTargetKcal: 0,
+  const plan: NutritionPlan = serverPlan || {
+    targetCalories: 0,
     bmrKcal: 0,
     tdeeKcal: 0,
     targetProteinG: 0,

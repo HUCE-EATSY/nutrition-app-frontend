@@ -39,7 +39,7 @@ export default function CalculatingPlanScreen() {
           markStepCompleted("Calculating");
           router.replace("/(onboarding)/plan-result");
         }, 2500);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Onboarding API failed:", error);
         Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
           { text: "Quay lại", onPress: () => router.back() }

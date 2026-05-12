@@ -1,6 +1,6 @@
 import { GoalType } from "@/constants/types/contracts";
 import { t } from "@/constants/i18n";
-import { clamp } from "@/hooks/utils/date";
+import { clamp, getAgeFromBirthDate } from "@/hooks/utils/date";
 
 export function validateNickname(value: string) {
   const trimmed = value.trim();
@@ -14,10 +14,16 @@ export function validateNickname(value: string) {
 }
 
 export function validateAdultBirthDate(dateISO: string) {
-  const date = new Date(dateISO);
-  if (Number.isNaN(date.getTime())) {
+  const birthDate = new Date(dateISO);
+  if (Number.isNaN(birthDate.getTime())) {
     return t.validators.invalidBirthDate;
   }
+
+  const age = getAgeFromBirthDate(dateISO);
+  if (age < 18) {
+    return t.validators.adultOnly;
+  }
+
   return null;
 }
 
