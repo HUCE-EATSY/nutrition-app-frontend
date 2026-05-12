@@ -17,6 +17,7 @@ import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
 import { Toast } from "@/components/common/Toast";
+import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface FoodItem {
@@ -30,8 +31,6 @@ interface FoodItem {
   fat: number;
   servingSize: number;
 }
-
-const API_BASE = "http://localhost:5184";
 
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();

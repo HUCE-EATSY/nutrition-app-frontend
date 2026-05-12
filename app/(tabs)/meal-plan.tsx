@@ -20,14 +20,13 @@ import { SegmentedPillTabs } from "@/components/meal/SegmentedPillTabs";
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography, radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
+import { API_BASE } from "@/constants/api";
 
 const tabs = [
   { key: "explore", label: t.mealPlan.tabs.explore },
   { key: "saved", label: t.mealPlan.tabs.saved },
   { key: "history", label: t.mealPlan.tabs.history },
 ];
-
-const API_BASE = "http://localhost:5184";
 
 interface FoodItem {
   id: number;

@@ -12,8 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
-
-const API_BASE = "http://localhost:5184";
+import { API_BASE } from "@/constants/api";
 
 interface FoodItem {
   id: number;

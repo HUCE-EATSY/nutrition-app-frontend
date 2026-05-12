@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getTodayDateISO } from "@/hooks/utils/date";
 import { DiaryDaySummary } from "@/constants/types/contracts";
 import { useAuthStore } from "./authStore";
+import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export interface ExerciseLog {
@@ -52,9 +53,6 @@ interface DiaryState {
   addExercise: (payload: CreateExercisePayload) => Promise<void>;
   deleteEntry: (entryId: string) => Promise<void>;
 }
-
-// ── API base (sẽ cấu hình từ env sau) ───────────────────────────────────────
-const API_BASE = "http://localhost:5184"; // Backend .NET
 
 function getHeaders() {
   const token = useAuthStore.getState().accessToken;
