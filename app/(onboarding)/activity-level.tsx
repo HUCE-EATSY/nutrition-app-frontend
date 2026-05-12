@@ -5,7 +5,7 @@ import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepSc
 import { OptionCard } from "@/components/onboarding/OptionCard";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { activityOptions, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/hooks/utils/onboarding";
+import { activityOptions, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
 
 export default function ActivityLevelScreen() {
   const activityLevel = useOnboardingStore((state) => state.draft.activityLevel);

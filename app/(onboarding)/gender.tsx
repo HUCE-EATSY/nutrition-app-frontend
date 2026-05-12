@@ -5,7 +5,7 @@ import { OptionCard } from "@/components/onboarding/OptionCard";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { genderOptions, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/hooks/utils/onboarding";
+import { genderOptions, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
 
 export default function GenderScreen() {
   const selected = useOnboardingStore((state) => state.draft.gender);

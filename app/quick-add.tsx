@@ -21,7 +21,7 @@ export default function QuickAddModal() {
     }
   };
 
-  const handleNavigate = (path: any) => {
+  const handleNavigate = (path: string) => {
     // Thay vì gọi back() rồi push() gây conflict animation làm app bị "khựng" (stutter),
     // chúng ta dùng router.navigate để Expo tự xử lý luồng chuyển tab mượt mà.
     router.navigate(path);

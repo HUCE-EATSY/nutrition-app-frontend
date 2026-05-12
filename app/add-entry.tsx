@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -32,6 +32,11 @@ interface FoodItem {
   servingSize: number;
 }
 
+<<<<<<< HEAD
+=======
+// API base đã được cấu hình trong @/constants/api
+
+>>>>>>> 4775dcfa4b0816f681882eb26d603ccd996dff7f
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();
@@ -82,17 +87,7 @@ export default function AddEntryScreen() {
   }
 
   // ── Search với debounce 400ms ─────────────────────────────────────────────
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (searchQuery.trim().length < 2) {
-      setFoods([]);
-      return;
-    }
-    debounceRef.current = setTimeout(() => searchFoods(searchQuery), 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [searchQuery]);
-
-  async function searchFoods(query: string) {
+  const searchFoods = useCallback(async (query: string) => {
     setIsSearching(true);
     try {
       const res = await fetch(
@@ -106,7 +101,17 @@ export default function AddEntryScreen() {
     } finally {
       setIsSearching(false);
     }
-  }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (searchQuery.trim().length < 2) {
+      setFoods([]);
+      return;
+    }
+    debounceRef.current = setTimeout(() => searchFoods(searchQuery), 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery, searchFoods]);
 
   // ── Tính dinh dưỡng theo gram ─────────────────────────────────────────────
   function calcNutrition(food: FoodItem, g: number) {

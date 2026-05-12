@@ -2,46 +2,85 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Alert, Pressable, StyleSheet, Text, View, ScrollView } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { useAuthStore } from "@/hooks/store/authStore";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { colors, radius, spacing, typography } from "@/constants";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
+import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
 
 export default function AccountScreen() {
-  const draft = useOnboardingStore((state) => state.draft);
+  const { draft, serverPlan } = useOnboardingStore();
+  const { userInfo } = useAuthStore();
   const resetOnboarding = useOnboardingStore((state) => state.reset);
-  const { logout } = useGoogleAuth();
+  const { logout, deleteAccount } = useGoogleAuth();
   
-  const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 15;
+  const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
 
-  const nickname = draft.nickname ?? "KIEN";
-  const joinedDate = "19 Thg 04, 2026"; // In a real app, this would come from a user object
+  const nickname = draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
+  const joinedDate = "12 Thg 05, 2026"; // In a real app, this would come from a user object
 
-  const [visible, setVisible] = React.useState(false);
-  const showDialog = () => setVisible(true);
-  const hideDialog = () => setVisible(false);
+  const plan = serverPlan || {
+    targetCalories: 2000,
+    targetProteinG: 100,
+    targetCarbsG: 250,
+    targetFatG: 67,
+  };
+
+  const proteinPct = Math.round((plan.targetProteinG * 400) / plan.targetCalories) || 20;
+  const carbsPct = Math.round((plan.targetCarbsG * 400) / plan.targetCalories) || 50;
+  const fatPct = 100 - proteinPct - carbsPct;
+
+  const [settingsVisible, setSettingsVisible] = React.useState(false);
+  const [confirmVisible, setConfirmVisible] = React.useState(false);
+  const [confirmType, setConfirmType] = React.useState<"logout" | "delete" | null>(null);
+
+  const showSettings = () => setSettingsVisible(true);
+  const hideSettings = () => setSettingsVisible(false);
+
+  const showConfirm = (type: "logout" | "delete") => {
+    setConfirmType(type);
+    setSettingsVisible(false);
+    setConfirmVisible(true);
+  };
+
+  const hideConfirm = () => {
+    setConfirmVisible(false);
+    setConfirmType(null);
+  };
 
   const handleLogout = async () => {
     try {
-      console.log("Logout confirmed in dialog");
-      hideDialog();
+      console.log("Logging out...");
+      hideConfirm();
       await logout();
-      console.log("Auth cleared");
       resetOnboarding();
-      console.log("Onboarding reset");
       useOnboardingStore.getState().setPublicFlowStep("social-login");
-      console.log("Navigating to social-login...");
       router.replace("/(public)/social-login");
     } catch (error) {
       console.error("Logout failed:", error);
       Alert.alert("Lỗi", "Không thể đăng xuất. Vui lòng thử lại.");
+    }
+  };
+
+  const handleDeleteData = async () => {
+    try {
+      console.log("Deleting account data...");
+      hideConfirm();
+      await deleteAccount();
+      resetOnboarding();
+      useOnboardingStore.getState().setPublicFlowStep("social-login");
+      router.replace("/(public)/social-login");
+    } catch (error) {
+      console.error("Delete data failed:", error);
+      Alert.alert("Lỗi", "Không thể xóa dữ liệu. Vui lòng thử lại.");
     }
   };
 
@@ -51,7 +90,7 @@ export default function AccountScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t.account.profileTitle}</Text>
         <Pressable 
-          onPress={showDialog} 
+          onPress={showSettings} 
           style={styles.settingsButton}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         >
@@ -59,16 +98,54 @@ export default function AccountScreen() {
         </Pressable>
       </View>
 
-      {/* Logout Confirmation Dialog */}
+      {/* Settings Menu Dialog */}
       <Portal>
-        <Dialog onDismiss={hideDialog} visible={visible} style={styles.dialog}>
-          <Dialog.Title style={styles.dialogTitle}>{t.account.logoutConfirmTitle}</Dialog.Title>
+        <Dialog onDismiss={hideSettings} visible={settingsVisible} style={styles.dialog}>
+          <Dialog.Title style={styles.dialogTitle}>{t.account.title}</Dialog.Title>
           <Dialog.Content>
-            <Text style={styles.dialogContent}>{t.account.logoutConfirmMessage}</Text>
+            <View style={styles.menuContainer}>
+              <Pressable 
+                onPress={() => showConfirm("logout")} 
+                style={styles.menuItem}
+              >
+                <Ionicons color={colors.textSecondary} name="log-out-outline" size={24} />
+                <Text style={styles.menuItemText}>{t.account.logout}</Text>
+              </Pressable>
+              
+              <View style={styles.divider} />
+
+              <Pressable 
+                onPress={() => showConfirm("delete")} 
+                style={styles.menuItem}
+              >
+                <Ionicons color="#FF5A5F" name="trash-outline" size={24} />
+                <Text style={[styles.menuItemText, { color: "#FF5A5F" }]}>{t.account.deleteAccount}</Text>
+              </Pressable>
+            </View>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={hideDialog} textColor={colors.textSecondary}>{t.common.cancel}</Button>
-            <Button onPress={handleLogout} textColor="#FF5A5F">{t.account.logout}</Button>
+            <Button onPress={hideSettings} textColor={colors.textSecondary}>{t.common.close}</Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* Confirmation Dialog */}
+        <Dialog onDismiss={hideConfirm} visible={confirmVisible} style={styles.dialog}>
+          <Dialog.Title style={styles.dialogTitle}>
+            {confirmType === "logout" ? t.account.logoutConfirmTitle : t.account.deleteConfirmTitle}
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text style={styles.dialogContent}>
+              {confirmType === "logout" ? t.account.logoutConfirmMessage : t.account.deleteConfirmMessage}
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideConfirm} textColor={colors.textSecondary}>{t.common.cancel}</Button>
+            <Button 
+              onPress={confirmType === "logout" ? handleLogout : handleDeleteData} 
+              textColor="#FF5A5F"
+            >
+              {confirmType === "logout" ? t.account.logout : t.account.deleteAccount}
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -113,11 +190,11 @@ export default function AccountScreen() {
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="man-outline" size={18} />
-          <Text style={styles.statChipText}>{draft.heightCm ?? 225} cm</Text>
+          <Text style={styles.statChipText}>{draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
-          <Text style={styles.statChipText}>{draft.currentWeightKg ?? 54.3} kg</Text>
+          <Text style={styles.statChipText}>{draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
         </View>
       </View>
 
@@ -145,8 +222,8 @@ export default function AccountScreen() {
               <View style={[styles.progressKnob, { left: "40%" }]} />
             </View>
             <View style={styles.progressLabels}>
-              <Text style={styles.progressLabel}>{draft.currentWeightKg ?? 54.3} kg</Text>
-              <Text style={styles.progressLabel}>{draft.targetWeightKg ?? 53.9} kg</Text>
+              <Text style={styles.progressLabel}>{draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+              <Text style={styles.progressLabel}>{draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
             </View>
           </View>
         </LinearGradient>
@@ -180,14 +257,29 @@ export default function AccountScreen() {
             </Svg>
             <View style={styles.chartCenter}>
               <Ionicons color={colors.warning} name="flame" size={20} />
-              <Text style={styles.calorieValue}>1.925</Text>
+              <Text style={styles.calorieValue}>{Math.round(plan.targetCalories).toLocaleString()}</Text>
             </View>
           </View>
-
+  
           <View style={styles.macroList}>
-            <MacroItem color={colors.protein} label={t.home.protein} percentage="20%" value="96g" />
-            <MacroItem color={colors.carbs} label={t.home.carbs} percentage="50%" value="241g" />
-            <MacroItem color={colors.fat} label={t.home.fat} percentage="30%" value="144g" />
+            <MacroItem 
+              color={colors.protein} 
+              label={t.home.protein} 
+              percentage={`${proteinPct}%`} 
+              value={`${Math.round(plan.targetProteinG)}g`} 
+            />
+            <MacroItem 
+              color={colors.carbs} 
+              label={t.home.carbs} 
+              percentage={`${carbsPct}%`} 
+              value={`${Math.round(plan.targetCarbsG)}g`} 
+            />
+            <MacroItem 
+              color={colors.fat} 
+              label={t.home.fat} 
+              percentage={`${fatPct}%`} 
+              value={`${Math.round(plan.targetFatG)}g`} 
+            />
           </View>
         </View>
 
@@ -286,7 +378,7 @@ function MacroItem({ color, label, percentage, value }: { color: string; label: 
   );
 }
 
-function StatIconButton({ color, icon, label }: { color: string; icon: any; label: string }) {
+function StatIconButton({ color, icon, label }: { color: string; icon: keyof typeof Ionicons.glyphMap; label: string }) {
   return (
     <View style={styles.statIconContainer}>
       <View style={[styles.statIconCircle, { backgroundColor: color }]}>
@@ -297,7 +389,7 @@ function StatIconButton({ color, icon, label }: { color: string; icon: any; labe
   );
 }
 
-function SocialButton({ icon, label }: { icon: any; label: string }) {
+function SocialButton({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
   return (
     <Pressable style={styles.socialButton}>
       <Ionicons color={colors.textPrimary} name={icon} size={28} />
@@ -730,5 +822,24 @@ const styles = StyleSheet.create({
   dialogContent: {
     color: colors.textSecondary,
     ...typography.body,
+  },
+  menuContainer: {
+    marginTop: spacing.sm,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  menuItemText: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    fontSize: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.surfaceAlt,
+    marginVertical: spacing.xs,
   },
 });

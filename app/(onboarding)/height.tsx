@@ -4,7 +4,7 @@ import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPi
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { DEFAULT_HEIGHT_CM, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/hooks/utils/onboarding";
+import { DEFAULT_HEIGHT_CM, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
 
 export default function HeightScreen() {
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);

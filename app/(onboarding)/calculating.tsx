@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -10,28 +10,53 @@ import { testimonials } from "@/constants/mocks/data";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
 import { trackEvent } from "@/hooks/utils/analytics";
+import { useUser } from "@/hooks/useUser";
+
+import { useMutation } from "@tanstack/react-query";
 
 const labels = t.onboarding.calculating.labels;
 
 export default function CalculatingPlanScreen() {
   const [stage, setStage] = useState(0);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
+  const setServerPlan = useOnboardingStore((state) => state.setServerPlan);
+  const draft = useOnboardingStore((state) => state.draft);
+  const { onboardUser } = useUser();
 
-  useEffect(() => {
-    trackEvent("plan_calculation_started", { screen_name: "calculating" });
-    const timers = [
-      setTimeout(() => setStage(1), 700),
-      setTimeout(() => setStage(2), 1400),
+  const { mutate: submitOnboarding } = useMutation({
+    mutationFn: () => onboardUser(draft),
+    onSuccess: (result) => {
+      setServerPlan(result);
+      
+      // Chờ ít nhất 2.5s để hiệu ứng đẹp (kể từ lúc bắt đầu)
+      // Lưu ý: timers bên dưới vẫn chạy để cập nhật UI stage
       setTimeout(() => {
         markStepCompleted("Calculating");
         router.replace("/(onboarding)/plan-result");
-      }, 2500),
+      }, 2500);
+    },
+    onError: (error: unknown) => {
+      console.error("Onboarding API failed:", error);
+      Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
+        { text: "Quay lại", onPress: () => router.back() }
+      ]);
+    }
+  });
+
+  useEffect(() => {
+    trackEvent("plan_calculation_started", { screen_name: "calculating" });
+    
+    const timers = [
+      setTimeout(() => setStage(1), 700),
+      setTimeout(() => setStage(2), 1400),
     ];
+
+    submitOnboarding();
 
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [markStepCompleted]);
+  }, [submitOnboarding]);
 
   const testimonial = testimonials[stage % testimonials.length];
 

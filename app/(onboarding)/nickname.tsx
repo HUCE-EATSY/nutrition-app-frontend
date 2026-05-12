@@ -2,11 +2,10 @@ import { router } from "expo-router";
 import { StyleSheet, TextInput } from "react-native";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { validateNickname } from "@/constants/domain/validators/onboarding";
+import { getNextOnboardingPath, getOnboardingMeta, validateNickname } from "@/domain/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/constants";
-import { getNextOnboardingPath, getOnboardingMeta } from "@/hooks/utils/onboarding";
 
 export default function NicknameScreen() {
   const nickname = useOnboardingStore((state) => state.draft.nickname ?? "");

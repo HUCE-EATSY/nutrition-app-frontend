@@ -5,7 +5,7 @@ import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepSc
 import { OptionCard } from "@/components/onboarding/OptionCard";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath, goalOptions } from "@/hooks/utils/onboarding";
+import { getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath, goalOptions } from "@/domain/onboarding";
 
 export default function GoalTypeScreen() {
   const goalType = useOnboardingStore((state) => state.draft.goalType);

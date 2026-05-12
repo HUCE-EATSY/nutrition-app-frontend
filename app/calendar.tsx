@@ -38,7 +38,7 @@ export default function CalendarPickerModal() {
     }
   };
 
-  const handleDayPress = (day: any) => {
+  const handleDayPress = (day: { dateString: string }) => {
     setSelected(day.dateString);
     // Ở đây có thể lưu vào Global Store ngày được chọn
     
@@ -123,7 +123,7 @@ export default function CalendarPickerModal() {
                 borderColor: "rgba(161, 124, 243, 0.4)",
               }
             }
-          }}
+          } as any}
           markedDates={{
             [selected]: { selected: true, disableTouchEvent: true },
           }}
