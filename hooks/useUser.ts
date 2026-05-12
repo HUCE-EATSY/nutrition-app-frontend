@@ -43,7 +43,7 @@ export const useUser = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        
+
         // ASP.NET Core ProblemDetails thường để mã lỗi trong error.code hoặc error.extensions.code
         // và thông báo trong error.detail thay vì error.message
         const errorCode = error.code || error.extensions?.code;
@@ -60,7 +60,7 @@ export const useUser = () => {
             return infoJson.data.activeGoal;
           }
         }
-        
+
         throw new Error(errorDetail || "Failed to onboard user");
       }
 

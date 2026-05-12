@@ -7,7 +7,6 @@ import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { MacroDonutChart } from "@/components/dashboard/MacroDonutChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { calculateNutritionPlan } from "@/constants/domain/calculators/nutrition";
 import { getWeeklyGoalBounds } from "@/constants/domain/validators/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";

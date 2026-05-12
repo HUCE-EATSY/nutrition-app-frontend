@@ -123,7 +123,7 @@ export default function CalendarPickerModal() {
                 borderColor: "rgba(161, 124, 243, 0.4)",
               }
             }
-          }}
+          } as any}
           markedDates={{
             [selected]: { selected: true, disableTouchEvent: true },
           }}

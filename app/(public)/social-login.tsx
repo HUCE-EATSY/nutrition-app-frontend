@@ -55,7 +55,7 @@ export default function SocialLoginScreen() {
 
         <View style={styles.actions}>
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary500} />
+            <ActivityIndicator size="large" color={colors.primary} />
           ) : (
             <>
               <SocialAuthButton label={t.auth.social.google} onPress={() => handleContinue("google")} provider="google" />
