@@ -15,7 +15,7 @@ export interface ExerciseLog {
 }
 
 export interface CreateDiaryEntryPayload {
-  foodId: string;
+  foodId: number; // Changed from string to number
   foodName: string;  // hiển thị local, không gửi API
   dateISO: string;
   hour: number;
@@ -54,7 +54,7 @@ interface DiaryState {
 }
 
 // ── API base (sẽ cấu hình từ env sau) ───────────────────────────────────────
-const API_BASE = "http://143.198.110.11:5000"; // Đổi thành địa chỉ backend thật
+const API_BASE = "http://localhost:5184"; // Backend .NET
 
 function getHeaders() {
   const token = useAuthStore.getState().accessToken;
