@@ -15,6 +15,7 @@ import { View, ActivityIndicator, Text } from "react-native";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { PaperProvider, MD3DarkTheme } from "react-native-paper";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const paperTheme = {
   ...MD3DarkTheme,
@@ -26,6 +27,8 @@ const paperTheme = {
     surface: colors.surface,
   },
 };
+
+const queryClient = new QueryClient();
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -70,19 +73,21 @@ export default function RootLayout() {
   }
 
   return (
-    <PaperProvider theme={paperTheme}>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(public)" />
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="quick-add" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
-        <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
-        <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
-        <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
-        <Stack.Screen name="webview" options={{ presentation: "modal" }} />
-      </Stack>
-    </PaperProvider>
+    <QueryClientProvider client={queryClient}>
+      <PaperProvider theme={paperTheme}>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(public)" />
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="quick-add" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+          <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+          <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+          <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
+          <Stack.Screen name="webview" options={{ presentation: "modal" }} />
+        </Stack>
+      </PaperProvider>
+    </QueryClientProvider>
   );
 }

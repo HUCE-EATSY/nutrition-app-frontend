@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getTodayDateISO } from "@/hooks/utils/date";
 import { DiaryDaySummary } from "@/constants/types/contracts";
 import { useAuthStore } from "./authStore";
+import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export interface ExerciseLog {
@@ -54,7 +55,7 @@ interface DiaryState {
 }
 
 // ── API base (sẽ cấu hình từ env sau) ───────────────────────────────────────
-const API_BASE = "http://143.198.110.11:5000"; // Đổi thành địa chỉ backend thật
+// API base đã được cấu hình trong @/constants/api
 
 function getHeaders() {
   const token = useAuthStore.getState().accessToken;

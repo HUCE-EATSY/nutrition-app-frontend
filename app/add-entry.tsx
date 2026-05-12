@@ -17,6 +17,7 @@ import { colors, spacing, typography, radius } from "@/constants";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
+import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface FoodItem {
@@ -29,7 +30,7 @@ interface FoodItem {
   fatPer100g: number;
 }
 
-const API_BASE = "http://143.198.110.11:5000";
+// API base đã được cấu hình trong @/constants/api
 
 export default function AddEntryScreen() {
   const { hour, date } = useLocalSearchParams<{ hour: string; date: string }>();
