@@ -8,14 +8,17 @@ import {
   StyleSheet,
   Text,
   View,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { formatShortDate } from "@/hooks/utils/date";
+import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
+import { Toast } from "@/components/common/Toast";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -39,7 +42,20 @@ export default function DiaryTimelineScreen() {
     goToPrevDay,
     goToNextDay,
     fetchDiary,
+    addMealEntry,
   } = useDiaryStore();
+
+  // Modal state
+  const [showFoodSelector, setShowFoodSelector] = useState(false);
+  const [selectedHourForMeal, setSelectedHourForMeal] = useState<number>(currentHour);
+  const [selectedFood, setSelectedFood] = useState<any>(null);
+  const [grams, setGrams] = useState("100");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   // Load dữ liệu khi màn hình mount hoặc ngày thay đổi
   useEffect(() => {
@@ -79,6 +95,82 @@ export default function DiaryTimelineScreen() {
 
   // Tổng calo đốt từ bài tập trong ngày
   const totalBurned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
+
+  // Xử lý khi click nút + để thêm bữa ăn
+  function handleAddMeal(hour: number) {
+    setSelectedHourForMeal(hour);
+    setShowFoodSelector(true);
+  }
+
+  // Xử lý khi chọn món ăn từ modal
+  function handleSelectFood(food: any) {
+    setSelectedFood(food);
+    setShowFoodSelector(false);
+    setGrams("100"); // Reset gram về 100
+  }
+
+  // Tính dinh dưỡng theo gram
+  function calcNutrition(food: any, g: number) {
+    const ratio = g / food.servingSize;
+    return {
+      calories: Math.round(food.calories * ratio),
+      protein: Math.round(food.protein * ratio * 10) / 10,
+      carb: Math.round(food.carbs * ratio * 10) / 10,
+      fat: Math.round(food.fat * ratio * 10) / 10,
+    };
+  }
+
+  // Lưu bữa ăn
+  async function handleSaveMeal() {
+    if (!selectedFood) return;
+
+    const gramNum = parseFloat(grams) || 0;
+    if (gramNum <= 0) {
+      setToastMessage("Vui lòng nhập số gram hợp lệ");
+      setToastType("error");
+      setShowToast(true);
+      return;
+    }
+
+    const nutrition = calcNutrition(selectedFood, gramNum);
+
+    setIsSaving(true);
+    try {
+      await addMealEntry({
+        foodId: selectedFood.id,
+        foodName: selectedFood.name,
+        dateISO: selectedDate,
+        hour: selectedHourForMeal,
+        quantityG: gramNum,
+        totalCalories: nutrition.calories,
+        proteinGram: nutrition.protein,
+        carbGram: nutrition.carb,
+        fatGram: nutrition.fat,
+      });
+
+      // Hiện toast thành công
+      setToastMessage(
+        `Đã lưu ${selectedFood.name} (${gramNum}g) vào ${selectedHourForMeal
+          .toString()
+          .padStart(2, "0")}:00`
+      );
+      setToastType("success");
+      setShowToast(true);
+
+      // Reset state
+      setSelectedFood(null);
+      setGrams("100");
+
+      // Refresh diary
+      await fetchDiary(selectedDate);
+    } catch {
+      setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
+      setToastType("error");
+      setShowToast(true);
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -225,9 +317,7 @@ export default function DiaryTimelineScreen() {
                 {/* Nút thêm bữa ăn */}
                 <Pressable
                   hitSlop={8}
-                  onPress={() =>
-                    router.push(`/add-entry?hour=${hour}&date=${selectedDate}`)
-                  }
+                  onPress={() => handleAddMeal(hour)}
                   style={styles.addButton}
                 >
                   <Ionicons color={theme.colors.textMuted} name="add" size={24} />
@@ -246,6 +336,108 @@ export default function DiaryTimelineScreen() {
           <Text style={styles.exerciseButtonText}>Ghi hoạt động thể dục</Text>
         </Pressable>
       </ScrollView>
+
+      {/* Food Selector Modal */}
+      <FoodSelectorModal
+        visible={showFoodSelector}
+        onClose={() => setShowFoodSelector(false)}
+        onSelectFood={handleSelectFood}
+      />
+
+      {/* Meal Entry Panel - Hiện khi đã chọn món */}
+      {selectedFood && (
+        <View style={styles.mealPanel}>
+          <View style={styles.mealPanelContent}>
+            {/* Món đã chọn */}
+            <View style={styles.selectedFoodRow}>
+              <Ionicons color={theme.colors.warning} name="restaurant-outline" size={20} />
+              <Text style={styles.selectedFoodName} numberOfLines={1}>
+                {selectedFood.name}
+              </Text>
+              <Pressable hitSlop={8} onPress={() => setSelectedFood(null)}>
+                <Ionicons color={theme.colors.textMuted} name="close" size={20} />
+              </Pressable>
+            </View>
+
+            {/* Giờ */}
+            <View style={styles.mealInfoRow}>
+              <Ionicons color={theme.colors.warning} name="time-outline" size={16} />
+              <Text style={styles.mealInfoText}>
+                {selectedHourForMeal.toString().padStart(2, "0")}:00
+              </Text>
+            </View>
+
+            {/* Input gram */}
+            <View style={styles.gramRow}>
+              <Text style={styles.gramLabel}>Số gram</Text>
+              <View style={styles.gramInputWrap}>
+                <Pressable
+                  onPress={() => setGrams((g) => String(Math.max(1, parseFloat(g) - 10)))}
+                  style={styles.stepBtn}
+                >
+                  <Ionicons color={theme.colors.textPrimary} name="remove" size={18} />
+                </Pressable>
+                <TextInput
+                  keyboardType="numeric"
+                  onChangeText={setGrams}
+                  style={styles.gramInput}
+                  value={grams}
+                />
+                <Pressable
+                  onPress={() => setGrams((g) => String(parseFloat(g) + 10))}
+                  style={styles.stepBtn}
+                >
+                  <Ionicons color={theme.colors.textPrimary} name="add" size={18} />
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Nutrition preview */}
+            {(() => {
+              const gramNum = parseFloat(grams) || 0;
+              const nutrition = calcNutrition(selectedFood, gramNum);
+              return (
+                <View style={styles.nutritionPreview}>
+                  <Text style={styles.nutritionPreviewText}>
+                    {nutrition.calories} kcal • {nutrition.protein}g protein • {nutrition.carb}g
+                    carbs • {nutrition.fat}g fat
+                  </Text>
+                </View>
+              );
+            })()}
+
+            {/* Buttons */}
+            <View style={styles.mealPanelButtons}>
+              <Pressable
+                onPress={() => setSelectedFood(null)}
+                style={[styles.mealPanelButton, styles.cancelButton]}
+              >
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </Pressable>
+              <Pressable
+                disabled={isSaving}
+                onPress={handleSaveMeal}
+                style={[styles.mealPanelButton, styles.saveButton, isSaving && { opacity: 0.6 }]}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Lưu</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Toast Notification */}
+      <Toast
+        visible={showToast}
+        message={toastMessage}
+        type={toastType}
+        duration={2000}
+        onHide={() => setShowToast(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -377,5 +569,111 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: theme.colors.success,
     fontSize: 15,
+  },
+  mealPanel: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: theme.colors.bgBase,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.borderSoft,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  mealPanelContent: {
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  selectedFoodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: theme.colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+  },
+  selectedFoodName: {
+    ...typography.bodyStrong,
+    color: theme.colors.textPrimary,
+    flex: 1,
+  },
+  mealInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  mealInfoText: {
+    ...typography.body,
+    color: theme.colors.textSecondary,
+  },
+  gramRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  gramLabel: {
+    ...typography.body,
+    color: theme.colors.textSecondary,
+  },
+  gramInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  stepBtn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.surfaceAlt,
+  },
+  gramInput: {
+    width: 60,
+    height: 40,
+    textAlign: "center",
+    ...typography.bodyStrong,
+    color: theme.colors.textPrimary,
+    fontSize: 16,
+  },
+  nutritionPreview: {
+    backgroundColor: theme.colors.surface,
+    padding: spacing.sm,
+    borderRadius: 8,
+  },
+  nutritionPreviewText: {
+    ...typography.caption,
+    color: theme.colors.textSecondary,
+    textAlign: "center",
+  },
+  mealPanelButtons: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  mealPanelButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButton: {
+    backgroundColor: theme.colors.surface,
+  },
+  cancelButtonText: {
+    ...typography.bodyStrong,
+    color: theme.colors.textSecondary,
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  saveButtonText: {
+    ...typography.bodyStrong,
+    color: "#fff",
   },
 });

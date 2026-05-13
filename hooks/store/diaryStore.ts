@@ -16,7 +16,7 @@ export interface ExerciseLog {
 }
 
 export interface CreateDiaryEntryPayload {
-  foodId: string;
+  foodId: number; // Changed from string to number
   foodName: string;  // hiển thị local, không gửi API
   dateISO: string;
   hour: number;
@@ -53,9 +53,6 @@ interface DiaryState {
   addExercise: (payload: CreateExercisePayload) => Promise<void>;
   deleteEntry: (entryId: string) => Promise<void>;
 }
-
-// ── API base (sẽ cấu hình từ env sau) ───────────────────────────────────────
-// API base đã được cấu hình trong @/constants/api
 
 function getHeaders() {
   const token = useAuthStore.getState().accessToken;

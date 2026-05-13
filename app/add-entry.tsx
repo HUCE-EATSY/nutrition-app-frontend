@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -17,24 +16,29 @@ import { colors, spacing, typography, radius } from "@/constants";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
+import { Toast } from "@/components/common/Toast";
 import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface FoodItem {
-  id: string;
+  id: number;
   name: string;
   imageUrl: string | null;
-  caloriesPer100g: number;
-  proteinPer100g: number;
-  carbPer100g: number;
-  fatPer100g: number;
+  category: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  servingSize: number;
 }
 
+<<<<<<< HEAD
+=======
 // API base đã được cấu hình trong @/constants/api
 
+>>>>>>> 4775dcfa4b0816f681882eb26d603ccd996dff7f
 export default function AddEntryScreen() {
-  const { hour, date } = useLocalSearchParams<{ hour: string; date: string }>();
-  const targetHour = parseInt(hour ?? `${new Date().getHours()}`, 10);
+  const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();
 
   const { addMealEntry } = useDiaryStore();
@@ -47,17 +51,47 @@ export default function AddEntryScreen() {
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [grams, setGrams] = useState("100");
+  const [selectedHour, setSelectedHour] = useState(
+    hour ? parseInt(hour, 10) : new Date().getHours()
+  );
   const [isSaving, setIsSaving] = useState(false);
 
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Danh sách khung giờ (7:00 - 23:00)
+  const hours = Array.from({ length: 17 }, (_, i) => i + 7);
+
+  // ── Load pre-selected food nếu có foodId ─────────────────────────────────
+  useEffect(() => {
+    if (foodId) {
+      loadFoodById(foodId);
+    }
+  }, [foodId]);
+
+  async function loadFoodById(id: string) {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/Food/${id}`);
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      if (json.data) {
+        setSelected(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to load food:", error);
+    }
+  }
 
   // ── Search với debounce 400ms ─────────────────────────────────────────────
   const searchFoods = useCallback(async (query: string) => {
     setIsSearching(true);
     try {
       const res = await fetch(
-        `${API_BASE}/api/food?search=${encodeURIComponent(query)}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        `${API_BASE}/api/v1/Food?search=${encodeURIComponent(query)}`
       );
       if (!res.ok) throw new Error();
       const json = await res.json();
@@ -81,12 +115,12 @@ export default function AddEntryScreen() {
 
   // ── Tính dinh dưỡng theo gram ─────────────────────────────────────────────
   function calcNutrition(food: FoodItem, g: number) {
-    const ratio = g / 100;
+    const ratio = g / food.servingSize;
     return {
-      calories: Math.round(food.caloriesPer100g * ratio),
-      protein: Math.round(food.proteinPer100g * ratio * 10) / 10,
-      carb: Math.round(food.carbPer100g * ratio * 10) / 10,
-      fat: Math.round(food.fatPer100g * ratio * 10) / 10,
+      calories: Math.round(food.calories * ratio),
+      protein: Math.round(food.protein * ratio * 10) / 10,
+      carb: Math.round(food.carbs * ratio * 10) / 10,
+      fat: Math.round(food.fat * ratio * 10) / 10,
     };
   }
 
@@ -96,7 +130,9 @@ export default function AddEntryScreen() {
   // ── Lưu bữa ăn ───────────────────────────────────────────────────────────
   async function handleSave() {
     if (!selected || gramNum <= 0) {
-      Alert.alert("Lỗi", "Vui lòng chọn món ăn và nhập số gram hợp lệ.");
+      setToastMessage("Vui lòng chọn món ăn và nhập số gram hợp lệ");
+      setToastType("error");
+      setShowToast(true);
       return;
     }
     setIsSaving(true);
@@ -105,17 +141,29 @@ export default function AddEntryScreen() {
         foodId: selected.id,
         foodName: selected.name,
         dateISO: targetDate,
-        hour: targetHour,
+        hour: selectedHour,
         quantityG: gramNum,
         totalCalories: nutrition!.calories,
         proteinGram: nutrition!.protein,
         carbGram: nutrition!.carb,
         fatGram: nutrition!.fat,
       });
-      router.back();
+
+      // Hiện toast thành công
+      setToastMessage(
+        `Đã lưu ${selected.name} (${gramNum}g) vào ${selectedHour.toString().padStart(2, "0")}:00`
+      );
+      setToastType("success");
+      setShowToast(true);
+
+      // Đợi 2s rồi quay về tab Thực đơn
+      setTimeout(() => {
+        router.replace("/(tabs)/meal-plan");
+      }, 2000);
     } catch {
-      Alert.alert("Thất bại", "Không thể ghi bữa ăn. Vui lòng thử lại.");
-    } finally {
+      setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
+      setToastType("error");
+      setShowToast(true);
       setIsSaving(false);
     }
   }
@@ -128,9 +176,7 @@ export default function AddEntryScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>
-          Ghi bữa ăn — {targetHour.toString().padStart(2, "0")}:00
-        </Text>
+        <Text style={styles.headerTitle}>Ghi bữa ăn</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -182,7 +228,7 @@ export default function AddEntryScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.foodName}>{item.name}</Text>
                   <Text style={styles.foodSub}>
-                    {item.caloriesPer100g} kcal / 100g
+                    {item.calories} kcal / {item.servingSize}g • {item.category}
                   </Text>
                 </View>
                 <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
@@ -231,6 +277,31 @@ export default function AddEntryScreen() {
             </View>
           </View>
 
+          {/* Chọn khung giờ */}
+          <View style={styles.hourRow}>
+            <Text style={styles.hourLabel}>Khung giờ</Text>
+            <View style={styles.hourSelector}>
+              <Pressable
+                onPress={() => setSelectedHour((h) => Math.max(7, h - 1))}
+                style={styles.hourBtn}
+              >
+                <Ionicons color={colors.textPrimary} name="chevron-back" size={20} />
+              </Pressable>
+              <View style={styles.hourDisplay}>
+                <Ionicons color={colors.warning} name="time-outline" size={18} />
+                <Text style={styles.hourText}>
+                  {selectedHour.toString().padStart(2, "0")}:00
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setSelectedHour((h) => Math.min(23, h + 1))}
+                style={styles.hourBtn}
+              >
+                <Ionicons color={colors.textPrimary} name="chevron-forward" size={20} />
+              </Pressable>
+            </View>
+          </View>
+
           {/* Preview dinh dưỡng */}
           {nutrition && (
             <View style={styles.nutritionGrid}>
@@ -265,6 +336,15 @@ export default function AddEntryScreen() {
           </Pressable>
         </View>
       )}
+
+      {/* Toast Notification */}
+      <Toast
+        visible={showToast}
+        message={toastMessage}
+        type={toastType}
+        duration={2000}
+        onHide={() => setShowToast(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -396,4 +476,37 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   saveBtnText: { ...typography.bodyStrong, color: "#fff" },
+  hourRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  hourLabel: { ...typography.body, color: colors.textSecondary },
+  hourSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    overflow: "hidden",
+  },
+  hourBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceAlt,
+  },
+  hourDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    minWidth: 100,
+    justifyContent: "center",
+  },
+  hourText: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    fontSize: 18,
+  },
 });
