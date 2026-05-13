@@ -40,11 +40,11 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
   });
-  
+
   const hydrated = useOnboardingStore((state) => state.hydrated);
   const authHydrated = useAuthStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  
+
   const segments = useSegments();
   const router = useRouter();
 
@@ -86,7 +86,7 @@ export default function RootLayout() {
       </View>
     );
   }
-  
+
   if (!hydrated || !authHydrated) {
     return (
       <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
