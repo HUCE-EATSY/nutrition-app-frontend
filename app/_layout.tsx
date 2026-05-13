@@ -29,7 +29,17 @@ const paperTheme = {
   },
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: false,
+      staleTime: Infinity,
+    },
+  },
+});
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 

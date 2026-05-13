@@ -12,7 +12,7 @@ const getBaseUrl = () => {
   if (Platform.OS === 'web') {
     return "http://localhost:5184";
   }
-  return "http://192.168.100.215:5184";
+  return "http://192.168.37.191:5184";
 };
 
 export const API_BASE = getBaseUrl();

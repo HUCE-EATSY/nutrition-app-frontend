@@ -13,116 +13,57 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography, radius } from "@/constants";
-import { useDiaryStore } from "@/hooks/store/diaryStore";
-import { useAuthStore } from "@/hooks/store/authStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
+import { useAddMealEntry } from "@/hooks/api/useDiaryApi";
+import { useFoodList, useFoodDetails, FoodItem } from "@/hooks/api/useFoodApi";
+import { calcNutrition } from "@/hooks/utils/nutrition";
 import { Toast } from "@/components/common/Toast";
-import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
-interface FoodItem {
-  id: number;
-  name: string;
-  imageUrl: string | null;
-  category: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  servingSize: number;
-}
 
-<<<<<<< HEAD
-=======
-// API base đã được cấu hình trong @/constants/api
-
->>>>>>> 4775dcfa4b0816f681882eb26d603ccd996dff7f
+// ── Types ────────────────────────────────────────────────────────────────────
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();
 
-  const { addMealEntry } = useDiaryStore();
-  const accessToken = useAuthStore((s) => s.accessToken);
+  const { mutateAsync: addMealEntry, isPending: isSaving } = useAddMealEntry();
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
-  const [foods, setFoods] = useState<FoodItem[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [grams, setGrams] = useState("100");
   const [selectedHour, setSelectedHour] = useState(
     hour ? parseInt(hour, 10) : new Date().getHours()
   );
-  const [isSaving, setIsSaving] = useState(false);
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Danh sách khung giờ (7:00 - 23:00)
   const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────
+  const { data: preSelectedFood } = useFoodDetails(foodId);
   useEffect(() => {
-    if (foodId) {
-      loadFoodById(foodId);
+    if (preSelectedFood) {
+      setSelected(preSelectedFood);
     }
-  }, [foodId]);
-
-  async function loadFoodById(id: string) {
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/Food/${id}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      if (json.data) {
-        setSelected(json.data);
-      }
-    } catch (error) {
-      console.error("Failed to load food:", error);
-    }
-  }
+  }, [preSelectedFood]);
 
   // ── Search với debounce 400ms ─────────────────────────────────────────────
-  const searchFoods = useCallback(async (query: string) => {
-    setIsSearching(true);
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/v1/Food?search=${encodeURIComponent(query)}`
-      );
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setFoods(json.data ?? []);
-    } catch {
-      setFoods([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [accessToken]);
-
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (searchQuery.trim().length < 2) {
-      setFoods([]);
-      return;
-    }
-    debounceRef.current = setTimeout(() => searchFoods(searchQuery), 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [searchQuery, searchFoods]);
+    const handler = setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim().length >= 2 ? searchQuery : "");
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
-  // ── Tính dinh dưỡng theo gram ─────────────────────────────────────────────
-  function calcNutrition(food: FoodItem, g: number) {
-    const ratio = g / food.servingSize;
-    return {
-      calories: Math.round(food.calories * ratio),
-      protein: Math.round(food.protein * ratio * 10) / 10,
-      carb: Math.round(food.carbs * ratio * 10) / 10,
-      fat: Math.round(food.fat * ratio * 10) / 10,
-    };
-  }
+  const { data: foods = [], isFetching: isSearching } = useFoodList(debouncedQuery);
+
 
   const gramNum = parseFloat(grams) || 0;
   const nutrition = selected ? calcNutrition(selected, gramNum) : null;
@@ -135,7 +76,6 @@ export default function AddEntryScreen() {
       setShowToast(true);
       return;
     }
-    setIsSaving(true);
     try {
       await addMealEntry({
         foodId: selected.id,
@@ -164,7 +104,6 @@ export default function AddEntryScreen() {
       setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
       setToastType("error");
       setShowToast(true);
-      setIsSaving(false);
     }
   }
 
@@ -210,7 +149,7 @@ export default function AddEntryScreen() {
           )}
           <FlatList
             data={foods}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => String(item.id)}
             style={styles.list}
             ListEmptyComponent={
               searchQuery.length >= 2 && !isSearching ? (

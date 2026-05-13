@@ -16,9 +16,11 @@ import { useEffect, useState } from "react";
 import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
+import { useDiary, useExercises, useAddMealEntry } from "@/hooks/api/useDiaryApi";
 import { formatShortDate } from "@/hooks/utils/date";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { Toast } from "@/components/common/Toast";
+import { calcNutrition } from "@/hooks/utils/nutrition";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -36,31 +38,26 @@ export default function DiaryTimelineScreen() {
 
   const {
     selectedDate,
-    summary,
-    exercises,
-    isLoading,
     goToPrevDay,
     goToNextDay,
-    fetchDiary,
-    addMealEntry,
   } = useDiaryStore();
+
+  const { data: summary, isLoading: isDiaryLoading } = useDiary(selectedDate);
+  const { data: exercises = [], isLoading: isExercisesLoading } = useExercises(selectedDate);
+  const { mutateAsync: addMealEntry, isPending: isSaving } = useAddMealEntry();
+
+  const isLoading = isDiaryLoading || isExercisesLoading;
 
   // Modal state
   const [showFoodSelector, setShowFoodSelector] = useState(false);
   const [selectedHourForMeal, setSelectedHourForMeal] = useState<number>(currentHour);
   const [selectedFood, setSelectedFood] = useState<any>(null);
   const [grams, setGrams] = useState("100");
-  const [isSaving, setIsSaving] = useState(false);
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-
-  // Load dữ liệu khi màn hình mount hoặc ngày thay đổi
-  useEffect(() => {
-    fetchDiary(selectedDate);
-  }, [selectedDate, fetchDiary]);
 
   const macros: MacroInfo[] = [
     {
@@ -109,16 +106,6 @@ export default function DiaryTimelineScreen() {
     setGrams("100"); // Reset gram về 100
   }
 
-  // Tính dinh dưỡng theo gram
-  function calcNutrition(food: any, g: number) {
-    const ratio = g / food.servingSize;
-    return {
-      calories: Math.round(food.calories * ratio),
-      protein: Math.round(food.protein * ratio * 10) / 10,
-      carb: Math.round(food.carbs * ratio * 10) / 10,
-      fat: Math.round(food.fat * ratio * 10) / 10,
-    };
-  }
 
   // Lưu bữa ăn
   async function handleSaveMeal() {
@@ -134,7 +121,6 @@ export default function DiaryTimelineScreen() {
 
     const nutrition = calcNutrition(selectedFood, gramNum);
 
-    setIsSaving(true);
     try {
       await addMealEntry({
         foodId: selectedFood.id,
@@ -160,15 +146,10 @@ export default function DiaryTimelineScreen() {
       // Reset state
       setSelectedFood(null);
       setGrams("100");
-
-      // Refresh diary
-      await fetchDiary(selectedDate);
     } catch {
       setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
       setToastType("error");
       setShowToast(true);
-    } finally {
-      setIsSaving(false);
     }
   }
 

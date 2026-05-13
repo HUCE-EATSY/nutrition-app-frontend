@@ -2,10 +2,11 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { useEffect, useState } from 'react';
 import * as AuthSession from 'expo-auth-session';
+import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
 import { useOnboardingStore } from './store/onboardingStore';
 import { API_URLS } from '@/constants/api';
-import Constants from 'expo-constants';
+import axiosClient from './api/axiosClient';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -13,7 +14,6 @@ const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID;
 const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_GOOGLE_CLIENT_ID;
 
 export const useGoogleAuth = () => {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
   const { completeOnboarding, reset: resetOnboarding } = useOnboardingStore();
@@ -51,23 +51,13 @@ export const useGoogleAuth = () => {
     }
   }, [response]);
 
-  const loginToBackend = async (idToken: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(API_URLS.auth.google, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Backend login failed');
-      }
-
-      const { data } = await res.json();
-      
+  const mutation = useMutation({
+    mutationFn: async (idToken: string) => {
+      const response = await axiosClient.post(API_URLS.auth.google, { idToken });
+      return response.data;
+    },
+    onSuccess: (json) => {
+      const { data } = json;
       if (data.isNewUser === false) {
         completeOnboarding();
       }
@@ -76,15 +66,19 @@ export const useGoogleAuth = () => {
         id: data.userId,
         email: data.email,
       });
-      
-    } catch (err: unknown) {
+    },
+    onError: (err) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';
       setError(errorMessage);
       console.error(err);
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const loginToBackend = (idToken: string) => {
+    mutation.mutate(idToken);
   };
+
+  const loading = mutation.isPending;
 
   const logout = async () => {
     clearAuth();
@@ -108,4 +102,3 @@ export const useGoogleAuth = () => {
     request,
   };
 };
-
