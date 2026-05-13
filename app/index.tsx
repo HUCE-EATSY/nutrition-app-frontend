@@ -10,7 +10,7 @@ import { getDraftResumePath, getPublicResumePath } from "@/domain/onboarding";
 export default function IndexScreen() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  
+
   const publicFlowStep = useOnboardingStore((state) => state.publicFlowStep);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
   const draft = useOnboardingStore((state) => state.draft);
@@ -37,9 +37,9 @@ export default function IndexScreen() {
   // If authenticated but not finished onboarding, resume onboarding
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
-       <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
-       <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
-       <ActivityIndicator color={colors.primary} />
+      <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
+      <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
+      <ActivityIndicator color={colors.primary} />
     </View>
   );
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
@@ -10,6 +10,7 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
+import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { colors, radius, spacing, typography } from "@/constants";
 
@@ -19,20 +20,41 @@ import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG 
 export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
+  const { data: userGoalInfo } = useGetUserInfo();
   const resetOnboarding = useOnboardingStore((state) => state.reset);
-  const { logout, deleteAccount } = useGoogleAuth();
+  // Bypass Google Auth to prevent Client ID error during UI development
+  // const { logout, deleteAccount } = useGoogleAuth();
+  const logout = async () => console.log("Mock logout");
+  const deleteAccount = async () => console.log("Mock deleteAccount");
+
+  const profile = userGoalInfo?.activeGoal;
   
-  const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
+  // Profile info (DisplayName, HeightCm, WeightKg, DateOfBirth)
+  const profileInfo = userGoalInfo?.profile;
+  
+  const age = profileInfo?.dateOfBirth
+    ? getAgeFromBirthDate(profileInfo.dateOfBirth)
+    : draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
 
-  const nickname = draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
-  const joinedDate = "12 Thg 05, 2026"; // In a real app, this would come from a user object
+  const nickname = profileInfo?.displayName ?? draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
+  
+  const joinedDate = userGoalInfo?.createdAt
+    ? new Date(userGoalInfo.createdAt).toLocaleDateString("vi-VN", { year: 'numeric', month: 'short', day: 'numeric' })
+    : "12 Thg 05, 2026";
 
-  const plan = serverPlan || {
-    targetCalories: 2000,
-    targetProteinG: 100,
-    targetCarbsG: 250,
-    targetFatG: 67,
-  };
+  const plan = profile
+    ? {
+        targetCalories: Number(profile.targetCalories),
+        targetProteinG: Number(profile.targetProteinG),
+        targetCarbsG: Number(profile.targetCarbsG),
+        targetFatG: Number(profile.targetFatG),
+      }
+    : serverPlan || {
+        targetCalories: 2000,
+        targetProteinG: 100,
+        targetCarbsG: 250,
+        targetFatG: 67,
+      };
 
   const proteinPct = Math.round((plan.targetProteinG * 400) / plan.targetCalories) || 20;
   const carbsPct = Math.round((plan.targetCarbsG * 400) / plan.targetCalories) || 50;
@@ -190,17 +212,21 @@ export default function AccountScreen() {
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="man-outline" size={18} />
-          <Text style={styles.statChipText}>{draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
+          <Text style={styles.statChipText}>{profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
-          <Text style={styles.statChipText}>{draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+          <Text style={styles.statChipText}>{profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
         </View>
       </View>
 
       {/* Physical Profile Button */}
-      <Pressable style={styles.physicalProfileButton}>
+      <Pressable
+        style={({ pressed }) => [styles.physicalProfileButton, pressed && { opacity: 0.8 }]}
+        onPress={() => router.push("/physical-profile")}
+      >
         <Text style={styles.physicalProfileButtonText}>{t.account.physicalProfile}</Text>
+        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
       </Pressable>
 
       {/* Your Journey Section */}
@@ -222,8 +248,8 @@ export default function AccountScreen() {
               <View style={[styles.progressKnob, { left: "40%" }]} />
             </View>
             <View style={styles.progressLabels}>
-              <Text style={styles.progressLabel}>{draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
-              <Text style={styles.progressLabel}>{draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
+              <Text style={styles.progressLabel}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+              <Text style={styles.progressLabel}>{profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
             </View>
           </View>
         </LinearGradient>
@@ -291,10 +317,10 @@ export default function AccountScreen() {
       {/* Statistic Reports Section */}
       <SectionHeader title={t.account.testReports} />
       <View style={styles.statsIconRow}>
-        <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} />
-        <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} />
-        <StatIconButton color="#C6FFD0" icon="walk" label={t.account.stats.steps} />
-        <StatIconButton color="#85E6FF" icon="speedometer" label={t.account.stats.weight} />
+        <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} route="/stats/nutrition" />
+        <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} route="/stats/activity" />
+        <StatIconButton color="#C6FFD0" icon="walk" label={t.account.stats.steps} route="/stats/steps" />
+        <StatIconButton color="#85E6FF" icon="speedometer" label={t.account.stats.weight} route="/stats/weight" />
       </View>
 
       {/* Community Section */}
@@ -378,14 +404,18 @@ function MacroItem({ color, label, percentage, value }: { color: string; label: 
   );
 }
 
-function StatIconButton({ color, icon, label }: { color: string; icon: keyof typeof Ionicons.glyphMap; label: string }) {
+function StatIconButton({ color, icon, label, route }: { color: string; icon: keyof typeof Ionicons.glyphMap; label: string; route: string }) {
+  const router = useRouter();
   return (
-    <View style={styles.statIconContainer}>
+    <Pressable
+      style={({ pressed }) => [styles.statIconContainer, pressed && { opacity: 0.7 }]}
+      onPress={() => router.push(route as any)}
+    >
       <View style={[styles.statIconCircle, { backgroundColor: color }]}>
         <Ionicons color="#111020" name={icon} size={28} />
       </View>
       <Text style={styles.statIconLabel}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -514,8 +544,11 @@ const styles = StyleSheet.create({
   physicalProfileButton: {
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.xl,
   },
   physicalProfileButtonText: {
