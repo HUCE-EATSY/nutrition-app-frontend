@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
 
 interface MacroItemProps {
   label: string;
@@ -36,30 +37,41 @@ function ProgressItem({ label, current, target, color, icon, type }: MacroItemPr
 }
 
 export function MacroProgressRow() {
+  const { summary } = useDiaryStore();
+
+  const proteinCurrent = summary?.consumedProteinGram ?? 0;
+  const proteinTarget = summary?.targetProteinGram ?? 120;
+
+  const carbsCurrent = summary?.consumedCarbGram ?? 0;
+  const carbsTarget = summary?.targetCarbGram ?? 250;
+
+  const fatCurrent = summary?.consumedFatGram ?? 0;
+  const fatTarget = summary?.targetFatGram ?? 67;
+
   return (
     <View style={styles.container}>
       <ProgressItem
         color={colors.protein}
-        current={0}
+        current={proteinCurrent}
         icon="⚡"
-		label={t.home.protein}
-        target={96}
+        label={t.home.protein}
+        target={proteinTarget}
         type="protein"
       />
       <ProgressItem
         color={colors.carbs}
-        current={0}
+        current={carbsCurrent}
         icon="🍞"
         label={t.home.carbs}
-        target={241}
+        target={carbsTarget}
         type="carb"
       />
       <ProgressItem
         color={colors.fat}
-        current={0}
+        current={fatCurrent}
         icon="🥑"
         label={t.home.fat}
-        target={64}
+        target={fatTarget}
         type="fat"
       />
     </View>

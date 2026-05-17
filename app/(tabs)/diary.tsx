@@ -65,29 +65,29 @@ export default function DiaryTimelineScreen() {
   const macros: MacroInfo[] = [
     {
       label: "Calo",
-      value: summary?.consumedCalories ?? 0,
-      target: summary?.targetCalories ?? 2000,
+      value: Math.round(summary?.consumedCalories ?? 0),
+      target: Math.round(summary?.targetCalories ?? 2000),
       icon: "flame",
       color: theme.colors.primary,
     },
     {
       label: "Protein",
-      value: summary?.consumedProteinGram ?? 0,
-      target: summary?.targetProteinGram ?? 120,
+      value: Math.round(summary?.consumedProteinGram ?? 0),
+      target: Math.round(summary?.targetProteinGram ?? 120),
       icon: "flash",
       color: theme.colors.protein,
     },
     {
       label: "Carbs",
-      value: summary?.consumedCarbGram ?? 0,
-      target: summary?.targetCarbGram ?? 150,
+      value: Math.round(summary?.consumedCarbGram ?? 0),
+      target: Math.round(summary?.targetCarbGram ?? 150),
       icon: "leaf",
       color: theme.colors.carbs,
     },
     {
       label: "Fat",
-      value: summary?.consumedFatGram ?? 0,
-      target: summary?.targetFatGram ?? 55,
+      value: Math.round(summary?.consumedFatGram ?? 0),
+      target: Math.round(summary?.targetFatGram ?? 55),
       icon: "water",
       color: theme.colors.fat,
     },
@@ -132,28 +132,24 @@ export default function DiaryTimelineScreen() {
       return;
     }
 
-    const nutrition = calcNutrition(selectedFood, gramNum);
 
     setIsSaving(true);
     try {
+      // Chuyển giờ → mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Phụ
+      const mealTypeId =
+        selectedHourForMeal >= 5 && selectedHourForMeal <= 10 ? 1 :
+        selectedHourForMeal >= 11 && selectedHourForMeal <= 14 ? 2 :
+        selectedHourForMeal >= 18 && selectedHourForMeal <= 22 ? 3 : 4;
+
       await addMealEntry({
-        foodId: selectedFood.id,
-        foodName: selectedFood.name,
+        foodItemId: selectedFood.id,   // UUID string
+        mealTypeId,
         dateISO: selectedDate,
-        hour: selectedHourForMeal,
         quantityG: gramNum,
-        totalCalories: nutrition.calories,
-        proteinGram: nutrition.protein,
-        carbGram: nutrition.carb,
-        fatGram: nutrition.fat,
       });
 
       // Hiện toast thành công
-      setToastMessage(
-        `Đã lưu ${selectedFood.name} (${gramNum}g) vào ${selectedHourForMeal
-          .toString()
-          .padStart(2, "0")}:00`
-      );
+      setToastMessage(`Đã lưu ${selectedFood.name} (${gramNum}g)`);
       setToastType("success");
       setShowToast(true);
 

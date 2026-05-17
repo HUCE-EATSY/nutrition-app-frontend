@@ -4,8 +4,12 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
 
 export function SmallStatRow() {
+  const { exercises } = useDiaryStore();
+  const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
+
   return (
     <View style={styles.container}>
       <SurfaceCard style={styles.card}>
@@ -24,10 +28,12 @@ export function SmallStatRow() {
           </View>
         </View>
         <View style={styles.content}>
-          <Text style={styles.emptyText}>{t.home.noData}</Text>
+          <Text style={styles.emptyText}>
+            {exercises.length > 0 ? `${exercises.length} bài tập` : t.home.noData}
+          </Text>
           <View style={styles.burningRow}>
              <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
-             <Text style={styles.statValue}>0</Text>
+             <Text style={styles.statValue}>{burned}</Text>
           </View>
         </View>
       </SurfaceCard>

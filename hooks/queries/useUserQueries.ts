@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userService } from "../../services/userService";
+import { weightLogService } from "../../services/logService";
 import { OnboardingDraft, UserProfile } from "../../constants/types/contracts";
 
 export const USER_QUERY_KEYS = {
@@ -47,3 +48,11 @@ export const useUpdateGoal = () => {
     },
   });
 };
+
+export const useGetWeightLogs = (from?: string, to?: string) => {
+  return useQuery({
+    queryKey: [...USER_QUERY_KEYS.all, "weightLogs", from, to],
+    queryFn: () => weightLogService.getWeightLogs(from, to),
+  });
+};
+

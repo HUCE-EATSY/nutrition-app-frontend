@@ -12,26 +12,32 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
-import { API_BASE } from "@/constants/api";
+import { foodService, FoodItemDto } from "@/services/foodService";
 
-interface FoodItem {
-  id: number;
-  name: string;
-  imageUrl: string | null;
-  category: string;
+/** Alias để UI không cần thay đổi */
+type FoodItem = FoodItemDto & {
+  /** alias: caloriesKcal */
   calories: number;
+  /** alias: proteinG */
   protein: number;
+  /** alias: carbsG */
   carbs: number;
+  /** alias: fatG */
   fat: number;
+  /** alias: servingSizeG */
   servingSize: number;
+  name: string;
+  category: string;
+  imageUrl: string | null;
   description: string | null;
-}
+};
 
 interface FoodSelectorModalProps {
   visible: boolean;
   onClose: () => void;
   onSelectFood: (food: FoodItem) => void;
 }
+
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
   const [foods, setFoods] = useState<FoodItem[]>([]);
@@ -87,11 +93,21 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
   async function loadAllFoods() {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/Food`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setFoods(json.data ?? []);
-      setFilteredFoods(json.data ?? []);
+      const rawList = await foodService.getAllFoods(1, 50);
+      // Map DTO → FoodItem shape cho UI
+      const mapped: FoodItem[] = rawList.map((dto) => ({
+        ...dto,
+        name: dto.nameVi,
+        calories: dto.caloriesKcal,
+        protein: dto.proteinG ?? 0,
+        carbs: dto.carbsG ?? 0,
+        fat: dto.fatG ?? 0,
+        servingSize: dto.servingSizeG,
+        imageUrl: dto.imageUrl ?? null,
+        description: null,
+      }));
+      setFoods(mapped);
+      setFilteredFoods(mapped);
     } catch (error) {
       console.error("Failed to load foods:", error);
       setFoods([]);
@@ -101,8 +117,24 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
     }
   }
 
-  function handleSelectFood(food: FoodItem) {
-    onSelectFood(food);
+  async function handleSelectFood(food: FoodItem) {
+    try {
+      const full = await foodService.getFoodById(food.id);
+      if (full) {
+        onSelectFood({
+          ...food,
+          protein: full.proteinG ?? 0,
+          carbs: full.carbsG ?? 0,
+          fat: full.fatG ?? 0,
+          calories: full.caloriesKcal ?? 0,
+          servingSize: full.servingSizeG ?? 100,
+        });
+      } else {
+        onSelectFood(food);
+      }
+    } catch {
+      onSelectFood(food);
+    }
     // Reset state
     setSearchQuery("");
     setSelectedCategory(null);
