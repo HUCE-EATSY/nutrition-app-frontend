@@ -60,7 +60,7 @@ export default function RootLayout() {
     }
   }, []);
 
-  // Auth protection logic
+  // Auth protection logic - DISABLED FOR TESTING
   useEffect(() => {
     if (!loaded || !hydrated || !authHydrated) return;
 
@@ -68,14 +68,15 @@ export default function RootLayout() {
     const inPublicGroup = firstSegment === "(public)";
     const isMascotIntro = secondSegment === "mascot-intro";
 
-    if (!isAuthenticated && !inPublicGroup) {
-      // Redirect to the welcome page if not authenticated and not in public group
-      router.replace("/(public)/welcome");
-    } else if (isAuthenticated && inPublicGroup && !isMascotIntro) {
-      // If we are authenticated but in a public screen (like welcome or social-login), 
-      // go back to the index to let it decide where to go (home or onboarding)
-      router.replace("/");
-    }
+    // TEMPORARILY DISABLED: Allow access without authentication for testing
+    // if (!isAuthenticated && !inPublicGroup) {
+    //   // Redirect to the welcome page if not authenticated and not in public group
+    //   router.replace("/(public)/welcome");
+    // } else if (isAuthenticated && inPublicGroup && !isMascotIntro) {
+    //   // If we are authenticated but in a public screen (like welcome or social-login), 
+    //   // go back to the index to let it decide where to go (home or onboarding)
+    //   router.replace("/");
+    // }
   }, [isAuthenticated, segments, loaded, hydrated, authHydrated, router]);
 
   if (!loaded && !error) {
