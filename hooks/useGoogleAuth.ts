@@ -68,6 +68,9 @@ export const useGoogleAuth = () => {
 
       const { data } = await res.json();
       
+      // Thêm dòng này để lấy token dùng cho Swagger
+      console.log(">>> TOKEN DÙNG CHO SWAGGER:", data.accessToken);
+      
       if (data.isNewUser === false) {
         completeOnboarding();
       }

@@ -7,6 +7,7 @@ import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
+import { ProgressRingChart } from "@/components/charts/ProgressRingChart";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
@@ -260,27 +261,13 @@ export default function AccountScreen() {
       <View style={styles.macroCard}>
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
-            <Svg height="120" width="120">
-              <Circle
-                cx="60"
-                cy="60"
-                fill="transparent"
-                r="50"
-                stroke={colors.surfaceAlt}
-                strokeWidth="8"
-              />
-              <Circle
-                cx="60"
-                cy="60"
-                fill="transparent"
-                r="50"
-                stroke={colors.warning}
-                strokeDasharray={`${(2 * Math.PI * 50) * 0.75} ${2 * Math.PI * 50}`}
-                strokeLinecap="round"
-                strokeWidth="8"
-                transform="rotate(-90 60 60)"
-              />
-            </Svg>
+            <ProgressRingChart 
+              percentage={75} 
+              color={colors.warning} 
+              size={120} 
+              strokeWidth={8}
+              showPercentageText={false}
+            />
             <View style={styles.chartCenter}>
               <Ionicons color={colors.warning} name="flame" size={20} />
               <Text style={styles.calorieValue}>{Math.round(plan.targetCalories).toLocaleString()}</Text>
@@ -309,7 +296,10 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        <Pressable style={styles.customizeGoalButton}>
+        <Pressable 
+          style={styles.customizeGoalButton}
+          onPress={() => router.push('/account/targets')}
+        >
           <Text style={styles.customizeGoalText}>{t.account.customizeGoal}</Text>
         </Pressable>
       </View>

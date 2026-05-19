@@ -56,6 +56,7 @@ function calcEstimatedDate(goalWeightKg: number, currentWeightKg: number, weekly
 
 export default function PhysicalProfileScreen() {
   const insets = useSafeAreaInsets();
+  // Bypass API call for UI development when auth is disabled
   const { data: userGoalInfo } = useGetUserInfo();
   const { draft } = useOnboardingStore();
   const [resetModalVisible, setResetModalVisible] = useState(false);

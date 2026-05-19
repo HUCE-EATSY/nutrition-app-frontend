@@ -1,17 +1,40 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Svg, { Path, Circle, Line } from "react-native-svg";
 import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
+import { colors, spacing, typography, radius, layout } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
+import { useWeightStats } from "@/hooks/stats/useWeightStats";
+import { LineChart } from "../charts/LineChart";
+import { useResponsiveLayout } from "@/constants/responsive";
+
+function formatLogDate(isoString?: string) {
+  if (!isoString) return "Chưa có dữ liệu";
+  const parts = isoString.split("-");
+  if (parts.length < 3) return isoString;
+  const year = parts[0];
+  const month = parts[1];
+  const day = parts[2];
+  return `${day} Th ${month}, ${year}`;
+}
 
 export function WeightChartCard() {
   const router = useRouter();
+  const { width: windowWidth, horizontalPadding } = useResponsiveLayout();
   
-  // Simple mock chart line
-  const d = "M0 60 L50 60 L100 58 L150 55 L200 55 L250 55 L300 55";
+  const {
+    currentWeight,
+    actualChartData,
+    targetChartData,
+    isLoading,
+  } = useWeightStats();
+
+  const contentWidth = Math.min(windowWidth, layout.maxCardWidth);
+  const chartWidth = contentWidth - (horizontalPadding * 2) - (spacing.md * 2);
+  const lastPoint = actualChartData[actualChartData.length - 1];
+  const dateStr = lastPoint ? formatLogDate(lastPoint.fullDate) : "Chưa ghi nhận";
+  const hasData = actualChartData.length > 0;
 
   return (
     <SurfaceCard style={styles.container}>
@@ -24,8 +47,10 @@ export function WeightChartCard() {
 
       <View style={styles.main}>
         <View>
-          <Text style={styles.weightValue}>54.3 {t.home.kgSuffix}</Text>
-          <Text style={styles.date}>19 Th 04, 2026</Text>
+          <Text style={styles.weightValue}>
+            {currentWeight > 0 ? `${currentWeight} ${t.home.kgSuffix}` : "N/A"}
+          </Text>
+          <Text style={styles.date}>{dateStr}</Text>
         </View>
         <TouchableOpacity style={styles.updateBtn} onPress={() => router.push('/log-weight')}>
           <Text style={styles.updateText}>{t.home.update}</Text>
@@ -33,16 +58,19 @@ export function WeightChartCard() {
       </View>
 
       <View style={styles.chartArea}>
-         {/* Simple Grid and Line to mimic the image */}
-         <Svg height="80" width="100%" viewBox="0 0 300 80">
-            <Line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.05)" />
-            <Line x1="0" y1="40" x2="300" y2="40" stroke="rgba(255,255,255,0.05)" />
-            <Line x1="0" y1="60" x2="300" y2="60" stroke="rgba(255,255,255,0.05)" />
-            
-            <Path d={d} fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2" />
-            <Circle cx="50" cy="60" r="4" fill={colors.textPrimary} stroke={colors.surfaceAlt} strokeWidth="2" />
-            <Text style={[styles.chartPointLabel, { position: 'absolute', left: 40, bottom: 20 }]}>53.9</Text>
-         </Svg>
+         {isLoading ? (
+           <ActivityIndicator size="small" color={colors.primary} />
+         ) : !hasData ? (
+           <Text style={styles.noDataText}>Chưa có dữ liệu cân nặng</Text>
+         ) : (
+           <LineChart
+             actualData={actualChartData}
+             targetData={targetChartData}
+             width={chartWidth}
+             height={100}
+             yUnit="kg"
+           />
+         )}
       </View>
     </SurfaceCard>
   );
@@ -93,12 +121,13 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   chartArea: {
-    height: 80,
+    height: 100,
     marginTop: spacing.sm,
     justifyContent: "center",
+    alignItems: "center",
   },
-  chartPointLabel: {
+  noDataText: {
+    ...typography.caption,
     color: colors.textMuted,
-    fontSize: 10,
   },
 });
