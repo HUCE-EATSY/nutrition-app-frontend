@@ -15,6 +15,7 @@ import { colors, radius, spacing, typography } from "@/constants";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
+import { useUserInfo } from "@/hooks/api/useUserApi";
 
 export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
@@ -22,12 +23,25 @@ export default function AccountScreen() {
   const resetOnboarding = useOnboardingStore((state) => state.reset);
   const { logout, deleteAccount } = useGoogleAuth();
   
-  const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
+  const { data: serverUserInfo } = useUserInfo();
+  const profile = serverUserInfo?.profile;
+  const activeGoal = serverUserInfo?.activeGoal;
 
-  const nickname = draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
-  const joinedDate = "12 Thg 05, 2026"; // In a real app, this would come from a user object
+  const age = profile?.dateOfBirth 
+    ? getAgeFromBirthDate(profile.dateOfBirth) 
+    : (draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24);
 
-  const plan = serverPlan || {
+  const nickname = profile?.displayName ?? draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
+  
+  const joinedDate = serverUserInfo?.createdAt 
+    ? new Date(serverUserInfo.createdAt).toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "12 Thg 05, 2026";
+
+  const plan = activeGoal || serverPlan || {
     targetCalories: 2000,
     targetProteinG: 100,
     targetCarbsG: 250,
@@ -190,11 +204,11 @@ export default function AccountScreen() {
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="man-outline" size={18} />
-          <Text style={styles.statChipText}>{draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
+          <Text style={styles.statChipText}>{profile?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
-          <Text style={styles.statChipText}>{draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+          <Text style={styles.statChipText}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
         </View>
       </View>
 
@@ -222,8 +236,8 @@ export default function AccountScreen() {
               <View style={[styles.progressKnob, { left: "40%" }]} />
             </View>
             <View style={styles.progressLabels}>
-              <Text style={styles.progressLabel}>{draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
-              <Text style={styles.progressLabel}>{draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
+              <Text style={styles.progressLabel}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+              <Text style={styles.progressLabel}>{activeGoal?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
             </View>
           </View>
         </LinearGradient>

@@ -30,6 +30,7 @@ export function RollingWheelPicker<T extends string | number>({
   const scrollViewRef = useRef<ScrollView>(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const [internalSelectedValue, setInternalSelectedValue] = useState(selectedValue);
+  const isMomentumRef = useRef(false);
 
   const spacerCount = Math.floor(visibleItems / 2);
   const initialIndex = data.indexOf(selectedValue);
@@ -44,29 +45,38 @@ export function RollingWheelPicker<T extends string | number>({
     }
   }, [initialIndex, itemHeight, selectedValue, isScrolling]);
 
+  const onMomentumScrollBegin = () => {
+    isMomentumRef.current = true;
+  };
+
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setIsScrolling(false);
+    isMomentumRef.current = false;
     const y = event.nativeEvent.contentOffset.y;
     const index = Math.round(y / itemHeight);
     const newValue = data[index];
     if (newValue !== undefined && newValue !== selectedValue) {
       onValueChange(newValue);
     }
-    setIsScrolling(false);
   };
 
   const onScrollEndDrag = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    // Tự động snap khi kéo thả chậm không có momentum
-    const y = event.nativeEvent.contentOffset.y;
-    const index = Math.round(y / itemHeight);
-    const newValue = data[index];
-    if (newValue !== undefined && newValue !== selectedValue) {
-      onValueChange(newValue);
-    }
-    setIsScrolling(false);
+    setTimeout(() => {
+      if (!isMomentumRef.current) {
+        setIsScrolling(false);
+        const y = event.nativeEvent.contentOffset.y;
+        const index = Math.round(y / itemHeight);
+        const newValue = data[index];
+        if (newValue !== undefined && newValue !== selectedValue) {
+          onValueChange(newValue);
+        }
+      }
+    }, 0);
   };
 
   const onScrollBeginDrag = () => {
     setIsScrolling(true);
+    isMomentumRef.current = false;
   };
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -75,11 +85,6 @@ export function RollingWheelPicker<T extends string | number>({
     const newValue = data[index];
     if (newValue !== undefined && newValue !== internalSelectedValue) {
       setInternalSelectedValue(newValue);
-      // Cập nhật lên parent ngay lập tức để nextISO trong BirthDateScreen luôn mới nhất
-      // Dùng if để tránh loop vô tận nếu parent update props
-      if (newValue !== selectedValue) {
-        onValueChange(newValue);
-      }
     }
   };
 
@@ -88,6 +93,7 @@ export function RollingWheelPicker<T extends string | number>({
       <ScrollView
         ref={scrollViewRef}
         decelerationRate="fast"
+        onMomentumScrollBegin={onMomentumScrollBegin}
         onMomentumScrollEnd={onMomentumScrollEnd}
         onScroll={onScroll}
         onScrollBeginDrag={onScrollBeginDrag}

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -43,8 +43,7 @@ export default function AddEntryScreen() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  // Danh sách khung giờ (7:00 - 23:00)
-  const hours = Array.from({ length: 17 }, (_, i) => i + 7);
+
 
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────
   const { data: preSelectedFood } = useFoodDetails(foodId);

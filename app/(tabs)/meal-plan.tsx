@@ -3,12 +3,10 @@ import {
   StyleSheet,
   Text,
   View,
-  FlatList,
   TextInput,
   Pressable,
   ActivityIndicator,
   Image,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";

@@ -42,6 +42,8 @@ export function HorizontalRulerPicker({
   const [containerWidth, setContainerWidth] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [internalValue, setInternalValue] = useState(value);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const isMomentumRef = useRef(false);
 
   // Generate all possible values
   const data = useMemo(() => {
@@ -57,6 +59,9 @@ export function HorizontalRulerPicker({
 
   // Sync internal value when prop changes (from external buttons)
   useEffect(() => {
+    if (isScrolling) {
+      return;
+    }
     if (Math.abs(value - internalValue) > step / 4) {
       setInternalValue(value);
       if (isReady && flatListRef.current && containerWidth > 0) {
@@ -69,7 +74,7 @@ export function HorizontalRulerPicker({
         }
       }
     }
-  }, [value, isReady, containerWidth, data, step, internalValue]);
+  }, [value, isReady, containerWidth, data, step, internalValue, isScrolling]);
 
   const onLayout = (event: LayoutChangeEvent) => {
     const width = event.nativeEvent.layout.width;
@@ -97,6 +102,39 @@ export function HorizontalRulerPicker({
 
     if (newValue !== undefined && newValue !== internalValue) {
       setInternalValue(newValue);
+    }
+  };
+
+  const onScrollBeginDrag = () => {
+    setIsScrolling(true);
+    isMomentumRef.current = false;
+  };
+
+  const onMomentumScrollBegin = () => {
+    isMomentumRef.current = true;
+  };
+
+  const onScrollEndDrag = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setTimeout(() => {
+      if (!isMomentumRef.current) {
+        setIsScrolling(false);
+        const offsetX = event.nativeEvent.contentOffset.x;
+        const index = Math.round(offsetX / TICK_WIDTH);
+        const newValue = data[clamp(index, 0, data.length - 1)];
+        if (newValue !== undefined && newValue !== value) {
+          onChange(newValue);
+        }
+      }
+    }, 0);
+  };
+
+  const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    setIsScrolling(false);
+    isMomentumRef.current = false;
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / TICK_WIDTH);
+    const newValue = data[clamp(index, 0, data.length - 1)];
+    if (newValue !== undefined && newValue !== value) {
       onChange(newValue);
     }
   };
@@ -162,6 +200,10 @@ export function HorizontalRulerPicker({
                 horizontal
                 keyExtractor={(item) => item.toString()}
                 onScroll={onScroll}
+                onScrollBeginDrag={onScrollBeginDrag}
+                onScrollEndDrag={onScrollEndDrag}
+                onMomentumScrollBegin={onMomentumScrollBegin}
+                onMomentumScrollEnd={onMomentumScrollEnd}
                 renderItem={renderItem}
                 scrollEventThrottle={16}
                 showsHorizontalScrollIndicator={false}

@@ -20,6 +20,7 @@ export function useOnboardUser() {
       };
 
       const body = {
+        displayName: draft.nickname || "User",
         gender: draft.gender === "male" ? 1 : 2,
         dateOfBirth: draft.birthDateISO?.split("T")[0],
         heightCm: draft.heightCm,

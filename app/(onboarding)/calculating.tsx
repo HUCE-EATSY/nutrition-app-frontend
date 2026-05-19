@@ -56,6 +56,7 @@ export default function CalculatingPlanScreen() {
     return () => {
       timers.forEach(clearTimeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitOnboarding, draft]);
 
   const testimonial = testimonials[stage % testimonials.length];

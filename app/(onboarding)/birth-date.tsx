@@ -31,6 +31,7 @@ export default function BirthDateScreen() {
         setPicker(parts);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedBirthDate]);
 
   const nextISO = useMemo(() => createBirthDateISO(picker.day, picker.month, picker.year), [picker.day, picker.month, picker.year]);

@@ -11,7 +11,7 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
