@@ -1,7 +1,6 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,72 +10,88 @@ import {
   Text,
   TextInput,
   View,
+  SectionList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography, radius } from "@/constants";
-import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
-import {
-  ACTIVITIES,
-  ActivityId,
-  ActivityIntensity,
-  getMetValue,
-} from "@/domain/catalogs/activities";
-
-// Cân nặng mặc định nếu chưa có profile (kg)
-const DEFAULT_WEIGHT_KG = 65;
+import { exerciseService, Exercise, ExerciseCategory } from "@/services/exerciseService";
 
 export default function AddExerciseScreen() {
-  const { date } = useLocalSearchParams<{ date: string }>();
+  const { date, exerciseName } = useLocalSearchParams<{ date: string; exerciseName?: string }>();
   const targetDate = date ?? getTodayDateISO();
-  const currentHour = new Date().getHours();
-
-  const { addExercise } = useDiaryStore();
 
   // ── State ─────────────────────────────────────────────────────────────────
-  const [selectedId, setSelectedId] = useState<ActivityId | null>(null);
-  const [intensity, setIntensity] = useState<ActivityIntensity>("amateur");
-  const [duration, setDuration] = useState("30");
-  const [isSaving, setIsSaving] = useState(false);
+  const [categories, setCategories] = useState<ExerciseCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // ── Tính calo đốt: MET × weight × hours ──────────────────────────────────
-  const durationNum = parseFloat(duration) || 0;
-  const met = selectedId ? getMetValue(selectedId, intensity) : 0;
-  const caloriesBurned = Math.round(met * DEFAULT_WEIGHT_KG * (durationNum / 60));
+  // ── Load danh sách bài tập từ API ────────────────────────────────────────
+  useEffect(() => {
+    loadExercises();
+  }, []);
 
-  const selectedActivity = ACTIVITIES.find((a) => a.id === selectedId);
-
-  // ── Lưu bài tập ──────────────────────────────────────────────────────────
-  async function handleSave() {
-    if (!selectedId || !selectedActivity) {
-      Alert.alert("Lỗi", "Vui lòng chọn hoạt động.");
-      return;
-    }
-    if (durationNum <= 0 || durationNum > 600) {
-      Alert.alert("Lỗi", "Thời gian phải từ 1 đến 600 phút.");
-      return;
-    }
-
-    setIsSaving(true);
+  async function loadExercises() {
     try {
-      await addExercise({
-        activityId: selectedId,
-        activityLabel: `${selectedActivity.label}${intensity === "professional" ? " (chuyên)": ""}`,
-        dateISO: targetDate,
-        hour: currentHour,
-        durationMinutes: durationNum,
-        caloriesBurned,
-      });
-      router.back();
-    } catch {
-      Alert.alert("Thất bại", "Không thể ghi hoạt động. Vui lòng thử lại.");
+      setLoading(true);
+      const data = await exerciseService.getCategories();
+      console.log("Categories loaded:", data);
+      setCategories(data);
+    } catch (error: any) {
+      console.error("Load exercises error:", error);
+      Alert.alert("Lỗi", error?.message || "Không thể tải danh sách bài tập");
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   }
 
+  // ── Chọn bài tập và chuyển sang màn hình nhập chi tiết ──────────────────
+  function handleSelectExercise(exercise: Exercise) {
+    console.log("Selected exercise:", exercise.nameVi);
+    // TODO: Navigate to exercise detail input screen
+    router.push(`/exercise-detail?exerciseId=${exercise.id}&date=${targetDate}`);
+  }
+
+  // ── Lọc và nhóm bài tập theo alphabet ────────────────────────────────────
+  const allExercises = categories.flatMap(cat => cat.exercises);
+  
+  const filteredExercises = searchQuery
+    ? allExercises.filter(ex => 
+        ex.nameVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ex.nameEn.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allExercises;
+
+  // Nhóm theo chữ cái đầu
+  const groupedExercises = filteredExercises.reduce((acc, exercise) => {
+    const firstLetter = exercise.nameVi.charAt(0).toUpperCase();
+    if (!acc[firstLetter]) {
+      acc[firstLetter] = [];
+    }
+    acc[firstLetter].push(exercise);
+    return acc;
+  }, {} as Record<string, Exercise[]>);
+
+  const sections = Object.keys(groupedExercises)
+    .sort()
+    .map(letter => ({
+      title: letter,
+      data: groupedExercises[letter],
+    }));
+
   // ── Render ────────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color={colors.primary} size="large" />
+          <Text style={styles.loadingText}>Đang tải bài tập...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
       {/* Header */}
@@ -84,248 +99,196 @@ export default function AddExerciseScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>Ghi hoạt động</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Thêm hoạt động</Text>
+        <Pressable hitSlop={12} onPress={() => {}}>
+          <Ionicons color={colors.primary} name="add" size={28} />
+        </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          placeholder="Tìm kiếm hoạt động"
+          placeholderTextColor={colors.textMuted}
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+      </View>
 
-        {/* ── Chọn hoạt động ── */}
-        <Text style={styles.sectionLabel}>Loại hoạt động</Text>
-        <View style={styles.activityGrid}>
-          {ACTIVITIES.map((activity) => {
-            const isActive = activity.id === selectedId;
-            return (
-              <Pressable
-                key={activity.id}
-                onPress={() => setSelectedId(activity.id)}
-                style={[styles.activityCard, isActive && styles.activityCardActive]}
-              >
-                <MaterialCommunityIcons
-                  color={isActive ? colors.primary : colors.textMuted}
-                  name={activity.icon}
-                  size={28}
-                />
-                <Text style={[styles.activityLabel, isActive && styles.activityLabelActive]}>
-                  {activity.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+      {/* Apple Health Section */}
+      <View style={styles.healthSection}>
+        <Text style={styles.sectionTitle}>THEO DỐI TỰ ĐỘNG</Text>
+        <Pressable style={styles.healthCard}>
+          <View style={styles.healthIconWrapper}>
+            <Ionicons name="heart" size={32} color="#FF2D55" />
+          </View>
+          <View style={styles.healthContent}>
+            <Text style={styles.healthText}>
+              Kết nối Apple Health để Wao tự theo dõi calo hoạt động cho bạn.
+            </Text>
+            <Text style={styles.healthLink}>Kết nối</Text>
+          </View>
+        </Pressable>
+      </View>
 
-        {/* ── Cường độ ── */}
-        <Text style={styles.sectionLabel}>Cường độ</Text>
-        <View style={styles.intensityRow}>
-          {(["amateur", "professional"] as ActivityIntensity[]).map((level) => (
-            <Pressable
-              key={level}
-              onPress={() => setIntensity(level)}
-              style={[
-                styles.intensityBtn,
-                intensity === level && styles.intensityBtnActive,
-              ]}
-            >
-              <Ionicons
-                color={intensity === level ? colors.primary : colors.textMuted}
-                name={level === "amateur" ? "walk-outline" : "trending-up-outline"}
-                size={18}
-              />
-              <Text
-                style={[
-                  styles.intensityText,
-                  intensity === level && { color: colors.primary },
-                ]}
-              >
-                {level === "amateur" ? "Bình thường" : "Chuyên nghiệp"}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* ── Thời gian ── */}
-        <Text style={styles.sectionLabel}>Thời gian (phút)</Text>
-        <View style={styles.durationRow}>
-          <Pressable
-            onPress={() => setDuration((d) => String(Math.max(1, parseFloat(d) - 5)))}
-            style={styles.stepBtn}
-          >
-            <Ionicons color={colors.textPrimary} name="remove" size={22} />
-          </Pressable>
-          <TextInput
-            keyboardType="numeric"
-            onChangeText={setDuration}
-            style={styles.durationInput}
-            value={duration}
-          />
-          <Pressable
-            onPress={() => setDuration((d) => String(parseFloat(d) + 5))}
-            style={styles.stepBtn}
-          >
-            <Ionicons color={colors.textPrimary} name="add" size={22} />
-          </Pressable>
-        </View>
-
-        {/* ── Preview calo đốt ── */}
-        {selectedId && durationNum > 0 && (
-          <View style={styles.burnPreview}>
-            <Ionicons color={colors.success} name="flame" size={24} />
-            <View>
-              <Text style={styles.burnKcal}>{caloriesBurned} kcal</Text>
-              <Text style={styles.burnNote}>
-                {selectedActivity?.label} · {durationNum} phút · {intensity === "professional" ? "Chuyên" : "Bình thường"}
-              </Text>
-            </View>
+      {/* Exercise List */}
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        renderSectionHeader={({ section: { title } }) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText}>{title}</Text>
           </View>
         )}
-
-        {/* ── Nút lưu ── */}
-        <Pressable
-          disabled={isSaving || !selectedId}
-          onPress={handleSave}
-          style={[
-            styles.saveBtn,
-            (!selectedId || isSaving) && { opacity: 0.5 },
-          ]}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons color="#fff" name="checkmark-circle-outline" size={20} />
-              <Text style={styles.saveBtnText}>Ghi hoạt động</Text>
-            </>
-          )}
-        </Pressable>
-      </ScrollView>
+        renderItem={({ item }) => (
+          <Pressable
+            style={styles.exerciseItem}
+            onPress={() => handleSelectExercise(item)}
+          >
+            <Text style={styles.exerciseName}>{item.nameVi} ({item.nameEn})</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Không tìm thấy bài tập</Text>
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgBase },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+  },
+  loadingText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  headerTitle: { ...typography.bodyStrong, color: colors.textPrimary },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
+  headerTitle: { 
+    ...typography.h3, 
+    color: colors.textPrimary,
+    fontSize: 18,
   },
-  sectionLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginTop: spacing.sm,
-  },
-  activityGrid: {
+  searchContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  activityCard: {
-    width: "30%",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.md,
-    gap: spacing.xs,
     backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
-    borderColor: "transparent",
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    height: 48,
   },
-  activityCardActive: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(165,108,255,0.1)",
+  searchIcon: {
+    marginRight: spacing.sm,
   },
-  activityLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: "center",
-  },
-  activityLabelActive: { color: colors.primary },
-  intensityRow: { flexDirection: "row", gap: spacing.sm },
-  intensityBtn: {
+  searchInput: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: "transparent",
+    ...typography.body,
+    color: colors.textPrimary,
+    fontSize: 15,
   },
-  intensityBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(165,108,255,0.1)",
+  healthSection: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
-  intensityText: {
+  sectionTitle: {
     ...typography.caption,
     color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+  },
+  healthCard: {
+    flexDirection: "row",
+    backgroundColor: "rgba(165,108,255,0.15)",
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(165,108,255,0.3)",
+  },
+  healthIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  healthContent: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  healthText: {
+    ...typography.caption,
+    color: colors.textPrimary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  healthLink: {
+    ...typography.caption,
+    color: colors.primary,
+    fontSize: 13,
     fontWeight: "600",
   },
-  durationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
+  listContent: {
+    paddingBottom: spacing.xxxl,
   },
-  stepBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
+  sectionHeader: {
+    backgroundColor: colors.bgBase,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
   },
-  durationInput: {
-    width: 80,
-    height: 56,
-    textAlign: "center",
-    ...typography.h3,
-    color: colors.textPrimary,
-    fontSize: 28,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-  },
-  burnPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "rgba(92,214,122,0.1)",
-    borderRadius: radius.sm,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(92,214,122,0.25)",
-    marginTop: spacing.sm,
-  },
-  burnKcal: {
-    ...typography.h3,
-    color: colors.success,
-    fontSize: 24,
-  },
-  burnNote: {
+  sectionHeaderText: {
     ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: "700",
   },
-  saveBtn: {
+  exerciseItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.success,
-    borderRadius: radius.sm,
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    gap: spacing.sm,
-    marginTop: spacing.lg,
+    backgroundColor: colors.bgBase,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  saveBtnText: { ...typography.bodyStrong, color: "#fff" },
+  exerciseName: {
+    ...typography.body,
+    color: colors.textPrimary,
+    fontSize: 15,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.xxxl,
+  },
+  emptyText: {
+    ...typography.body,
+    color: colors.textMuted,
+  },
 });

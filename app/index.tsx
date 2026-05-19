@@ -24,9 +24,10 @@ export default function IndexScreen() {
     );
   }
 
-  // If not authenticated, always go to welcome
+  // TEMPORARILY DISABLED: Allow access without authentication for testing
+  // If not authenticated, go to home anyway for testing
   if (!isAuthenticated) {
-    return <Redirect href="/(public)/welcome" />;
+    return <Redirect href="/(tabs)/home" />;
   }
 
   // If authenticated but finished onboarding, go to home

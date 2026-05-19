@@ -32,6 +32,8 @@ interface FoodItem {
   servingSize: number;
 }
 
+// API base đã được cấu hình trong @/constants/api
+
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();

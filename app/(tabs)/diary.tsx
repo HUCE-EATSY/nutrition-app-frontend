@@ -251,8 +251,8 @@ export default function DiaryTimelineScreen() {
           {hours.map((hour) => {
             const isCurrentHour = hour === currentHour;
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const slot = summary?.slots.find((s) => s.hour === hour);
-            const hasEntries = !!(slot && slot.entries.length > 0);
+            const slot = summary?.slots?.find((s) => s.hour === hour);
+            const hasEntries = !!(slot && slot.entries && slot.entries.length > 0);
 
             // Bài tập trong giờ này
             const hourExercises = exercises.filter((ex) => ex.hour === hour);

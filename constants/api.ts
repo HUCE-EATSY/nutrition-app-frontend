@@ -29,5 +29,20 @@ export const API_URLS = {
     profile: `${API_BASE}/api/User/profile`,
     goal: `${API_BASE}/api/User/goal`,
     info: `${API_BASE}/api/User/info`,
+  },
+  exercises: {
+    categories: `${API_BASE}/api/exercises/categories`,
+    detail: (id: string) => `${API_BASE}/api/exercises/${id}`,
+    logs: `${API_BASE}/api/exercises/logs`,
+    logDetail: (id: string) => `${API_BASE}/api/exercises/logs/${id}`,
+    dailySummary: (date: string) => `${API_BASE}/api/exercises/logs/daily/${date}`,
+  },
+  notifications: {
+    settings: `${API_BASE}/api/notifications/settings`,
+    list: `${API_BASE}/api/notifications`,
+    markAsRead: `${API_BASE}/api/notifications/mark-as-read`,
+    markAllAsRead: `${API_BASE}/api/notifications/mark-all-as-read`,
+    delete: (id: string) => `${API_BASE}/api/notifications/${id}`,
+    unreadCount: `${API_BASE}/api/notifications/unread-count`,
   }
 };

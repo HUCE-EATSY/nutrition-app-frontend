@@ -35,3 +35,12 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Public API client without authentication
+export const publicApiClient = axios.create({
+  baseURL: API_BASE,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
