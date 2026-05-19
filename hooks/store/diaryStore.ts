@@ -80,6 +80,9 @@ function mapSummaryToUI(
       carbGram: log.carbsG ?? 0,
       fatGram: log.fatG ?? 0,
       type: "meal",
+      imageUrl: log.imageUrl,
+      quantityG: log.quantityG,
+      foodItemId: log.foodItemId,
     });
   }
 
@@ -119,6 +122,7 @@ interface DiaryState {
   fetchDiary: (dateISO?: string) => Promise<void>;
   addMealEntry: (payload: CreateDiaryEntryPayload) => Promise<void>;
   deleteFoodLog: (logId: number) => Promise<void>;
+  updateMealEntry: (logId: number, quantityG: number) => Promise<void>;
   addExercise: (payload: CreateExercisePayload) => Promise<void>;
   /** @deprecated dùng deleteFoodLog(logId) thay thế */
   deleteEntry: (entryId: string) => Promise<void>;
@@ -218,6 +222,11 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
 
   deleteFoodLog: async (logId) => {
     await foodLogService.deleteFoodLog(logId);
+    await get().fetchDiary();
+  },
+
+  updateMealEntry: async (logId, quantityG) => {
+    await foodLogService.updateFoodLog(logId, { quantity_g: quantityG });
     await get().fetchDiary();
   },
 

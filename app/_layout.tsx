@@ -109,6 +109,8 @@ export default function RootLayout() {
           <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
           <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
           <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
+          <Stack.Screen name="create-food" options={{ presentation: "modal" }} />
+          <Stack.Screen name="create-recipe" options={{ presentation: "modal" }} />
           <Stack.Screen name="webview" options={{ presentation: "modal" }} />
         </Stack>
       </PaperProvider>

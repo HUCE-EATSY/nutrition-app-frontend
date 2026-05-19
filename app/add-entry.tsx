@@ -70,10 +70,19 @@ export default function AddEntryScreen() {
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [grams, setGrams] = useState("100");
-  // mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Bữa phụ
-  const [mealTypeId, setMealTypeId] = useState(getMealTypeFromHour(
+  
+  // State quản lý giờ được chọn (Tránh lỗi crash do biến selectedHour chưa được định nghĩa)
+  const [selectedHour, setSelectedHour] = useState(
     hour ? parseInt(hour, 10) : new Date().getHours()
-  ));
+  );
+  
+  // mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Bữa phụ
+  const [mealTypeId, setMealTypeId] = useState(getMealTypeFromHour(selectedHour));
+  
+  useEffect(() => {
+    setMealTypeId(getMealTypeFromHour(selectedHour));
+  }, [selectedHour]);
+
   const [isSaving, setIsSaving] = useState(false);
 
   // Toast state

@@ -98,12 +98,12 @@ export default function QuickAddModal() {
             <Text style={styles.secondaryText}>Cân nặng</Text>
           </Pressable>
 
-          <Pressable style={styles.secondaryCard} onPress={() => handleToast("Tạo công thức")}>
+          <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/create-recipe")}>
             <MaterialCommunityIcons name="book-plus-outline" size={24} color={colors.textPrimary} />
             <Text style={styles.secondaryText}>Tạo công thức</Text>
           </Pressable>
 
-          <Pressable style={styles.secondaryCard} onPress={() => handleToast("Tạo thực phẩm")}>
+          <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/create-food")}>
             <MaterialCommunityIcons name="bowl-mix-outline" size={24} color={colors.textPrimary} />
             <Text style={styles.secondaryText}>Tạo thực phẩm</Text>
           </Pressable>

@@ -67,6 +67,18 @@ export interface CreateFoodRequest {
   };
 }
 
+export interface CreateRecipeRequest {
+  nameVi: string;
+  nameEn?: string;
+  categoryId: number;
+  servingUnitVi?: string;
+  image?: any;
+  components: {
+    child_food_id: string;
+    quantity_g: number;
+  }[];
+}
+
 // ── Helper mapping functions ──────────────────────────────────────────────────
 function mapSearchToDto(raw: any): FoodItemDto {
   if (!raw) return {} as FoodItemDto;
@@ -82,9 +94,9 @@ function mapSearchToDto(raw: any): FoodItemDto {
     barcode: null,
     source: raw.source,
     caloriesKcal: raw.calories_kcal ?? 0,
-    proteinG: 0,
-    carbsG: 0,
-    fatG: 0,
+    proteinG: raw.protein_g ?? 0,
+    carbsG: raw.carbs_g ?? 0,
+    fatG: raw.fat_g ?? 0,
     fiberG: 0,
     sugarG: 0,
     sodiumMg: 0,
@@ -120,7 +132,7 @@ export const foodService = {
    * Tìm kiếm món ăn
    * GET /api/foods/search?Q=&CategoryId=&Page=&PageSize=
    */
-  searchFoods: async (params: {
+   searchFoods: async (params: {
     q: string;
     categoryId?: number;
     page?: number;
@@ -146,13 +158,14 @@ export const foodService = {
   },
 
   /**
-   * Lấy danh sách tất cả món ăn (dùng cho modal selector – tìm q='')
-   * Thực chất vẫn gọi search với Q tối thiểu
+   * Lấy danh sách món ăn mặc định
+   * GET /api/foods
    */
-  getAllFoods: async (page = 1, pageSize = 50): Promise<FoodItemDto[]> => {
+  getAllFoods: async (page = 1, pageSize = 50, categoryId?: number): Promise<FoodItemDto[]> => {
     try {
-      const res = await apiClient.get(API_URLS.foods.search, {
-        params: { Q: " ", Page: page, PageSize: pageSize },
+      // NOTE: Giả định API_URLS.foods.base = '/api/foods' (nếu chưa có trong API_URLS thì tạm gọi trực tiếp)
+      const res = await apiClient.get("/api/foods", {
+        params: { CategoryId: categoryId, Page: page, PageSize: pageSize },
       });
       const resData = res.data.data ?? res.data;
       const items = Array.isArray(resData?.items) ? resData.items : (Array.isArray(resData) ? resData : []);
@@ -204,6 +217,8 @@ export const foodService = {
     if (req.servingUnitVi) form.append("ServingUnitVi", req.servingUnitVi);
     if (req.image) form.append("Image", req.image as any);
     if (req.barcode != null) form.append("Barcode", String(req.barcode));
+    
+    // Nutrition keys
     form.append("Nutrition.CaloriesKcal", String(req.nutrition.caloriesKcal));
     if (req.nutrition.proteinG != null) form.append("Nutrition.ProteinG", String(req.nutrition.proteinG));
     if (req.nutrition.carbsG != null) form.append("Nutrition.CarbsG", String(req.nutrition.carbsG));
@@ -213,6 +228,32 @@ export const foodService = {
     if (req.nutrition.sodiumMg != null) form.append("Nutrition.SodiumMg", String(req.nutrition.sodiumMg));
 
     const response = await apiClient.post(API_URLS.foods.create, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    const raw = response.data.data ?? response.data;
+    return mapDetailToDto(raw);
+  },
+
+  /**
+   * Tạo công thức mới (từ các nguyên liệu có sẵn)
+   * POST /api/foods/recipes  multipart/form-data
+   */
+  createRecipe: async (req: CreateRecipeRequest): Promise<FoodItemDto> => {
+    const form = new FormData();
+    form.append("NameVi", req.nameVi);
+    if (req.nameEn) form.append("NameEn", req.nameEn);
+    form.append("CategoryId", String(req.categoryId));
+    if (req.servingUnitVi) form.append("ServingUnitVi", req.servingUnitVi);
+    if (req.image) form.append("Image", req.image as any);
+
+    req.components.forEach((comp, index) => {
+      form.append(`Components[${index}].ChildFoodId`, comp.child_food_id);
+      form.append(`Components[${index}].QuantityG`, String(comp.quantity_g));
+    });
+
+    // NOTE: Cần thêm API_URLS.foods.createRecipe vào api.ts nếu chưa có. Ở đây tạm dùng "/api/foods/recipes"
+    const url = API_URLS.foods.createRecipe || "/api/foods/recipes";
+    const response = await apiClient.post(url, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     const raw = response.data.data ?? response.data;
