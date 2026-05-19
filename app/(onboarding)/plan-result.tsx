@@ -89,11 +89,11 @@ export default function PlanResultScreen() {
           <MacroDonutChart
             calories={Math.round(plan.targetCalories)}
             carbGram={Math.round(plan.targetCarbsG)}
-            carbPct={Math.round((plan.targetCarbsG * 400) / plan.targetCalories)}
+            carbPct={plan.targetCalories > 0 ? Math.round((plan.targetCarbsG * 400) / plan.targetCalories) : 0}
             fatGram={Math.round(plan.targetFatG)}
-            fatPct={Math.round((plan.targetFatG * 900) / plan.targetCalories)}
+            fatPct={plan.targetCalories > 0 ? Math.round((plan.targetFatG * 900) / plan.targetCalories) : 0}
             proteinGram={Math.round(plan.targetProteinG)}
-            proteinPct={Math.round((plan.targetProteinG * 400) / plan.targetCalories)}
+            proteinPct={plan.targetCalories > 0 ? Math.round((plan.targetProteinG * 400) / plan.targetCalories) : 0}
           />
         </SurfaceCard>
 

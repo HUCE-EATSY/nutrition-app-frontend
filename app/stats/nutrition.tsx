@@ -1,39 +1,41 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useNutritionStats } from "@/hooks/stats/useNutritionStats";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { FilterTabs } from "@/components/stats/FilterTabs";
 import { DateSlider } from "@/components/stats/DateSlider";
-import { DonutChart } from "@/components/charts/DonutChart";
-import { getTodayISO } from "@/hooks/utils/date";
+import { PieChart } from "@/components/charts/PieChart";
 
 export default function NutritionStatsScreen() {
   const router = useRouter();
-  const { period, activeTabLabel, tabs, handleTabChange } = useNutritionStats();
-  const { draft } = useOnboardingStore();
+  const { 
+    period, activeTabLabel, tabs, handleTabChange,
+    dates, selectedDate, handleSelectDate,
+    summary, isLoading, error
+  } = useNutritionStats();
   
-  // Mock DateSlider data
-  const mockDates = [
-    { dayOfWeek: "T2", date: 1, fullDateStr: "2026-05-01" },
-    { dayOfWeek: "T3", date: 2, fullDateStr: "2026-05-02" },
-    { dayOfWeek: "T4", date: 3, fullDateStr: "2026-05-03" },
-    { dayOfWeek: "T5", date: 4, fullDateStr: "2026-05-04" },
-    { dayOfWeek: "T6", date: 5, fullDateStr: "2026-05-05" },
-    { dayOfWeek: "T7", date: 6, fullDateStr: getTodayISO() },
-    { dayOfWeek: "CN", date: 7, fullDateStr: "2026-05-07" },
-  ];
+  const targetCal = summary?.target?.target_calories ?? 0;
+  const consumedCal = summary?.total_calories ?? 0;
   
-  const [selectedDate, setSelectedDate] = React.useState(getTodayISO());
+  const proteinG = summary?.total_protein_g ?? 0;
+  const carbG = summary?.total_carbs_g ?? 0;
+  const fatG = summary?.total_fat_g ?? 0;
 
-  const targetCal = 2225;
-  const consumedCal = 0;
-  
+  const targetProteinG = summary?.target?.target_protein_g ?? 0;
+  const targetCarbG = summary?.target?.target_carbs_g ?? 0;
+  const targetFatG = summary?.target?.target_fat_g ?? 0;
+
+  const proteinPct = summary?.target?.protein_pct ?? 0;
+  const carbPct = summary?.target?.carbs_pct ?? 0;
+  const fatPct = summary?.target?.fat_pct ?? 0;
+
+  const centerLabelPct = summary?.target?.calories_pct ? Math.round(summary.target.calories_pct) : 0;
+
   const macroData = [
-    { label: "Chất đạm", value: 0, color: "#EF4444" },
-    { label: "Đường bột", value: 0, color: "#3B82F6" },
-    { label: "Chất béo", value: 0, color: "#F59E0B" },
+    { label: "Chất đạm", value: proteinG, color: "#EF4444" },
+    { label: "Đường bột", value: carbG, color: "#3B82F6" },
+    { label: "Chất béo", value: fatG, color: "#F59E0B" },
   ];
 
   return (
@@ -61,52 +63,65 @@ export default function NutritionStatsScreen() {
         />
         
         {activeTabLabel === "Ngày" && (
-          <DateSlider dates={mockDates} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          <DateSlider dates={dates} selectedDate={selectedDate} onSelectDate={handleSelectDate} />
         )}
 
-        {/* Calorie Overview Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Thống kê lượng calo trong ngày</Text>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Calo mục tiêu</Text>
-            <Text style={styles.targetValue}>{targetCal} cal</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>Calo thực phẩm nạp vào</Text>
-            <Text style={styles.greyValue}>- cal</Text>
-          </View>
-        </View>
+        {activeTabLabel === "Tuần" && (
+           <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
+             <Text style={{ color: '#9CA3AF' }}>Đang phát triển</Text>
+           </View>
+        )}
 
-        {/* Macro Statistics Card */}
-        <View style={styles.card}>
-          <View style={styles.chartContainer}>
-            <DonutChart 
-              data={macroData} 
-              centerLabel="0%"
-            />
+        {isLoading ? (
+          <View style={[styles.card, { paddingVertical: 40, alignItems: 'center' }]}>
+            <ActivityIndicator size="large" color="#8B5CF6" />
           </View>
-          <View style={styles.legendContainer}>
-            <Text style={styles.legendText}>⚡ Chất đạm (0g) | 0% | 20%</Text>
-            <Text style={styles.legendText}>🍚 Đường bột (0g) | 0% | 50%</Text>
-            <Text style={styles.legendText}>🥑 Chất béo (0g) | 0% | 30%</Text>
-          </View>
-        </View>
-        
-        {/* Detailed Nutrients List */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Giá trị dinh dưỡng</Text>
-          <NutrientRow label="Đường bột (carb)" current="-" target="278 g" />
-          <NutrientRow label="Chất xơ" current="-" target="25 g" />
-          <NutrientRow label="Đường" current="-" target="50 g" />
-          <NutrientRow label="Chất béo (fat)" current="-" target="74 g" />
-          <NutrientRow label="Chất đạm (protein)" current="-" target="111 g" />
-          
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Khoáng chất</Text>
-          <NutrientRow label="Canxi" current="-" target="1.000 mg" />
-          <NutrientRow label="Kali" current="-" target="3.500 mg" />
-          <NutrientRow label="Sắt" current="-" target="18 mg" isLast />
-        </View>
+        ) : activeTabLabel === "Ngày" ? (
+          <>
+            {/* Calorie Overview Card */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Thống kê lượng calo trong ngày</Text>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Calo mục tiêu</Text>
+                <Text style={styles.targetValue}>{targetCal} cal</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Calo thực phẩm nạp vào</Text>
+                <Text style={styles.greyValue}>{consumedCal} cal</Text>
+              </View>
+            </View>
+
+            {/* Macro Statistics Card */}
+            <View style={styles.card}>
+              <View style={styles.chartContainer}>
+                <PieChart 
+                  data={macroData} 
+                />
+              </View>
+              <View style={styles.legendContainer}>
+                <Text style={styles.legendText}>⚡ Chất đạm ({proteinG}g) | {proteinPct}% | 20%</Text>
+                <Text style={styles.legendText}>🍚 Đường bột ({carbG}g) | {carbPct}% | 50%</Text>
+                <Text style={styles.legendText}>🥑 Chất béo ({fatG}g) | {fatPct}% | 30%</Text>
+              </View>
+            </View>
+            
+            {/* Detailed Nutrients List */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Giá trị dinh dưỡng</Text>
+              <NutrientRow label="Đường bột (carb)" current={`${carbG} g`} target={`${targetCarbG} g`} />
+              <NutrientRow label="Chất xơ" current="-" target="-" />
+              <NutrientRow label="Đường" current="-" target="-" />
+              <NutrientRow label="Chất béo (fat)" current={`${fatG} g`} target={`${targetFatG} g`} />
+              <NutrientRow label="Chất đạm (protein)" current={`${proteinG} g`} target={`${targetProteinG} g`} />
+              
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Khoáng chất</Text>
+              <NutrientRow label="Canxi" current="-" target="-" />
+              <NutrientRow label="Kali" current="-" target="-" />
+              <NutrientRow label="Sắt" current="-" target="-" isLast />
+            </View>
+          </>
+        ) : null}
       </View>
     </ScrollView>
   );

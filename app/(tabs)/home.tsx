@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useEffect } from "react";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -12,8 +13,22 @@ import { ActivityGrid } from "@/components/dashboard/ActivityGrid";
 import { SmallStatRow } from "@/components/dashboard/SmallStatRow";
 import { WaterIntakeCard } from "@/components/dashboard/WaterIntakeCard";
 import { WeightChartCard } from "@/components/dashboard/WeightChartCard";
+import { useNutritionStore } from "@/hooks/store/statsStore";
 
 export default function HomeScreen() {
+  const { selectedDate, summaryCache, fetchSummary } = useNutritionStore();
+
+  useEffect(() => {
+    fetchSummary(selectedDate);
+  }, [selectedDate]);
+
+  const summary = summaryCache[selectedDate];
+
+  const targetCalories = summary?.target?.target_calories ?? 2000;
+  const consumedCalories = summary?.total_calories ?? 0;
+  const remainingCalories = Math.max(0, targetCalories - consumedCalories);
+  const percentage = Math.min((consumedCalories / targetCalories) * 100, 100);
+
   return (
     <SafeScreen scrollable>
       <View style={styles.screen}>
@@ -21,15 +36,22 @@ export default function HomeScreen() {
         <DateScroller />
 
         <CalorieOverview 
-          remaining={1925} 
-          goal={1925} 
-          consumed={0} 
+          remaining={remainingCalories} 
+          goal={targetCalories} 
+          consumed={consumedCalories} 
           burned={0} 
-          percentage={0} 
+          percentage={percentage} 
         />
 
         <SurfaceCard style={styles.macroCard}>
-          <MacroProgressRow />
+          <MacroProgressRow 
+            protein={summary?.total_protein_g ?? 0}
+            targetProtein={summary?.target?.target_protein_g ?? 100}
+            carbs={summary?.total_carbs_g ?? 0}
+            targetCarbs={summary?.target?.target_carbs_g ?? 200}
+            fat={summary?.total_fat_g ?? 0}
+            targetFat={summary?.target?.target_fat_g ?? 70}
+          />
           <View style={styles.paginationDots}>
             <View style={[styles.dot, styles.dotActive]} />
             <View style={styles.dot} />

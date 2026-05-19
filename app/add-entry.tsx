@@ -32,11 +32,6 @@ interface FoodItem {
   servingSize: number;
 }
 
-<<<<<<< HEAD
-=======
-// API base đã được cấu hình trong @/constants/api
-
->>>>>>> 4775dcfa4b0816f681882eb26d603ccd996dff7f
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();
@@ -210,7 +205,7 @@ export default function AddEntryScreen() {
           )}
           <FlatList
             data={foods}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             style={styles.list}
             ListEmptyComponent={
               searchQuery.length >= 2 && !isSearching ? (

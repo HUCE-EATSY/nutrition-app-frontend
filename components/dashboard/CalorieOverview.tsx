@@ -23,9 +23,12 @@ export function CalorieOverview({ remaining, goal, consumed, burned, percentage 
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{t.home.calorieGoal}</Text>
-        <View style={styles.reportBadge}>
+        <Pressable 
+          style={({ pressed }) => [styles.reportBadge, pressed && { opacity: 0.7 }]} 
+          onPress={() => router.push('/stats/nutrition')}
+        >
           <Text style={styles.reportText}>{t.home.report}</Text>
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.chartContainer}>

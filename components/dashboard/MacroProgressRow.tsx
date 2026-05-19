@@ -35,31 +35,47 @@ function ProgressItem({ label, current, target, color, icon, type }: MacroItemPr
   );
 }
 
-export function MacroProgressRow() {
+interface MacroProgressRowProps {
+  protein?: number;
+  targetProtein?: number;
+  carbs?: number;
+  targetCarbs?: number;
+  fat?: number;
+  targetFat?: number;
+}
+
+export function MacroProgressRow({
+  protein = 0,
+  targetProtein = 100,
+  carbs = 0,
+  targetCarbs = 200,
+  fat = 0,
+  targetFat = 70,
+}: MacroProgressRowProps) {
   return (
     <View style={styles.container}>
       <ProgressItem
         color={colors.protein}
-        current={0}
+        current={protein}
         icon="⚡"
-		label={t.home.protein}
-        target={96}
+        label={t.home.protein}
+        target={targetProtein}
         type="protein"
       />
       <ProgressItem
         color={colors.carbs}
-        current={0}
+        current={carbs}
         icon="🍞"
         label={t.home.carbs}
-        target={241}
+        target={targetCarbs}
         type="carb"
       />
       <ProgressItem
         color={colors.fat}
-        current={0}
+        current={fat}
         icon="🥑"
         label={t.home.fat}
-        target={64}
+        target={targetFat}
         type="fat"
       />
     </View>
