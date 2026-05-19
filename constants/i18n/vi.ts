@@ -329,7 +329,7 @@ export const vi = {
     bmiDescriptions: {
       underweight: "Bạn đang ở dưới ngưỡng cân bằng, ưu tiên ăn đủ và tăng năng lượng sạch.",
       normal: "Chỉ số của bạn đang ở vùng cân bằng để xây dựng routine bền vững.",
-      overweight: "Bạn đang ở trên ngưỡng cân bằng, ưu tiên deficit vừa phải và vận động đều.",
+      overweight: "Cân nặng đang bắt đầu vượt ngưỡng. Hãy tăng vận động và kiểm soát chế độ ăn mỗi ngày.",
       obese: "Bạn cần một lộ trình chậm và chắc, ưu tiên giữ macro rõ ràng.",
     },
     bmiSource: "BMI tiêu chuẩn",

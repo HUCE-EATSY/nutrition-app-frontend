@@ -61,10 +61,10 @@ export function RollingWheelPicker<T extends string | number>({
   };
 
   const onScrollEndDrag = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = event.nativeEvent.contentOffset.y;
     setTimeout(() => {
       if (!isMomentumRef.current) {
         setIsScrolling(false);
-        const y = event.nativeEvent.contentOffset.y;
         const index = Math.round(y / itemHeight);
         const newValue = data[index];
         if (newValue !== undefined && newValue !== selectedValue) {

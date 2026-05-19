@@ -8,14 +8,17 @@ import { useAuthStore } from "@/hooks/store/authStore";
 import { getDraftResumePath, getPublicResumePath } from "@/domain/onboarding";
 
 export default function IndexScreen() {
-  const hydrated = useOnboardingStore((state) => state.hydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  // Lấy trạng thái hydrated từ cả hai store để tránh race condition
+  const onboardingHydrated = useOnboardingStore((state) => state.hydrated);
+  const authHydrated = useAuthStore((state) => state.hydrated);
   
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const publicFlowStep = useOnboardingStore((state) => state.publicFlowStep);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
   const draft = useOnboardingStore((state) => state.draft);
 
-  if (!hydrated) {
+  // Đợi cho đến khi cả hai store được khôi phục dữ liệu đầy đủ
+  if (!onboardingHydrated || !authHydrated) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
         <ActivityIndicator color={colors.primary} size="large" />
@@ -24,17 +27,17 @@ export default function IndexScreen() {
     );
   }
 
-  // If not authenticated, always go to welcome
+  // Nếu chưa đăng nhập, chuyển đến màn hình chào mừng
   if (!isAuthenticated) {
     return <Redirect href="/(public)/welcome" />;
   }
 
-  // If authenticated but finished onboarding, go to home
+  // Nếu đã đăng nhập và hoàn thành onboarding, vào màn hình chính
   if (hasCompletedOnboarding) {
     return <Redirect href="/(tabs)/home" />;
   }
 
-  // If authenticated but not finished onboarding, resume onboarding
+  // Nếu đã đăng nhập nhưng chưa hoàn thành onboarding, tiếp tục tiến trình tương ứng
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
        <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />

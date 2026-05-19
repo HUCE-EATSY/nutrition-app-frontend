@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 import { SocialAuthButton } from "@/components/buttons/SocialAuthButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -23,7 +23,12 @@ export default function SocialLoginScreen() {
     }
   }, [userInfo, setPublicFlowStep]);
 
-  const handleContinue = (provider: "google" | "facebook") => {
+  const handleClose = useCallback(() => {
+    setPublicFlowStep("welcome");
+    router.replace("/(public)/welcome");
+  }, [setPublicFlowStep]);
+
+  const handleContinue = useCallback((provider: "google" | "facebook") => {
     trackEvent("social_login_clicked", { provider, screen_name: "social-login" });
     if (provider === "google") {
       signIn();
@@ -32,16 +37,16 @@ export default function SocialLoginScreen() {
       setPublicFlowStep("mascot-intro");
       router.push("/(public)/mascot-intro");
     }
-  };
+  }, [signIn, setPublicFlowStep]);
+
+  const handleGooglePress = useCallback(() => handleContinue("google"), [handleContinue]);
+  const handleFacebookPress = useCallback(() => handleContinue("facebook"), [handleContinue]);
 
   return (
     <SafeScreen scrollable={isShortHeight}>
       <View style={styles.screen}>
         <Pressable 
-          onPress={() => {
-            setPublicFlowStep("welcome");
-            router.replace("/(public)/welcome");
-          }} 
+          onPress={handleClose} 
           style={styles.closeButton}
         >
           <Text style={styles.closeText}>×</Text>
@@ -58,8 +63,8 @@ export default function SocialLoginScreen() {
             <ActivityIndicator size="large" color={colors.primary} />
           ) : (
             <>
-              <SocialAuthButton label={t.auth.social.google} onPress={() => handleContinue("google")} provider="google" />
-              <SocialAuthButton label={t.auth.social.facebook} onPress={() => handleContinue("facebook")} provider="facebook" />
+              <SocialAuthButton label={t.auth.social.google} onPress={handleGooglePress} provider="google" />
+              <SocialAuthButton label={t.auth.social.facebook} onPress={handleFacebookPress} provider="facebook" />
             </>
           )}
         </View>

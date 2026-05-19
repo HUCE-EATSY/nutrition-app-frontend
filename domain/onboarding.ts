@@ -1,5 +1,7 @@
+import { Alert } from "react-native";
 import {
   ActivityLevel,
+  BMIStatus,
   GoalType,
   OnboardingDraft,
   OnboardingRouteName,
@@ -166,4 +168,68 @@ export function validateWeeklyGoal(goalType: GoalType | null, value: number | nu
   const bounds = getWeeklyGoalBounds(goalType);
   if (value < bounds.min || value > bounds.max) return t.validators.weeklyGoalRange(bounds.min, bounds.max);
   return null;
+}
+
+// ── BMI Helpers ──────────────────────────────────────────────────────────────
+
+export function calculateBmi(weightKg: number, heightCm: number): number {
+  const heightM = heightCm / 100;
+  return Number((weightKg / (heightM * heightM)).toFixed(1));
+}
+
+export function getBmiStatus(bmiValue: number): BMIStatus {
+  if (bmiValue < 18.5) return "underweight";
+  if (bmiValue < 23) return "normal";
+  if (bmiValue < 25) return "overweight";
+  return "obese";
+}
+
+export function getBmiStatusColors(status: BMIStatus) {
+  switch (status) {
+    case "underweight":
+      return {
+        badgeBg: "rgba(61, 139, 255, 0.2)",
+        badgeText: "#3D8BFF",
+        valueColor: "#3D8BFF",
+      };
+    case "normal":
+      return {
+        badgeBg: "rgba(92, 214, 122, 0.2)",
+        badgeText: "#5CD67A",
+        valueColor: "#5CD67A",
+      };
+    case "overweight":
+      return {
+        badgeBg: "#F5B323",
+        badgeText: "#111020",
+        valueColor: "#F5B323",
+      };
+    case "obese":
+      return {
+        badgeBg: "rgba(255, 90, 95, 0.2)",
+        badgeText: "#FF5A5F",
+        valueColor: "#FF5A5F",
+      };
+  }
+}
+
+export function getTargetBmiDesc(status: BMIStatus): string {
+  switch (status) {
+    case "underweight":
+      return "Mục tiêu dưới vùng cân bằng. Bạn nên ưu tiên tăng cơ và bổ sung dinh dưỡng hợp lý.";
+    case "normal":
+      return "Mục tiêu nằm trong vùng cân bằng, cực kỳ lý tưởng để duy trì vóc dáng và sức khỏe lâu dài.";
+    case "overweight":
+      return "Mục tiêu vẫn ở vùng thừa cân. Bạn có thể cân nhắc đặt mục tiêu thấp hơn để cơ thể khỏe mạnh hơn.";
+    case "obese":
+      return "Mục tiêu ở vùng cao. Bạn nên chọn mốc cân nặng thấp hơn để giảm tải cho xương khớp và tim mạch.";
+  }
+}
+
+export function showBmiReferencesAlert() {
+  Alert.alert(
+    "Nguồn tham khảo",
+    "Chỉ số BMI được tính toán dựa trên tiêu chuẩn của Tổ chức Y tế Thế giới (WHO) dành cho người Châu Á:\n\n• Dưới 18.5: Thiếu cân\n• 18.5 - 22.9: Bình thường (Cân bằng)\n• 23.0 - 24.9: Thừa cân\n• Từ 25.0 trở lên: Béo phì",
+    [{ text: "Đóng", style: "cancel" }]
+  );
 }
