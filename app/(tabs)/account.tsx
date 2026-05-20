@@ -232,29 +232,81 @@ export default function AccountScreen() {
 
       {/* Your Journey Section */}
       <SectionHeader title={t.account.yourJourney} />
-      <View style={styles.journeyCard}>
-        <LinearGradient
-          colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
-          style={styles.journeyCardGradient}
-        >
-          <View style={styles.journeyIconBg}>
-            <Ionicons color={colors.primary} name="locate" size={32} />
-          </View>
-          <Text style={styles.journeyTitle}>{t.account.maintainingWeight}</Text>
-          <Text style={styles.journeySubtitle}>{t.account.updateWeightHint}</Text>
+      {(() => {
+        const startWeight = profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const currentWeightVal = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const targetWeightVal = profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
 
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: "40%" }]} />
-              <View style={[styles.progressKnob, { left: "40%" }]} />
-            </View>
-            <View style={styles.progressLabels}>
-              <Text style={styles.progressLabel}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
-              <Text style={styles.progressLabel}>{profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
-            </View>
+        let progressPct = 0;
+        const totalChangeNeeded = Math.abs(startWeight - targetWeightVal);
+
+        if (totalChangeNeeded > 0) {
+          const isLosing = startWeight > targetWeightVal;
+          if (isLosing) {
+            const currentChange = startWeight - currentWeightVal;
+            progressPct = Math.min(Math.max((currentChange / totalChangeNeeded) * 100, 0), 100);
+          } else {
+            const currentChange = currentWeightVal - startWeight;
+            progressPct = Math.min(Math.max((currentChange / totalChangeNeeded) * 100, 0), 100);
+          }
+        } else {
+          progressPct = 100;
+        }
+
+        const progressStr = `${progressPct.toFixed(0)}%`;
+
+        let journeyTitle = t.account.maintainingWeight;
+        if (startWeight > targetWeightVal) {
+          if (currentWeightVal <= targetWeightVal) {
+            journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu giảm cân!";
+          } else {
+            const lost = startWeight - currentWeightVal;
+            journeyTitle = lost >= 0 
+              ? `Bạn đã giảm được ${lost.toFixed(1)} kg` 
+              : `Bạn bị tăng ${Math.abs(lost).toFixed(1)} kg so với ban đầu`;
+          }
+        } else if (startWeight < targetWeightVal) {
+          if (currentWeightVal >= targetWeightVal) {
+            journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu tăng cân!";
+          } else {
+            const gained = currentWeightVal - startWeight;
+            journeyTitle = gained >= 0 
+              ? `Bạn đã tăng được ${gained.toFixed(1)} kg` 
+              : `Bạn bị giảm ${Math.abs(gained).toFixed(1)} kg so với ban đầu`;
+          }
+        }
+
+        const journeySubtitle = startWeight === targetWeightVal
+          ? `Mục tiêu giữ dáng ở mốc ${targetWeightVal} kg. Hiện tại: ${currentWeightVal} kg`
+          : `Bắt đầu: ${startWeight} kg • Hiện tại: ${currentWeightVal} kg • Mục tiêu: ${targetWeightVal} kg`;
+
+        return (
+          <View style={styles.journeyCard}>
+            <LinearGradient
+              colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
+              style={styles.journeyCardGradient}
+            >
+              <View style={styles.journeyIconBg}>
+                <Ionicons color={colors.primary} name="locate" size={32} />
+              </View>
+              <Text style={styles.journeyTitle}>{journeyTitle}</Text>
+              <Text style={styles.journeySubtitle}>{journeySubtitle}</Text>
+
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: progressStr }]} />
+                  <View style={[styles.progressKnob, { left: progressStr }]} />
+                </View>
+                <View style={styles.progressLabels}>
+                  <Text style={styles.progressLabel}>{startWeight} kg</Text>
+                  <Text style={styles.progressLabel}>{targetWeightVal} kg</Text>
+                </View>
+              </View>
+            </LinearGradient>
           </View>
-        </LinearGradient>
-      </View>
+        );
+      })()}
+
 
       {/* Nutrition Goals Section */}
       <SectionHeader title={t.account.nutritionGoals} />

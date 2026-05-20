@@ -1,29 +1,67 @@
-import { useState } from "react";
-import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView } from "react-native";
+import { useState, useEffect } from "react";
+import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView, ActivityIndicator, TextInput } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { colors, spacing, typography, radius } from "@/constants";
 import { SafeScreen } from "@/components/layout/SafeScreen";
+import { saveWeightLog } from "@/services/weightLogService";
+import { getTodayDateISO } from "@/hooks/utils/date";
+import { useWeightStore } from "@/hooks/store/statsStore";
+import { useWeightStats } from "@/hooks/stats/useWeightStats";
 
 export default function LogWeightScreen() {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const { currentWeight, resolvedTarget } = useWeightStats();
   
-  // Mặc định lấy từ state toàn cục, ở đây tạm mock giá trị 53.6
-  const [weight, setWeight] = useState(53.6);
-  
-  // Lấy ngày hiện tại format dạng: 29 / 04 / 2026
-  const today = new Date();
-  const dateString = `${today.getDate().toString().padStart(2, '0')} / ${(today.getMonth() + 1).toString().padStart(2, '0')} / ${today.getFullYear()}`;
+  // Khởi tạo cân nặng bằng cân nặng gần nhất hoặc 60kg làm mặc định
+  const [weight, setWeight] = useState(currentWeight || 60);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Cho phép tự điền ngày để test (mặc định là ngày hôm nay dạng YYYY-MM-DD)
+  const [logDateStr, setLogDateStr] = useState(getTodayDateISO());
+
+  // Set initial weight when currentWeight is fetched
+  useEffect(() => {
+    if (currentWeight > 0) {
+      setWeight(currentWeight);
+    }
+  }, [currentWeight]);
 
   const handleUpload = () => {
     Alert.alert("Chưa hỗ trợ", "Tính năng thêm ảnh chụp sẽ được ra mắt trong phiên bản tới.");
   };
 
-  const handleSave = () => {
-    // Gọi API hoặc update Global Store ở đây
-    router.back();
+  const handleSave = async () => {
+    if (isSaving) return;
+    
+    // Kiểm tra định dạng ngày nhập YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(logDateStr)) {
+      Alert.alert("Lỗi định dạng", "Vui lòng nhập ngày đúng định dạng YYYY-MM-DD.\nVí dụ: 2026-05-20");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveWeightLog(weight, logDateStr);
+      
+      // Invalidate react-query cache for user profile (Account & Physical Profile)
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      
+      // Reload weight store so home page chart and weight value updates instantly
+      const { period, fetchWeightData } = useWeightStore.getState();
+      await fetchWeightData(period);
+      
+      router.back();
+    } catch (error: any) {
+      Alert.alert("Lỗi", error.message || "Không thể lưu cân nặng. Vui lòng thử lại.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const incrementWeight = () => setWeight((prev) => parseFloat((prev + 0.1).toFixed(1)));
@@ -58,7 +96,9 @@ export default function LogWeightScreen() {
         <View style={styles.inputSection}>
           <View style={styles.inputHeader}>
             <Text style={styles.inputLabel}>Cân nặng hiện tại</Text>
-            <Text style={styles.inputGoal}>Mục tiêu: 60Kg</Text>
+            <Text style={styles.inputGoal}>
+              Mục tiêu: {resolvedTarget ? `${resolvedTarget} Kg` : "Chưa đặt"}
+            </Text>
           </View>
 
           <View style={styles.stepperContainer}>
@@ -66,6 +106,7 @@ export default function LogWeightScreen() {
             <Pressable 
               style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]} 
               onPress={decrementWeight}
+              disabled={isSaving}
             >
               <MaterialCommunityIcons name="minus" size={32} color={colors.textPrimary} />
             </Pressable>
@@ -77,6 +118,7 @@ export default function LogWeightScreen() {
             <Pressable 
               style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]} 
               onPress={incrementWeight}
+              disabled={isSaving}
             >
               <MaterialCommunityIcons name="plus" size={32} color={colors.textPrimary} />
             </Pressable>
@@ -86,9 +128,17 @@ export default function LogWeightScreen() {
         {/* Form Fields (Date Picker) */}
         <View style={styles.formSection}>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Ngày cân</Text>
+            <Text style={styles.dateLabel}>Ngày cân (YYYY-MM-DD)</Text>
             <View style={styles.dateRight}>
-              <Text style={styles.dateValue}>{dateString}</Text>
+              <TextInput
+                style={styles.dateInput}
+                value={logDateStr}
+                onChangeText={setLogDateStr}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.textMuted}
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
               <Ionicons name="calendar-outline" size={20} color={colors.textPrimary} />
             </View>
           </View>
@@ -96,10 +146,19 @@ export default function LogWeightScreen() {
 
       </KeyboardAvoidingView>
 
+
       {/* Footer Action */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <Pressable style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Lưu cân nặng</Text>
+        <Pressable 
+          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]} 
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator color={colors.textPrimary} size="small" />
+          ) : (
+            <Text style={styles.saveBtnText}>Lưu cân nặng</Text>
+          )}
         </Pressable>
       </View>
     </SafeScreen>
@@ -211,6 +270,16 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: colors.textPrimary,
   },
+  dateInput: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    textAlign: "right",
+    minWidth: 110,
+  },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
@@ -227,3 +296,4 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
 });
+
