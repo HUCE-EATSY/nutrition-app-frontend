@@ -1,46 +1,22 @@
-import { router } from "expo-router";
-import { View } from "react-native";
+import * as z from "zod";
 
-import { OptionCard } from "@/components/onboarding/OptionCard";
-import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
+import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
 import { t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { genderOptions, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
+import { genderOptions } from "@/domain/onboarding";
+
+const genderSchema = z.object({
+  gender: z.enum(["male", "female"]),
+});
 
 export default function GenderScreen() {
-  const selected = useOnboardingStore((state) => state.draft.gender);
-  const setGender = useOnboardingStore((state) => state.setGender);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("Gender");
-
   return (
-    <OnboardingStepScaffold
-      continueDisabled={!selected}
-      onBack={() => router.replace(getPreviousOnboardingPath("Gender"))}
-      onContinue={() => {
-        if (!selected) {
-          return;
-        }
-        markStepCompleted("Gender");
-        router.replace(getNextOnboardingPath("Gender"));
-      }}
+    <OnboardingOptionSelection
+      stepName="Gender"
+      fieldName="gender"
+      schema={genderSchema}
+      options={genderOptions}
       question={t.onboarding.questions.Gender}
-      step={meta.step}
-      totalSteps={meta.totalSteps}
-    >
-      <View style={{ gap: 16 }}>
-        {genderOptions.map((option) => (
-          <OptionCard
-            key={option.value}
-            accent={option.accent}
-            icon={option.value === "female" ? "♀" : "♂"}
-            onPress={() => setGender(option.value)}
-            selected={selected === option.value}
-            subtitle={option.subtitle}
-            title={option.title}
-          />
-        ))}
-      </View>
-    </OnboardingStepScaffold>
+      getIcon={(value) => (value === "female" ? "♀" : "♂")}
+    />
   );
 }

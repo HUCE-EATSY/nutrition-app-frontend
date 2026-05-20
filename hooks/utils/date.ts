@@ -6,22 +6,24 @@ export function roundToStep(value: number, step: number) {
   return Math.round(value / step) * step;
 }
 
+import { format, parseISO, differenceInYears, addDays as addDaysFns, formatISO } from "date-fns";
+import { vi } from "date-fns/locale";
+
 export function formatShortDate(dateISO: string) {
-  return new Date(dateISO).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  try {
+    return format(parseISO(dateISO), "dd MMM yyyy", { locale: vi });
+  } catch {
+    return dateISO;
+  }
 }
 
 export function formatDateForHero(dateISO: string) {
-  return new Date(dateISO).toLocaleDateString("vi-VN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  try {
+    return format(parseISO(dateISO), "d MMMM yyyy", { locale: vi });
+  } catch {
+    return dateISO;
+  }
 }
-
 
 export function createBirthDateISO(day: number, month: number, year: number) {
   const safeMonth = `${month}`.padStart(2, "0");
@@ -30,16 +32,20 @@ export function createBirthDateISO(day: number, month: number, year: number) {
 }
 
 export function getDateParts(dateISO: string) {
-  // Tránh dùng new Date(iso) vì sẽ bị lệch múi giờ (UTC vs Local)
-  const parts = dateISO.split("T")[0].split("-");
-  if (parts.length === 3) {
-    return {
-      year: parseInt(parts[0], 10),
-      month: parseInt(parts[1], 10),
-      day: parseInt(parts[2], 10),
-    };
+  try {
+    // Tránh dùng new Date(iso) trực tiếp nếu không cần thiết
+    const cleanISO = dateISO.split("T")[0];
+    const parts = cleanISO.split("-");
+    if (parts.length === 3) {
+      return {
+        year: parseInt(parts[0], 10),
+        month: parseInt(parts[1], 10),
+        day: parseInt(parts[2], 10),
+      };
+    }
+  } catch {
+    // Fallback
   }
-  // Fallback nếu chuỗi không đúng định dạng
   const date = new Date(dateISO);
   return {
     day: date.getDate(),
@@ -49,30 +55,27 @@ export function getDateParts(dateISO: string) {
 }
 
 export function getAgeFromBirthDate(dateISO: string, today = new Date()) {
-  const birthDate = new Date(dateISO);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  const dayDiff = today.getDate() - birthDate.getDate();
-
-  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-    age -= 1;
+  try {
+    return differenceInYears(today, parseISO(dateISO));
+  } catch {
+    return 0;
   }
-
-  return age;
 }
 
 export function addDays(dateISO: string, days: number) {
-  const date = new Date(dateISO);
-  date.setDate(date.getDate() + days);
-  return date.toISOString();
+  try {
+    return formatISO(addDaysFns(parseISO(dateISO), days));
+  } catch {
+    return dateISO;
+  }
 }
 
 export function getTodayISO() {
-  return new Date().toISOString();
+  return formatISO(new Date());
 }
 
 export function getTodayDateISO() {
-  return new Date().toISOString().slice(0, 10);
+  return format(new Date(), "yyyy-MM-dd");
 }
 
 export function hourLabel(hour: number) {

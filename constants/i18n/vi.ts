@@ -262,8 +262,8 @@ export const vi = {
       surplusDaily: "Thặng dư mỗi ngày",
       deltaDaily: "Chênh lệch mỗi ngày",
       macroSplit: "Tỷ lệ macro",
-      roadmapTitle: "Lộ trình ",
-      roadmapBody: "Chưa làm xong",
+      roadmapTitle: "Lộ trình đề xuất",
+      roadmapBody: "Mục tiêu dinh dưỡng cá nhân đã được thiết lập. Hãy bắt đầu ghi chép các bữa ăn đầu tiên trong ngày, theo dõi lượng calo/macro nạp vào và duy trì thói quen lành mạnh để sớm đạt mục tiêu!",
       cta: "Bắt đầu hành trình",
     },
     genderOptions: {
@@ -329,7 +329,7 @@ export const vi = {
     bmiDescriptions: {
       underweight: "Bạn đang ở dưới ngưỡng cân bằng, ưu tiên ăn đủ và tăng năng lượng sạch.",
       normal: "Chỉ số của bạn đang ở vùng cân bằng để xây dựng routine bền vững.",
-      overweight: "Bạn đang ở trên ngưỡng cân bằng, ưu tiên deficit vừa phải và vận động đều.",
+      overweight: "Cân nặng đang bắt đầu vượt ngưỡng. Hãy tăng vận động và kiểm soát chế độ ăn mỗi ngày.",
       obese: "Bạn cần một lộ trình chậm và chắc, ưu tiên giữ macro rõ ràng.",
     },
     bmiSource: "BMI tiêu chuẩn",

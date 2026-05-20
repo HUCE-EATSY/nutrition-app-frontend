@@ -10,9 +10,7 @@ import { testimonials } from "@/constants/mocks/data";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
 import { trackEvent } from "@/hooks/utils/analytics";
-import { useUser } from "@/hooks/useUser";
-
-import { useMutation } from "@tanstack/react-query";
+import { useOnboardUser } from "@/hooks/api/useUserApi";
 
 const labels = t.onboarding.calculating.labels;
 
@@ -21,27 +19,26 @@ export default function CalculatingPlanScreen() {
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
   const setServerPlan = useOnboardingStore((state) => state.setServerPlan);
   const draft = useOnboardingStore((state) => state.draft);
-  const { onboardUser } = useUser();
 
-  const { mutate: submitOnboarding } = useMutation({
-    mutationFn: () => onboardUser(draft),
-    onSuccess: (result) => {
-      setServerPlan(result);
-      
-      // Chờ ít nhất 2.5s để hiệu ứng đẹp (kể từ lúc bắt đầu)
-      // Lưu ý: timers bên dưới vẫn chạy để cập nhật UI stage
-      setTimeout(() => {
-        markStepCompleted("Calculating");
-        router.replace("/(onboarding)/plan-result");
-      }, 2500);
-    },
-    onError: (error: unknown) => {
-      console.error("Onboarding API failed:", error);
-      Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
-        { text: "Quay lại", onPress: () => router.back() }
-      ]);
-    }
-  });
+  const { mutate: submitOnboarding } = useOnboardUser();
+
+  const handleSuccess = (result: any) => {
+    setServerPlan(result);
+    
+    // Chờ ít nhất 2.5s để hiệu ứng đẹp (kể từ lúc bắt đầu)
+    // Lưu ý: timers bên dưới vẫn chạy để cập nhật UI stage
+    setTimeout(() => {
+      markStepCompleted("Calculating");
+      router.replace("/(onboarding)/plan-result");
+    }, 2500);
+  };
+
+  const handleError = (error: unknown) => {
+    console.error("Onboarding API failed:", error);
+    Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
+      { text: "Quay lại", onPress: () => router.back() }
+    ]);
+  };
 
   useEffect(() => {
     trackEvent("plan_calculation_started", { screen_name: "calculating" });
@@ -51,12 +48,16 @@ export default function CalculatingPlanScreen() {
       setTimeout(() => setStage(2), 1400),
     ];
 
-    submitOnboarding();
+    submitOnboarding(draft, {
+      onSuccess: handleSuccess,
+      onError: handleError,
+    });
 
     return () => {
       timers.forEach(clearTimeout);
     };
-  }, [submitOnboarding]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitOnboarding, draft]);
 
   const testimonial = testimonials[stage % testimonials.length];
 

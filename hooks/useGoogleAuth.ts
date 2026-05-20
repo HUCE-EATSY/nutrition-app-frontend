@@ -1,114 +1,108 @@
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import { useEffect, useState } from 'react';
-import * as AuthSession from 'expo-auth-session';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
 import { useOnboardingStore } from './store/onboardingStore';
 import { API_URLS } from '@/constants/api';
-import Constants from 'expo-constants';
-
-WebBrowser.maybeCompleteAuthSession();
+import axiosClient from './api/axiosClient';
 
 const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID;
-const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_GOOGLE_CLIENT_ID;
+
+GoogleSignin.configure({
+  webClientId: WEB_CLIENT_ID,
+  offlineAccess: false,
+});
 
 export const useGoogleAuth = () => {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
-  const { completeOnboarding, reset: resetOnboarding } = useOnboardingStore();
+  const { completeOnboarding, reset: resetOnboarding, setPublicFlowStep } = useOnboardingStore();
+  const queryClient = useQueryClient();
 
-  // Tạo redirectUri phù hợp cho cả Expo Go và Standalone app
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'nutritionappfrontend',
-  });
+  const mutation = useMutation({
+    mutationFn: async (idToken: string) => {
+      const response = await axiosClient.post(API_URLS.auth.google, { idToken });
+      return response.data;
+    },
+    onSuccess: (json) => {
+      const { data } = json;
 
+      // Clear query client cache to avoid cross-user/cross-session leaks
+      queryClient.clear();
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    // Quan trọng: Khi chạy trên Expo Go, Google Provider thường ưu tiên webClientId
-    webClientId: WEB_CLIENT_ID,
-    androidClientId: ANDROID_CLIENT_ID,
-    // iosClientId: process.env.EXPO_PUBLIC_IOS_GOOGLE_CLIENT_ID,
-    
-    redirectUri,
-    scopes: ['openid', 'profile', 'email'],
-    responseType: 'id_token',
-  });
-
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const idToken = response.authentication?.idToken || response.params.id_token;
-      
-      if (idToken) {
-        loginToBackend(idToken);
-      } else {
-        console.log('Google Auth Response:', JSON.stringify(response, null, 2));
-        setError('Không tìm thấy ID Token từ Google.');
-      }
-    } else if (response?.type === 'error') {
-      console.error('Google Auth Error Response:', response);
-      setError('Google login failed: ' + (response.error?.message || 'Unknown error'));
-    }
-  }, [response]);
-
-  const loginToBackend = async (idToken: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(API_URLS.auth.google, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Backend login failed');
-      }
-
-      const { data } = await res.json();
-      
       // Thêm dòng này để lấy token dùng cho Swagger
       console.log(">>> TOKEN DÙNG CHO SWAGGER:", data.accessToken);
-      
+
       if (data.isNewUser === false) {
         completeOnboarding();
+      } else {
+        setPublicFlowStep("mascot-intro");
       }
 
       setAuth(data.accessToken, data.refreshToken, {
         id: data.userId,
         email: data.email,
       });
-      
-    } catch (err: unknown) {
+    },
+    onError: (err) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';
       setError(errorMessage);
       console.error(err);
+    }
+  });
+
+  const signIn = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const response = await GoogleSignin.signIn();
+      
+      if (response.type === 'success' && response.data) {
+        const idToken = response.data.idToken;
+        if (idToken) {
+          mutation.mutate(idToken);
+        } else {
+          setError('Không tìm thấy ID Token từ Google.');
+        }
+      }
+    } catch (err: any) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // Hủy đăng nhập - không làm gì thêm
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        setError('Đang xử lý đăng nhập Google.');
+      } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        setError('Google Play Services không khả dụng hoặc chưa được cập nhật.');
+      } else {
+        console.error('Google Sign-In error:', err);
+        setError(err.message || 'Đăng nhập Google thất bại.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const logout = async () => {
+    try {
+      await GoogleSignin.signOut();
+    } catch (e) {
+      console.error('Failed to sign out from Google:', e);
+    }
     clearAuth();
     resetOnboarding();
+    queryClient.clear();
   };
 
   return {
     userInfo,
     isAuthenticated,
-    loading,
+    loading: loading || mutation.isPending,
     error,
-    signIn: () => {
-      console.log('Attempting sign in with Redirect URI:', redirectUri);
-      return promptAsync();
-    },
+    signIn,
     logout,
     deleteAccount: async () => {
-      clearAuth();
-      resetOnboarding();
+      await logout();
     },
-    request,
   };
 };
-

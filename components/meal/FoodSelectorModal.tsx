@@ -12,20 +12,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
-import { API_BASE } from "@/constants/api";
+import { useFoodList, FoodItem } from "@/hooks/api/useFoodApi";
 
-interface FoodItem {
-  id: number;
-  name: string;
-  imageUrl: string | null;
-  category: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  servingSize: number;
-  description: string | null;
-}
+// Used from useFoodApi.ts
 
 interface FoodSelectorModalProps {
   visible: boolean;
@@ -34,9 +23,9 @@ interface FoodSelectorModalProps {
 }
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
-  const [foods, setFoods] = useState<FoodItem[]>([]);
+  const { data: foods = [], isLoading } = useFoodList();
+
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAllFoods, setShowAllFoods] = useState(false);
@@ -51,13 +40,6 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
     : filteredFoods.slice(0, DEFAULT_DISPLAY_COUNT);
 
   const hasMoreFoods = filteredFoods.length > DEFAULT_DISPLAY_COUNT;
-
-  // Load foods khi modal mở
-  useEffect(() => {
-    if (visible) {
-      loadAllFoods();
-    }
-  }, [visible]);
 
   // Filter foods
   useEffect(() => {
@@ -83,23 +65,6 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [searchQuery, selectedCategory, foods]);
-
-  async function loadAllFoods() {
-    setIsLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/Food`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setFoods(json.data ?? []);
-      setFilteredFoods(json.data ?? []);
-    } catch (error) {
-      console.error("Failed to load foods:", error);
-      setFoods([]);
-      setFilteredFoods([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   function handleSelectFood(food: FoodItem) {
     onSelectFood(food);

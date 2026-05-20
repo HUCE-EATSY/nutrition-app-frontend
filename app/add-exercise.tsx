@@ -15,8 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography, radius } from "@/constants";
-import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
+import { useAddExercise } from "@/hooks/api/useDiaryApi";
 import {
   ACTIVITIES,
   ActivityId,
@@ -32,13 +32,12 @@ export default function AddExerciseScreen() {
   const targetDate = date ?? getTodayDateISO();
   const currentHour = new Date().getHours();
 
-  const { addExercise } = useDiaryStore();
+  const { mutateAsync: addExercise, isPending: isSaving } = useAddExercise();
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [selectedId, setSelectedId] = useState<ActivityId | null>(null);
   const [intensity, setIntensity] = useState<ActivityIntensity>("amateur");
   const [duration, setDuration] = useState("30");
-  const [isSaving, setIsSaving] = useState(false);
 
   // ── Tính calo đốt: MET × weight × hours ──────────────────────────────────
   const durationNum = parseFloat(duration) || 0;
@@ -58,7 +57,6 @@ export default function AddExerciseScreen() {
       return;
     }
 
-    setIsSaving(true);
     try {
       await addExercise({
         activityId: selectedId,
@@ -71,8 +69,6 @@ export default function AddExerciseScreen() {
       router.back();
     } catch {
       Alert.alert("Thất bại", "Không thể ghi hoạt động. Vui lòng thử lại.");
-    } finally {
-      setIsSaving(false);
     }
   }
 

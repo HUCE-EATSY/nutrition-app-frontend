@@ -40,7 +40,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": false,

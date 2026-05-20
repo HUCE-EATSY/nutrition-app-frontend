@@ -1,6 +1,6 @@
+import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { StateStorage } from "zustand/middleware";
-import { Platform } from "react-native";
 
 const isWeb = Platform.OS === "web";
 
@@ -9,20 +9,20 @@ export const secureStorage: StateStorage = {
     if (isWeb) {
       return localStorage.getItem(name);
     }
-    return (await SecureStore.getItemAsync(name)) || null;
+    return await SecureStore.getItemAsync(name);
   },
   setItem: async (name: string, value: string): Promise<void> => {
     if (isWeb) {
       localStorage.setItem(name, value);
-      return;
+    } else {
+      await SecureStore.setItemAsync(name, value);
     }
-    await SecureStore.setItemAsync(name, value);
   },
   removeItem: async (name: string): Promise<void> => {
     if (isWeb) {
       localStorage.removeItem(name);
-      return;
+    } else {
+      await SecureStore.deleteItemAsync(name);
     }
-    await SecureStore.deleteItemAsync(name);
   },
 };
