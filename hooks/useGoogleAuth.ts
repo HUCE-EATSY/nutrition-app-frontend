@@ -40,6 +40,10 @@ export const useGoogleAuth = () => {
     if (response?.type === 'success') {
       const idToken = response.authentication?.idToken || response.params.id_token;
       
+      console.log('=== GOOGLE AUTH SUCCESS ===');
+      console.log('ID Token:', idToken?.substring(0, 50) + '...');
+      console.log('Full Response:', JSON.stringify(response, null, 2));
+      
       if (idToken) {
         loginToBackend(idToken);
       } else {
@@ -56,18 +60,30 @@ export const useGoogleAuth = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('=== CALLING BACKEND ===');
+      console.log('URL:', API_URLS.auth.google);
+      console.log('ID Token (first 50 chars):', idToken.substring(0, 50) + '...');
+      
       const res = await fetch(API_URLS.auth.google, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
 
+      console.log('Backend Response Status:', res.status);
+      
       if (!res.ok) {
         const errorData = await res.json();
+        console.error('Backend Error:', errorData);
         throw new Error(errorData.message || 'Backend login failed');
       }
 
       const { data } = await res.json();
+      
+      console.log('=== LOGIN SUCCESS ===');
+      console.log('User ID:', data.userId);
+      console.log('Email:', data.email);
+      console.log('Is New User:', data.isNewUser);
       
       // Thêm dòng này để lấy token dùng cho Swagger
       console.log(">>> TOKEN DÙNG CHO SWAGGER:", data.accessToken);
@@ -83,6 +99,8 @@ export const useGoogleAuth = () => {
       
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';
+      console.error('=== LOGIN ERROR ===');
+      console.error('Error:', errorMessage);
       setError(errorMessage);
       console.error(err);
     } finally {
