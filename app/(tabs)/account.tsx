@@ -255,7 +255,7 @@ export default function AccountScreen() {
 
         const progressStr = `${progressPct.toFixed(0)}%`;
 
-        let journeyTitle = t.account.maintainingWeight;
+        let journeyTitle: string = t.account.maintainingWeight;
         if (startWeight > targetWeightVal) {
           if (currentWeightVal <= targetWeightVal) {
             journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu giảm cân!";
@@ -294,8 +294,8 @@ export default function AccountScreen() {
 
               <View style={styles.progressBarContainer}>
                 <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: progressStr }]} />
-                  <View style={[styles.progressKnob, { left: progressStr }]} />
+                  <View style={[styles.progressFill, { width: progressStr as any }]} />
+                  <View style={[styles.progressKnob, { left: progressStr as any }]} />
                 </View>
                 <View style={styles.progressLabels}>
                   <Text style={styles.progressLabel}>{startWeight} kg</Text>
