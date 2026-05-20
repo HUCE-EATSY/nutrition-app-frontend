@@ -98,6 +98,9 @@ export interface DiaryEntry {
   carbGram: number;
   fatGram: number;
   type: "meal" | "snack" | "drink";
+  imageUrl?: string | null;
+  quantityG?: number;
+  foodItemId?: string;
 }
 
 export interface DiaryHourSlot {

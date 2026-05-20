@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useRouter } from "expo-router";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
+import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { ProgressRingChart } from "@/components/charts/ProgressRingChart";
@@ -12,21 +13,34 @@ import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { colors, radius, spacing, typography } from "@/constants";
+import { userService } from "@/services/userService";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
 
 export default function AccountScreen() {
+  const queryClient = useQueryClient();
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
-  const { data: userGoalInfo } = useGetUserInfo();
+  const { data: userGoalInfo, refetch: refetchUserInfo } = useGetUserInfo();
   const resetOnboarding = useOnboardingStore((state) => state.reset);
-  // Bypass Google Auth to prevent Client ID error during UI development
-  // const { logout, deleteAccount } = useGoogleAuth();
-  const logout = async () => console.log("Mock logout");
-  const deleteAccount = async () => console.log("Mock deleteAccount");
+  const { logout, deleteAccount } = useGoogleAuth();
+
+  // Avatar state: ưu tiên avatarUrl từ server
+  const [avatarUri, setAvatarUri] = useState<string | null>(
+    userGoalInfo?.profile?.avatarUrl ?? null
+  );
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  // Đồng bộ hóa avatarUri khi dữ liệu người dùng được tải về từ server
+  React.useEffect(() => {
+    if (userGoalInfo?.profile?.avatarUrl) {
+      setAvatarUri(userGoalInfo.profile.avatarUrl);
+    }
+  }, [userGoalInfo?.profile?.avatarUrl]);
 
   const profile = userGoalInfo?.activeGoal;
   
@@ -64,6 +78,38 @@ export default function AccountScreen() {
   const [settingsVisible, setSettingsVisible] = React.useState(false);
   const [confirmVisible, setConfirmVisible] = React.useState(false);
   const [confirmType, setConfirmType] = React.useState<"logout" | "delete" | null>(null);
+
+  /** Upload avatar: chọn ảnh rồi gửi lên /api/User/avatar */
+  const handleUploadAvatar = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("Không có quyền", "Vui lòng cấp quyền truy cập ảnh.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets[0]) return;
+
+      setIsUploadingAvatar(true);
+      const asset = result.assets[0];
+      const { avatarUrl } = await userService.uploadAvatar(
+        asset.uri,
+        asset.mimeType ?? 'image/jpeg'
+      );
+      setAvatarUri(avatarUrl);
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    } catch (err) {
+      console.error("Lỗi upload avatar:", err);
+      Alert.alert("Lỗi", "Không thể tải ảnh lên. Vui lòng thử lại.");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const showSettings = () => setSettingsVisible(true);
   const hideSettings = () => setSettingsVisible(false);
@@ -177,10 +223,25 @@ export default function AccountScreen() {
       <View style={styles.profileSection}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{nickname.charAt(0).toUpperCase()}</Text>
+            {avatarUri ? (
+              <Image
+                source={{ uri: avatarUri }}
+                style={{ width: 100, height: 100, borderRadius: radius.pill }}
+              />
+            ) : (
+              <Text style={styles.avatarText}>{nickname.charAt(0).toUpperCase()}</Text>
+            )}
           </View>
-          <Pressable style={styles.addAvatarButton}>
-            <Ionicons color={colors.textSecondary} name="add" size={16} />
+          <Pressable
+            style={styles.addAvatarButton}
+            onPress={handleUploadAvatar}
+            disabled={isUploadingAvatar}
+          >
+            <Ionicons
+              color={colors.textSecondary}
+              name={isUploadingAvatar ? "hourglass-outline" : "add"}
+              size={16}
+            />
           </Pressable>
         </View>
         <Text style={styles.profileName}>{nickname.toUpperCase()}</Text>

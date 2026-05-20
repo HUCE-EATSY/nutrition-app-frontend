@@ -5,9 +5,12 @@ import { useRouter } from "expo-router";
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
 
 export function SmallStatRow() {
   const router = useRouter();
+  const { exercises } = useDiaryStore();
+  const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
 
   return (
     <View style={styles.container}>
@@ -47,10 +50,22 @@ export function SmallStatRow() {
               </TouchableOpacity>
             </View>
             <View style={styles.content}>
-              <View style={styles.iconWrapper}>
-                <MaterialCommunityIcons name="fire" size={20} color={colors.danger} />
-              </View>
-              <Text style={styles.emptyText}>{t.home.noData}</Text>
+              {exercises.length > 0 ? (
+                <>
+                  <Text style={styles.emptyText}>{exercises.length} bài tập</Text>
+                  <View style={styles.burningRow}>
+                    <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
+                    <Text style={styles.statValue}>{burned} kcal</Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.iconWrapper}>
+                    <MaterialCommunityIcons name="fire" size={20} color={colors.danger} />
+                  </View>
+                  <Text style={styles.emptyText}>{t.home.noData}</Text>
+                </>
+              )}
             </View>
           </SurfaceCard>
         </TouchableOpacity>

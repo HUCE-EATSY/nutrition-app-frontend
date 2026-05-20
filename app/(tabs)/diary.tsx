@@ -1,24 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View,
   TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
 
-import { theme, spacing, typography } from "@/constants";
+import { Toast } from "@/components/common/Toast";
+import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
+import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
+import { spacing, theme, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { formatShortDate } from "@/hooks/utils/date";
-import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
-import { Toast } from "@/components/common/Toast";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -43,12 +45,15 @@ export default function DiaryTimelineScreen() {
     goToNextDay,
     fetchDiary,
     addMealEntry,
+    deleteFoodLog,
+    updateMealEntry,
   } = useDiaryStore();
 
   // Modal state
   const [showFoodSelector, setShowFoodSelector] = useState(false);
   const [selectedHourForMeal, setSelectedHourForMeal] = useState<number>(currentHour);
   const [selectedFood, setSelectedFood] = useState<any>(null);
+  const [editingLogId, setEditingLogId] = useState<number | null>(null);
   const [grams, setGrams] = useState("100");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -65,29 +70,29 @@ export default function DiaryTimelineScreen() {
   const macros: MacroInfo[] = [
     {
       label: "Calo",
-      value: summary?.consumedCalories ?? 0,
-      target: summary?.targetCalories ?? 2000,
+      value: Math.round(summary?.consumedCalories ?? 0),
+      target: Math.round(summary?.targetCalories ?? 2000),
       icon: "flame",
       color: theme.colors.primary,
     },
     {
       label: "Protein",
-      value: summary?.consumedProteinGram ?? 0,
-      target: summary?.targetProteinGram ?? 120,
+      value: Math.round(summary?.consumedProteinGram ?? 0),
+      target: Math.round(summary?.targetProteinGram ?? 120),
       icon: "flash",
       color: theme.colors.protein,
     },
     {
       label: "Carbs",
-      value: summary?.consumedCarbGram ?? 0,
-      target: summary?.targetCarbGram ?? 150,
+      value: Math.round(summary?.consumedCarbGram ?? 0),
+      target: Math.round(summary?.targetCarbGram ?? 150),
       icon: "leaf",
       color: theme.colors.carbs,
     },
     {
       label: "Fat",
-      value: summary?.consumedFatGram ?? 0,
-      target: summary?.targetFatGram ?? 55,
+      value: Math.round(summary?.consumedFatGram ?? 0),
+      target: Math.round(summary?.targetFatGram ?? 55),
       icon: "water",
       color: theme.colors.fat,
     },
@@ -106,25 +111,42 @@ export default function DiaryTimelineScreen() {
   function handleSelectFood(food: any) {
     setSelectedFood(food);
     setShowFoodSelector(false);
+    setEditingLogId(null);
     setGrams("100"); // Reset gram về 100
   }
 
-  // Tính dinh dưỡng theo gram
-  function calcNutrition(food: any, g: number) {
-    const ratio = g / food.servingSize;
-    return {
-      calories: Math.round(food.calories * ratio),
-      protein: Math.round(food.protein * ratio * 10) / 10,
-      carb: Math.round(food.carbs * ratio * 10) / 10,
-      fat: Math.round(food.fat * ratio * 10) / 10,
-    };
+  // Xử lý khi chỉnh sửa log cũ
+  function handleEditLog(entry: any) {
+    setEditingLogId(Number(entry.id));
+    setSelectedHourForMeal(entry.hour);
+    setGrams(String(entry.quantityG ?? 100));
+
+    const qty = entry.quantityG ?? 100;
+    const ratio = qty > 0 ? (100 / qty) : 1;
+    setSelectedFood({
+      id: entry.foodItemId || "",
+      name: entry.title,
+      servingSize: 100,
+      calories: entry.calories * ratio,
+      protein: entry.proteinGram * ratio,
+      carbs: entry.carbGram * ratio,
+      fat: entry.fatGram * ratio,
+      imageUrl: entry.imageUrl,
+    });
   }
 
+  function handleCancelMeal() {
+    setSelectedFood(null);
+    setEditingLogId(null);
+    setGrams("100");
+  }
+
+
+
   // Lưu bữa ăn
-  async function handleSaveMeal() {
+  async function handleSaveMeal(gramNum: number) {
     if (!selectedFood) return;
 
-    const gramNum = parseFloat(grams) || 0;
     if (gramNum <= 0) {
       setToastMessage("Vui lòng nhập số gram hợp lệ");
       setToastType("error");
@@ -132,45 +154,65 @@ export default function DiaryTimelineScreen() {
       return;
     }
 
-    const nutrition = calcNutrition(selectedFood, gramNum);
-
     setIsSaving(true);
     try {
-      await addMealEntry({
-        foodId: selectedFood.id,
-        foodName: selectedFood.name,
-        dateISO: selectedDate,
-        hour: selectedHourForMeal,
-        quantityG: gramNum,
-        totalCalories: nutrition.calories,
-        proteinGram: nutrition.protein,
-        carbGram: nutrition.carb,
-        fatGram: nutrition.fat,
-      });
+      if (editingLogId !== null) {
+        await updateMealEntry(editingLogId, gramNum);
+        setToastMessage(`Đã cập nhật ${selectedFood.name} (${gramNum}g)`);
+      } else {
+        // Chuyển giờ → mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Phụ
+        const mealTypeId =
+          selectedHourForMeal >= 5 && selectedHourForMeal <= 10 ? 1 :
+            selectedHourForMeal >= 11 && selectedHourForMeal <= 14 ? 2 :
+              selectedHourForMeal >= 18 && selectedHourForMeal <= 22 ? 3 : 4;
 
-      // Hiện toast thành công
-      setToastMessage(
-        `Đã lưu ${selectedFood.name} (${gramNum}g) vào ${selectedHourForMeal
-          .toString()
-          .padStart(2, "0")}:00`
-      );
+        await addMealEntry({
+          foodItemId: selectedFood.id,   // UUID string
+          mealTypeId,
+          dateISO: selectedDate,
+          quantityG: gramNum,
+        });
+
+        setToastMessage(`Đã lưu ${selectedFood.name} (${gramNum}g)`);
+      }
+
       setToastType("success");
       setShowToast(true);
 
       // Reset state
       setSelectedFood(null);
+      setEditingLogId(null);
       setGrams("100");
 
       // Refresh diary
       await fetchDiary(selectedDate);
     } catch {
-      setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
+      setToastMessage("Không thể lưu bữa ăn. Vui lòng thử lại.");
       setToastType("error");
       setShowToast(true);
     } finally {
       setIsSaving(false);
     }
   }
+
+  async function handleDeleteLog(logId: number) {
+    try {
+      await deleteFoodLog(logId);
+      setToastMessage("Đã xóa món ăn khỏi nhật ký");
+      setToastType("success");
+      setShowToast(true);
+      await fetchDiary(selectedDate);
+    } catch {
+      setToastMessage("Không thể xóa. Vui lòng thử lại.");
+      setToastType("error");
+      setShowToast(true);
+    }
+  }
+
+  const formattedHour = `${selectedHourForMeal.toString().padStart(2, "0")}:00`;
+  const isToday = selectedDate === new Date().toISOString().slice(0, 10);
+  const dateStr = isToday ? "Hôm nay" : formatShortDate(selectedDate);
+  const detailHeaderTitle = `${dateStr} • ${formattedHour}`;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -257,71 +299,120 @@ export default function DiaryTimelineScreen() {
             // Bài tập trong giờ này
             const hourExercises = exercises.filter((ex) => ex.hour === hour);
 
+            const slotTotals = hasEntries ? {
+              calories: slot!.entries.reduce((sum, e) => sum + e.calories, 0),
+              protein: Math.round(slot!.entries.reduce((sum, e) => sum + e.proteinGram, 0) * 10) / 10,
+              carbs: Math.round(slot!.entries.reduce((sum, e) => sum + e.carbGram, 0) * 10) / 10,
+              fat: Math.round(slot!.entries.reduce((sum, e) => sum + e.fatGram, 0) * 10) / 10,
+            } : { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
             return (
-              <View key={hour} style={styles.timelineRow}>
-                {/* Giờ */}
-                <View style={styles.timeWrapper}>
-                  <Text
-                    style={[styles.timeText, isCurrentHour && styles.timeTextActive]}
-                  >
+              <View key={hour} style={styles.hourGroup}>
+                {/* Header row of the hour */}
+                <View style={styles.hourHeaderRow}>
+                  <Text style={[styles.hourText, isCurrentHour && styles.hourTextActive]}>
                     {timeString}
                   </Text>
+                  
+                  {hasEntries && (
+                    <View style={styles.hourMacrosRow}>
+                      <Ionicons color={theme.colors.primary} name="flame" size={11} />
+                      <Text style={styles.hourMacroText}>{Math.round(slotTotals.calories)} cal</Text>
+                      
+                      <Ionicons color={theme.colors.protein} name="flash" size={11} />
+                      <Text style={styles.hourMacroText}>{slotTotals.protein}g</Text>
+                      
+                      <Ionicons color={theme.colors.carbs} name="leaf" size={11} />
+                      <Text style={styles.hourMacroText}>{slotTotals.carbs}g</Text>
+                      
+                      <Ionicons color={theme.colors.fat} name="water" size={11} />
+                      <Text style={styles.hourMacroText}>{slotTotals.fat}g</Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.hourLineDivider} />
+                  
+                  <Pressable
+                    hitSlop={8}
+                    onPress={() => handleAddMeal(hour)}
+                    style={styles.hourAddBtn}
+                  >
+                    <Ionicons color={theme.colors.textMuted} name="add" size={20} />
+                  </Pressable>
                 </View>
 
-                {/* Nội dung */}
-                <View style={styles.lineContentWrapper}>
-                  <View
-                    style={[
-                      styles.timelineLine,
-                      isCurrentHour && styles.timelineLineActive,
-                    ]}
-                  />
+                {/* Detailed Cards for Entries */}
+                {(hasEntries || hourExercises.length > 0) && (
+                  <View style={styles.hourContentList}>
+                    {/* Meal Entries */}
+                    {hasEntries && slot!.entries.map((entry) => {
+                      const servings = Math.round(((entry.quantityG ?? 100) / 100) * 100) / 100;
+                      return (
+                        <Pressable
+                          key={entry.id}
+                          onPress={() => handleEditLog(entry)}
+                          onLongPress={() => {
+                            const numId = Number(entry.id);
+                            if (!isNaN(numId)) {
+                              handleDeleteLog(numId);
+                            }
+                          }}
+                          style={styles.foodCard}
+                        >
+                          {entry.imageUrl ? (
+                            <Image source={{ uri: entry.imageUrl }} style={styles.foodCardImg} />
+                          ) : (
+                            <View style={styles.foodCardImgPlaceholder}>
+                              <Ionicons color={theme.colors.textMuted} name="restaurant-outline" size={22} />
+                            </View>
+                          )}
+                          
+                          <View style={styles.foodCardInfo}>
+                            <Text style={styles.foodCardName} numberOfLines={1}>
+                              {entry.title}
+                            </Text>
+                            <Text style={styles.foodCardSub}>
+                              {servings} Khẩu phần • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
+                            </Text>
+                            <View style={styles.foodCardMacros}>
+                              <Ionicons color={theme.colors.protein} name="flash" size={11} />
+                              <Text style={[styles.foodCardMacroVal, { color: theme.colors.protein }]}>
+                                {entry.proteinGram}g
+                              </Text>
+                              
+                              <Ionicons color={theme.colors.carbs} name="leaf" size={11} />
+                              <Text style={[styles.foodCardMacroVal, { color: theme.colors.carbs }]}>
+                                {entry.carbGram}g
+                              </Text>
+                              
+                              <Ionicons color={theme.colors.fat} name="water" size={11} />
+                              <Text style={[styles.foodCardMacroVal, { color: theme.colors.fat }]}>
+                                {entry.fatGram}g
+                              </Text>
+                            </View>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
 
-                  <View style={styles.entriesColumn}>
-                    {/* Bữa ăn */}
-                    {hasEntries && (
-                      <View style={styles.entryChip}>
-                        <Ionicons
-                          color={theme.colors.warning}
-                          name="restaurant-outline"
-                          size={12}
-                        />
-                        <Text numberOfLines={1} style={styles.entryText}>
-                          {slot!.entries.map((e) => e.title).join(", ")}
-                        </Text>
-                        <Text style={styles.entryCalText}>
-                          {slot!.entries.reduce((s, e) => s + e.calories, 0)} kcal
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* Bài tập */}
+                    {/* Exercise Entries */}
                     {hourExercises.map((ex) => (
-                      <View key={ex.id} style={[styles.entryChip, styles.exerciseChip]}>
-                        <Ionicons
-                          color={theme.colors.success}
-                          name="barbell-outline"
-                          size={12}
-                        />
-                        <Text numberOfLines={1} style={styles.entryText}>
-                          {ex.activityLabel} {ex.durationMinutes} phút
-                        </Text>
-                        <Text style={[styles.entryCalText, { color: theme.colors.success }]}>
-                          -{ex.caloriesBurned} kcal
-                        </Text>
+                      <View key={ex.id} style={styles.exerciseCard}>
+                        <View style={styles.exerciseCardIconBg}>
+                          <Ionicons color={theme.colors.success} name="barbell-outline" size={16} />
+                        </View>
+                        <View style={styles.exerciseCardInfo}>
+                          <Text style={styles.exerciseCardName} numberOfLines={1}>
+                            {ex.activityLabel}
+                          </Text>
+                          <Text style={styles.exerciseCardSub}>
+                            {ex.durationMinutes} phút • Đốt {ex.caloriesBurned} kcal
+                          </Text>
+                        </View>
                       </View>
                     ))}
                   </View>
-                </View>
-
-                {/* Nút thêm bữa ăn */}
-                <Pressable
-                  hitSlop={8}
-                  onPress={() => handleAddMeal(hour)}
-                  style={styles.addButton}
-                >
-                  <Ionicons color={theme.colors.textMuted} name="add" size={24} />
-                </Pressable>
+                )}
               </View>
             );
           })}
@@ -344,91 +435,18 @@ export default function DiaryTimelineScreen() {
         onSelectFood={handleSelectFood}
       />
 
-      {/* Meal Entry Panel - Hiện khi đã chọn món */}
-      {selectedFood && (
-        <View style={styles.mealPanel}>
-          <View style={styles.mealPanelContent}>
-            {/* Món đã chọn */}
-            <View style={styles.selectedFoodRow}>
-              <Ionicons color={theme.colors.warning} name="restaurant-outline" size={20} />
-              <Text style={styles.selectedFoodName} numberOfLines={1}>
-                {selectedFood.name}
-              </Text>
-              <Pressable hitSlop={8} onPress={() => setSelectedFood(null)}>
-                <Ionicons color={theme.colors.textMuted} name="close" size={20} />
-              </Pressable>
-            </View>
-
-            {/* Giờ */}
-            <View style={styles.mealInfoRow}>
-              <Ionicons color={theme.colors.warning} name="time-outline" size={16} />
-              <Text style={styles.mealInfoText}>
-                {selectedHourForMeal.toString().padStart(2, "0")}:00
-              </Text>
-            </View>
-
-            {/* Input gram */}
-            <View style={styles.gramRow}>
-              <Text style={styles.gramLabel}>Số gram</Text>
-              <View style={styles.gramInputWrap}>
-                <Pressable
-                  onPress={() => setGrams((g) => String(Math.max(1, parseFloat(g) - 10)))}
-                  style={styles.stepBtn}
-                >
-                  <Ionicons color={theme.colors.textPrimary} name="remove" size={18} />
-                </Pressable>
-                <TextInput
-                  keyboardType="numeric"
-                  onChangeText={setGrams}
-                  style={styles.gramInput}
-                  value={grams}
-                />
-                <Pressable
-                  onPress={() => setGrams((g) => String(parseFloat(g) + 10))}
-                  style={styles.stepBtn}
-                >
-                  <Ionicons color={theme.colors.textPrimary} name="add" size={18} />
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Nutrition preview */}
-            {(() => {
-              const gramNum = parseFloat(grams) || 0;
-              const nutrition = calcNutrition(selectedFood, gramNum);
-              return (
-                <View style={styles.nutritionPreview}>
-                  <Text style={styles.nutritionPreviewText}>
-                    {nutrition.calories} kcal • {nutrition.protein}g protein • {nutrition.carb}g
-                    carbs • {nutrition.fat}g fat
-                  </Text>
-                </View>
-              );
-            })()}
-
-            {/* Buttons */}
-            <View style={styles.mealPanelButtons}>
-              <Pressable
-                onPress={() => setSelectedFood(null)}
-                style={[styles.mealPanelButton, styles.cancelButton]}
-              >
-                <Text style={styles.cancelButtonText}>Hủy</Text>
-              </Pressable>
-              <Pressable
-                disabled={isSaving}
-                onPress={handleSaveMeal}
-                style={[styles.mealPanelButton, styles.saveButton, isSaving && { opacity: 0.6 }]}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Lưu</Text>
-                )}
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      )}
+      {/* Food Detail Modal - Tái sử dụng để xem chi tiết / nhập khẩu phần */}
+      <FoodDetailModal
+        visible={!!selectedFood}
+        food={selectedFood}
+        onClose={handleCancelMeal}
+        onAdd={(food, adjustedGrams) => {
+          handleSaveMeal(adjustedGrams);
+        }}
+        initialGrams={editingLogId !== null ? parseFloat(grams) : undefined}
+        submitButtonText={editingLogId !== null ? "Lưu thay đổi" : "Thêm vào nhật ký"}
+        headerTitle={detailHeaderTitle}
+      />
 
       {/* Toast Notification */}
       <Toast
@@ -493,65 +511,136 @@ const styles = StyleSheet.create({
     color: theme.colors.success,
   },
   scrollContent: { paddingTop: spacing.lg },
-  timelineContainer: { gap: spacing.sm },
-  timelineRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    minHeight: 48,
+  timelineContainer: { gap: spacing.md },
+  hourGroup: {
+    marginBottom: spacing.xs,
   },
-  timeWrapper: { width: 50, paddingTop: 4 },
-  timeText: {
+  hourHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 32,
+    gap: spacing.sm,
+  },
+  hourText: {
     ...typography.bodyStrong,
     color: theme.colors.textMuted,
     fontSize: 13,
+    width: 44,
   },
-  timeTextActive: { color: theme.colors.primary },
-  lineContentWrapper: {
+  hourTextActive: {
+    color: theme.colors.primary,
+  },
+  hourMacrosRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255,255,255,0.02)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  hourMacroText: {
+    ...typography.caption,
+    color: theme.colors.textSecondary,
+    fontSize: 11,
+    marginRight: 4,
+  },
+  hourLineDivider: {
     flex: 1,
-    minHeight: 48,
-    justifyContent: "center",
-    marginHorizontal: spacing.sm,
-  },
-  timelineLine: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: "50%",
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
-  timelineLineActive: { backgroundColor: "rgba(165,108,255,0.15)" },
-  entriesColumn: { gap: 4 },
-  entryChip: {
+  hourAddBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hourContentList: {
+    paddingLeft: 44,
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  foodCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.surface,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    padding: spacing.md,
+    borderRadius: 12,
+    gap: spacing.md,
+  },
+  foodCardImg: {
+    width: 56,
+    height: 56,
     borderRadius: 8,
-    gap: 6,
-    alignSelf: "flex-start",
-    maxWidth: "100%",
+    backgroundColor: theme.colors.surfaceAlt,
   },
-  exerciseChip: { backgroundColor: "rgba(92,214,122,0.12)" },
-  entryText: {
-    ...typography.caption,
-    color: theme.colors.textPrimary,
-    fontSize: 12,
-    flex: 1,
-  },
-  entryCalText: {
-    ...typography.caption,
-    color: theme.colors.textMuted,
-    fontSize: 11,
-  },
-  addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  foodCardImgPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    backgroundColor: theme.colors.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+  },
+  foodCardInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  foodCardName: {
+    ...typography.bodyStrong,
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+  },
+  foodCardSub: {
+    ...typography.caption,
+    color: theme.colors.textSecondary,
+    fontSize: 11,
+  },
+  foodCardMacros: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 2,
+  },
+  foodCardMacroVal: {
+    ...typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  exerciseCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(92,214,122,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(92,214,122,0.15)",
+    padding: spacing.sm,
+    borderRadius: 10,
+    gap: spacing.sm,
+  },
+  exerciseCardIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: "rgba(92,214,122,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  exerciseCardInfo: {
+    flex: 1,
+    gap: 1,
+  },
+  exerciseCardName: {
+    ...typography.bodyStrong,
+    color: theme.colors.textPrimary,
+    fontSize: 13,
+  },
+  exerciseCardSub: {
+    ...typography.caption,
+    color: theme.colors.success,
+    fontSize: 11,
   },
   exerciseButton: {
     flexDirection: "row",

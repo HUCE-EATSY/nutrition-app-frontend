@@ -5,7 +5,8 @@ import * as AuthSession from 'expo-auth-session';
 import { useAuthStore } from './store/authStore';
 import { useOnboardingStore } from './store/onboardingStore';
 import { API_URLS } from '@/constants/api';
-import Constants from 'expo-constants';
+import { apiClient } from '@/services/apiClient';
+import { userService } from '@/services/userService';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -90,8 +91,18 @@ export const useGoogleAuth = () => {
   };
 
   const logout = async () => {
-    clearAuth();
-    resetOnboarding();
+    try {
+      // Gọi backend để vô hiệu hoá refresh token
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (refreshToken) {
+        await apiClient.post(API_URLS.auth.logout, { refreshToken });
+      }
+    } catch {
+      // Lỗi logout backend không ảnh hưởng client
+    } finally {
+      clearAuth();
+      resetOnboarding();
+    }
   };
 
   return {
@@ -105,8 +116,14 @@ export const useGoogleAuth = () => {
     },
     logout,
     deleteAccount: async () => {
-      clearAuth();
-      resetOnboarding();
+      try {
+        await userService.deleteAccount();
+      } catch {
+        // kể cả lỗi vẫn xóa local
+      } finally {
+        clearAuth();
+        resetOnboarding();
+      }
     },
     request,
   };

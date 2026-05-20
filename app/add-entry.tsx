@@ -12,16 +12,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { colors, spacing, typography, radius } from "@/constants";
-import { useDiaryStore } from "@/hooks/store/diaryStore";
-import { useAuthStore } from "@/hooks/store/authStore";
-import { getTodayDateISO } from "@/hooks/utils/date";
 import { Toast } from "@/components/common/Toast";
-import { API_BASE } from "@/constants/api";
+import { colors, radius, spacing, typography } from "@/constants";
+import { foodService, FoodItemDto } from "@/services/foodService";
+import { useAuthStore } from "@/hooks/store/authStore";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
+import { getTodayDateISO } from "@/hooks/utils/date";
 
 // ── Types ────────────────────────────────────────────────────────────────────
+/** Local display shape – map từ FoodItemDto */
 interface FoodItem {
-  id: number;
+  /** UUID string */
+  id: string;
   name: string;
   imageUrl: string | null;
   category: string;
@@ -32,7 +34,27 @@ interface FoodItem {
   servingSize: number;
 }
 
-// API base đã được cấu hình trong @/constants/api
+function mapDto(dto: FoodItemDto): FoodItem {
+  return {
+    id: dto.id,
+    name: dto.nameVi,
+    imageUrl: dto.imageUrl ?? null,
+    category: dto.category,
+    calories: dto.caloriesKcal,
+    protein: dto.proteinG ?? 0,
+    carbs: dto.carbsG ?? 0,
+    fat: dto.fatG ?? 0,
+    servingSize: dto.servingSizeG,
+  };
+}
+
+/** Chuyển giờ → meal_type_id: 1=Sáng(5-10), 2=Trưa(11-14), 3=Tối(18-22), 4=Phụ */
+function getMealTypeFromHour(hour: number): number {
+  if (hour >= 5 && hour <= 10) return 1;
+  if (hour >= 11 && hour <= 14) return 2;
+  if (hour >= 18 && hour <= 22) return 3;
+  return 4; // bữa phụ
+}
 
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
@@ -48,9 +70,19 @@ export default function AddEntryScreen() {
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [grams, setGrams] = useState("100");
+  
+  // State quản lý giờ được chọn (Tránh lỗi crash do biến selectedHour chưa được định nghĩa)
   const [selectedHour, setSelectedHour] = useState(
     hour ? parseInt(hour, 10) : new Date().getHours()
   );
+  
+  // mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Bữa phụ
+  const [mealTypeId, setMealTypeId] = useState(getMealTypeFromHour(selectedHour));
+  
+  useEffect(() => {
+    setMealTypeId(getMealTypeFromHour(selectedHour));
+  }, [selectedHour]);
+
   const [isSaving, setIsSaving] = useState(false);
 
   // Toast state
@@ -72,12 +104,8 @@ export default function AddEntryScreen() {
 
   async function loadFoodById(id: string) {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/Food/${id}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      if (json.data) {
-        setSelected(json.data);
-      }
+      const dto = await foodService.getFoodById(id);
+      if (dto) setSelected(mapDto(dto));
     } catch (error) {
       console.error("Failed to load food:", error);
     }
@@ -87,18 +115,15 @@ export default function AddEntryScreen() {
   const searchFoods = useCallback(async (query: string) => {
     setIsSearching(true);
     try {
-      const res = await fetch(
-        `${API_BASE}/api/v1/Food?search=${encodeURIComponent(query)}`
-      );
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setFoods(json.data ?? []);
+      const result = await foodService.searchFoods({ q: query, pageSize: 20 });
+      const items = Array.isArray(result) ? result : (result?.items ?? []);
+      setFoods(items.map(mapDto));
     } catch {
       setFoods([]);
     } finally {
       setIsSearching(false);
     }
-  }, [accessToken]);
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -135,25 +160,18 @@ export default function AddEntryScreen() {
     setIsSaving(true);
     try {
       await addMealEntry({
-        foodId: selected.id,
-        foodName: selected.name,
+        foodItemId: selected.id,           // UUID string
+        mealTypeId: mealTypeId,            // 1-4 từ đồng hồ
         dateISO: targetDate,
-        hour: selectedHour,
         quantityG: gramNum,
-        totalCalories: nutrition!.calories,
-        proteinGram: nutrition!.protein,
-        carbGram: nutrition!.carb,
-        fatGram: nutrition!.fat,
       });
 
-      // Hiện toast thành công
       setToastMessage(
-        `Đã lưu ${selected.name} (${gramNum}g) vào ${selectedHour.toString().padStart(2, "0")}:00`
+        `Đã lưu ${selected.name} (${gramNum}g)`
       );
       setToastType("success");
       setShowToast(true);
 
-      // Đợi 2s rồi quay về tab Thực đơn
       setTimeout(() => {
         router.replace("/(tabs)/meal-plan");
       }, 2000);
@@ -216,7 +234,17 @@ export default function AddEntryScreen() {
             }
             renderItem={({ item }) => (
               <Pressable
-                onPress={() => setSelected(item)}
+                onPress={async () => {
+                  setSelected(item);
+                  try {
+                    const full = await foodService.getFoodById(item.id);
+                    if (full) {
+                      setSelected(mapDto(full));
+                    }
+                  } catch (e) {
+                    console.error("Failed to load food details:", e);
+                  }
+                }}
                 style={styles.foodRow}
               >
                 <View style={styles.foodIcon}>
