@@ -40,9 +40,9 @@ export default function IndexScreen() {
   // Nếu đã đăng nhập nhưng chưa hoàn thành onboarding, tiếp tục tiến trình tương ứng
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
-       <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
-       <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
-       <ActivityIndicator color={colors.primary} />
+      <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
+      <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
+      <ActivityIndicator color={colors.primary} />
     </View>
   );
 }

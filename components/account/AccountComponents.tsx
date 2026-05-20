@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { colors, spacing, radius, typography } from "@/constants";
 
 export function SectionHeader({ title }: { title: string }) {
@@ -40,18 +41,23 @@ export function StatIconButton({
   color,
   icon,
   label,
+  route,
 }: {
   color: string;
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
+  route: string;
 }) {
   return (
-    <View style={styles.statIconContainer}>
+    <Pressable
+      style={({ pressed }) => [styles.statIconContainer, pressed && { opacity: 0.7 }]}
+      onPress={() => router.push(route as any)}
+    >
       <View style={[styles.statIconCircle, { backgroundColor: color }]}>
         <Ionicons color="#111020" name={icon} size={28} />
       </View>
       <Text style={styles.statIconLabel}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 

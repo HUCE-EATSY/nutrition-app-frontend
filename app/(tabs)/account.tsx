@@ -1,7 +1,7 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, Dialog, Button } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
@@ -10,21 +10,21 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
+import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { colors, radius, spacing, typography } from "@/constants";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
-import { useUserInfo } from "@/hooks/api/useUserApi";
 import { SectionHeader, MacroItem, StatIconButton, SocialButton } from "@/components/account/AccountComponents";
 
 export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
+  const { data: serverUserInfo } = useGetUserInfo();
   const resetOnboarding = useOnboardingStore((state) => state.reset);
   const { logout, deleteAccount } = useGoogleAuth();
-  
-  const { data: serverUserInfo } = useUserInfo();
+
   const profile = serverUserInfo?.profile;
   const activeGoal = serverUserInfo?.activeGoal;
 
@@ -42,12 +42,19 @@ export default function AccountScreen() {
       })
     : "12 Thg 05, 2026";
 
-  const plan = activeGoal || serverPlan || {
-    targetCalories: 2000,
-    targetProteinG: 100,
-    targetCarbsG: 250,
-    targetFatG: 67,
-  };
+  const plan = activeGoal
+    ? {
+        targetCalories: Number(activeGoal.targetCalories),
+        targetProteinG: Number(activeGoal.targetProteinG),
+        targetCarbsG: Number(activeGoal.targetCarbsG),
+        targetFatG: Number(activeGoal.targetFatG),
+      }
+    : serverPlan || {
+        targetCalories: 2000,
+        targetProteinG: 100,
+        targetCarbsG: 250,
+        targetFatG: 67,
+      };
 
   const proteinPct = Math.round((plan.targetProteinG * 400) / plan.targetCalories) || 20;
   const carbsPct = Math.round((plan.targetCarbsG * 400) / plan.targetCalories) || 50;
@@ -212,8 +219,12 @@ export default function AccountScreen() {
       </View>
 
       {/* Physical Profile Button */}
-      <Pressable style={styles.physicalProfileButton}>
+      <Pressable
+        style={({ pressed }) => [styles.physicalProfileButton, pressed && { opacity: 0.8 }]}
+        onPress={() => router.push("/physical-profile")}
+      >
         <Text style={styles.physicalProfileButtonText}>{t.account.physicalProfile}</Text>
+        <Ionicons name="chevron-forward" size={16} color={colors.primary} />
       </Pressable>
 
       {/* Your Journey Section */}
@@ -304,10 +315,10 @@ export default function AccountScreen() {
       {/* Statistic Reports Section */}
       <SectionHeader title={t.account.testReports} />
       <View style={styles.statsIconRow}>
-        <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} />
-        <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} />
-        <StatIconButton color="#C6FFD0" icon="walk" label={t.account.stats.steps} />
-        <StatIconButton color="#85E6FF" icon="speedometer" label={t.account.stats.weight} />
+        <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} route="/stats/nutrition" />
+        <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} route="/stats/activity" />
+        <StatIconButton color="#C6FFD0" icon="walk" label={t.account.stats.steps} route="/stats/steps" />
+        <StatIconButton color="#85E6FF" icon="speedometer" label={t.account.stats.weight} route="/stats/weight" />
       </View>
 
       {/* Community Section */}
@@ -366,6 +377,7 @@ export default function AccountScreen() {
     </SafeScreen>
   );
 }
+
 
 
 
@@ -485,8 +497,11 @@ const styles = StyleSheet.create({
   physicalProfileButton: {
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: spacing.xl,
   },
   physicalProfileButtonText: {
