@@ -131,7 +131,7 @@ Chia thành 3 lớp:
    - local UI state chia sẻ nhẹ
 
 3. **Persistence**
-   - AsyncStorage cho draft onboarding, tùy chọn user, last-used filters
+    - Secure Storage (via expo-secure-store) cho draft onboarding, tùy chọn user, last-used filters
    - secure OS-backed storage cho token session
 
 ## 4.4 UI & rendering
@@ -178,7 +178,7 @@ App layer
 ### Nguyên tắc
 - Screen không tự giữ business formula phức tạp.
 - Formula BMI/TDEE/macro nằm trong `domain/calculators`.
-- Storage access qua repository/service, không gọi AsyncStorage trực tiếp trong screen.
+- Storage access qua repository/service, không gọi storage service trực tiếp trong screen.
 - Component reusable không import store cụ thể.
 
 ---

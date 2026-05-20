@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView, ActivityIndicator } from "react-native";
+import { useState, useEffect } from "react";
+import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView, ActivityIndicator, TextInput } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Conditionally require DateTimePicker cho mobile
 let DateTimePicker: any = null;
@@ -14,78 +15,58 @@ if (Platform.OS !== "web") {
 
 import { colors, spacing, typography, radius } from "@/constants";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { weightLogService } from "@/services/logService";
-import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
-import { useQueryClient } from "@tanstack/react-query";
+import { saveWeightLog } from "@/services/weightLogService";
+import { getTodayDateISO } from "@/hooks/utils/date";
+import { useWeightStore } from "@/hooks/store/statsStore";
+import { useWeightStats } from "@/hooks/stats/useWeightStats";
 
 export default function LogWeightScreen() {
   const insets = useSafeAreaInsets();
-  const { data: userGoalInfo } = useGetUserInfo();
+  const queryClient = useQueryClient();
+  const { currentWeight, resolvedTarget } = useWeightStats();
   
-  // Cân nặng mặc định từ profile
-  const defaultWeight = userGoalInfo?.profile?.weightKg ?? 53.6;
-  const goalWeight = userGoalInfo?.activeGoal?.goalWeightKg ?? 60;
-
-  const [weight, setWeight] = useState(defaultWeight);
-  const [logDate, setLogDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  // Khởi tạo cân nặng bằng cân nặng gần nhất hoặc 60kg làm mặc định
+  const [weight, setWeight] = useState(currentWeight || 60);
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Format ngày hiển thị: 29 / 04 / 2026
-  const dateString = `${logDate.getDate().toString().padStart(2, '0')} / ${(logDate.getMonth() + 1).toString().padStart(2, '0')} / ${logDate.getFullYear()}`;
+
+  // Cho phép tự điền ngày để test (mặc định là ngày hôm nay dạng YYYY-MM-DD)
+  const [logDateStr, setLogDateStr] = useState(getTodayDateISO());
+
+  // Set initial weight when currentWeight is fetched
+  useEffect(() => {
+    if (currentWeight > 0) {
+      setWeight(currentWeight);
+    }
+  }, [currentWeight]);
 
   const handleUpload = () => {
     Alert.alert("Chưa hỗ trợ", "Tính năng thêm ảnh chụp sẽ được ra mắt trong phiên bản tới.");
   };
 
-  const queryClient = useQueryClient();
-
   const handleSave = async () => {
     if (isSaving) return;
+    
+    // Kiểm tra định dạng ngày nhập YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(logDateStr)) {
+      Alert.alert("Lỗi định dạng", "Vui lòng nhập ngày đúng định dạng YYYY-MM-DD.\nVí dụ: 2026-05-20");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const log_date = logDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      await saveWeightLog(weight, logDateStr);
       
-      // 1. Kiểm tra xem ngày hôm đó đã được ghi nhận cân nặng chưa
-      const existingLogs = await weightLogService.getWeightLogs(log_date, log_date);
+      // Invalidate react-query cache for user profile (Account & Physical Profile)
+      queryClient.invalidateQueries({ queryKey: ["user"] });
       
-      if (existingLogs && existingLogs.length > 0) {
-        // 2. Nếu đã tồn tại, tự động gọi PUT để cập nhật thay vì POST để tránh lỗi 409 Conflict
-        const existingLog = existingLogs[0];
-        await weightLogService.updateWeightLog(existingLog.id, { weight_kg: weight });
-        
-        // Invalidate cache của react-query để UI tự động tải lại dữ liệu mới nhất
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-
-        const msg = `Cân nặng ngày ${dateString} đã được cập nhật thành ${weight} kg.`;
-        if (Platform.OS === 'web') {
-          alert(msg);
-          router.back();
-        } else {
-          Alert.alert("Đã cập nhật", msg, [{ text: "OK", onPress: () => router.back() }]);
-        }
-      } else {
-        // 3. Nếu chưa tồn tại, gọi POST để tạo mới
-        await weightLogService.createWeightLog({ weight_kg: weight, log_date });
-        
-        // Invalidate cache của react-query để UI tự động tải lại dữ liệu mới nhất
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-
-        const msg = `Cân nặng ${weight} kg ngày ${dateString} đã được ghi lại.`;
-        if (Platform.OS === 'web') {
-          alert(msg);
-          router.back();
-        } else {
-          Alert.alert("Đã lưu", msg, [{ text: "OK", onPress: () => router.back() }]);
-        }
-      }
-    } catch (err: any) {
-      console.error("Lỗi khi lưu cân nặng:", err);
-      if (err.response?.status === 409) {
-        Alert.alert("Lỗi", "Bạn đã ghi nhận cân nặng cho ngày này rồi.");
-      } else {
-        Alert.alert("Lỗi", "Không thể lưu cân nặng. Vui lòng thử lại.");
-      }
+      // Reload weight store so home page chart and weight value updates instantly
+      const { period, fetchWeightData } = useWeightStore.getState();
+      await fetchWeightData(period);
+      
+      router.back();
+    } catch (error: any) {
+      Alert.alert("Lỗi", error.message || "Không thể lưu cân nặng. Vui lòng thử lại.");
     } finally {
       setIsSaving(false);
     }
@@ -123,7 +104,9 @@ export default function LogWeightScreen() {
         <View style={styles.inputSection}>
           <View style={styles.inputHeader}>
             <Text style={styles.inputLabel}>Cân nặng hiện tại</Text>
-            <Text style={styles.inputGoal}>Mục tiêu: {goalWeight}Kg</Text>
+            <Text style={styles.inputGoal}>
+              Mục tiêu: {resolvedTarget ? `${resolvedTarget} Kg` : "Chưa đặt"}
+            </Text>
           </View>
 
           <View style={styles.stepperContainer}>
@@ -131,6 +114,7 @@ export default function LogWeightScreen() {
             <Pressable 
               style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]} 
               onPress={decrementWeight}
+              disabled={isSaving}
             >
               <MaterialCommunityIcons name="minus" size={32} color={colors.textPrimary} />
             </Pressable>
@@ -142,6 +126,7 @@ export default function LogWeightScreen() {
             <Pressable 
               style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]} 
               onPress={incrementWeight}
+              disabled={isSaving}
             >
               <MaterialCommunityIcons name="plus" size={32} color={colors.textPrimary} />
             </Pressable>
@@ -150,65 +135,38 @@ export default function LogWeightScreen() {
 
         {/* Form Fields (Date Picker) */}
         <View style={styles.formSection}>
-          <Pressable style={styles.dateRow} onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.dateLabel}>Ngày cân</Text>
+          <View style={styles.dateRow}>
+            <Text style={styles.dateLabel}>Ngày cân (YYYY-MM-DD)</Text>
             <View style={styles.dateRight}>
-              <Text style={styles.dateValue}>{dateString}</Text>
+              <TextInput
+                style={styles.dateInput}
+                value={logDateStr}
+                onChangeText={setLogDateStr}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.textMuted}
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
               <Ionicons name="calendar-outline" size={20} color={colors.textPrimary} />
             </View>
-          </Pressable>
-
-          {showDatePicker && Platform.OS !== 'web' && DateTimePicker && (
-            <DateTimePicker
-              value={logDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              maximumDate={new Date()}
-              onChange={(_event: any, selectedDate: any) => {
-                setShowDatePicker(Platform.OS === 'ios');
-                if (selectedDate) setLogDate(selectedDate);
-              }}
-            />
-          )}
-
-          {/* Web fallback for date picker */}
-          {showDatePicker && Platform.OS === 'web' && (() => {
-            const Input = 'input' as any;
-            return (
-              <Input
-                type="date"
-                value={logDate.toISOString().split('T')[0]}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={(e: any) => {
-                  const newDate = new Date(e.target.value);
-                  if (!isNaN(newDate.getTime())) {
-                    setLogDate(newDate);
-                  }
-                  setShowDatePicker(false);
-                }}
-                style={{
-                  marginTop: spacing.sm,
-                  padding: spacing.sm,
-                  borderRadius: radius.sm,
-                  border: `1px solid ${colors.borderSoft}`,
-                  fontFamily: "PlusJakartaSans-Regular",
-                  width: '100%',
-                }}
-              />
-            );
-          })()}
-
+          </View>
         </View>
 
       </KeyboardAvoidingView>
 
+
       {/* Footer Action */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <Pressable style={[styles.saveBtn, isSaving && { opacity: 0.6 }]} onPress={handleSave} disabled={isSaving}>
-          {isSaving
-            ? <ActivityIndicator color={colors.textPrimary} size="small" />
-            : <Text style={styles.saveBtnText}>Lưu cân nặng</Text>
-          }
+        <Pressable 
+          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]} 
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator color={colors.textPrimary} size="small" />
+          ) : (
+            <Text style={styles.saveBtnText}>Lưu cân nặng</Text>
+          )}
         </Pressable>
       </View>
     </SafeScreen>
@@ -319,6 +277,16 @@ const styles = StyleSheet.create({
   dateValue: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
+  },
+  dateInput: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    textAlign: "right",
+    minWidth: 110,
   },
   footer: {
     paddingHorizontal: spacing.lg,

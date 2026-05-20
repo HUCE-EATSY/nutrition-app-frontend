@@ -23,3 +23,27 @@ export async function getUserGoal(): Promise<UserGoalApiResponse | null> {
     return null;
   }
 }
+
+/**
+ * Create or update a weight log entry for a specific date (YYYY-MM-DD).
+ */
+export async function saveWeightLog(weightKg: number, dateISO: string, note?: string): Promise<WeightLogEntry> {
+  // Query timeline for that specific day to see if there is an existing log
+  const existingLogs = await getWeightTimeline(dateISO, dateISO);
+  if (existingLogs && existingLogs.length > 0) {
+    const existingLog = existingLogs[0];
+    const res = await apiClient.put(`/api/logs/weight/${existingLog.id}`, {
+      weight_kg: weightKg,
+      note: note ?? existingLog.note,
+    });
+    return res.data.data;
+  } else {
+    const res = await apiClient.post("/api/logs/weight", {
+      weight_kg: weightKg,
+      log_date: dateISO,
+      note,
+    });
+    return res.data.data;
+  }
+}
+

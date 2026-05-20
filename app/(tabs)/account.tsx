@@ -20,49 +20,52 @@ import { userService } from "@/services/userService";
 
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
+import { SectionHeader, MacroItem, StatIconButton, SocialButton } from "@/components/account/AccountComponents";
 
 export default function AccountScreen() {
   const queryClient = useQueryClient();
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
-  const { data: userGoalInfo, refetch: refetchUserInfo } = useGetUserInfo();
+  const { data: serverUserInfo } = useGetUserInfo();
   const resetOnboarding = useOnboardingStore((state) => state.reset);
   const { logout, deleteAccount } = useGoogleAuth();
 
   // Avatar state: ưu tiên avatarUrl từ server
   const [avatarUri, setAvatarUri] = useState<string | null>(
-    userGoalInfo?.profile?.avatarUrl ?? null
+    serverUserInfo?.profile?.avatarUrl ?? null
   );
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Đồng bộ hóa avatarUri khi dữ liệu người dùng được tải về từ server
   React.useEffect(() => {
-    if (userGoalInfo?.profile?.avatarUrl) {
-      setAvatarUri(userGoalInfo.profile.avatarUrl);
+    if (serverUserInfo?.profile?.avatarUrl) {
+      setAvatarUri(serverUserInfo.profile.avatarUrl);
     }
-  }, [userGoalInfo?.profile?.avatarUrl]);
+  }, [serverUserInfo?.profile?.avatarUrl]);
 
-  const profile = userGoalInfo?.activeGoal;
-  
-  // Profile info (DisplayName, HeightCm, WeightKg, DateOfBirth)
-  const profileInfo = userGoalInfo?.profile;
-  
-  const age = profileInfo?.dateOfBirth
-    ? getAgeFromBirthDate(profileInfo.dateOfBirth)
-    : draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
+  const profile = serverUserInfo?.profile;
+  const activeGoal = serverUserInfo?.activeGoal;
 
-  const nickname = profileInfo?.displayName ?? draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
+  const age = profile?.dateOfBirth 
+    ? getAgeFromBirthDate(profile.dateOfBirth) 
+    : (draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24);
+
+  const nickname = profile?.displayName ?? draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
   
-  const joinedDate = userGoalInfo?.createdAt
-    ? new Date(userGoalInfo.createdAt).toLocaleDateString("vi-VN", { year: 'numeric', month: 'short', day: 'numeric' })
+  const joinedDate = serverUserInfo?.createdAt 
+    ? new Date(serverUserInfo.createdAt).toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
     : "12 Thg 05, 2026";
 
-  const plan = profile
+  const plan = activeGoal
     ? {
-        targetCalories: Number(profile.targetCalories),
-        targetProteinG: Number(profile.targetProteinG),
-        targetCarbsG: Number(profile.targetCarbsG),
-        targetFatG: Number(profile.targetFatG),
+        targetCalories: Number(activeGoal.targetCalories),
+        targetProteinG: Number(activeGoal.targetProteinG),
+        targetCarbsG: Number(activeGoal.targetCarbsG),
+        targetFatG: Number(activeGoal.targetFatG),
       }
     : serverPlan || {
         targetCalories: 2000,
@@ -127,7 +130,6 @@ export default function AccountScreen() {
 
   const handleLogout = async () => {
     try {
-      console.log("Logging out...");
       hideConfirm();
       await logout();
       resetOnboarding();
@@ -141,7 +143,6 @@ export default function AccountScreen() {
 
   const handleDeleteData = async () => {
     try {
-      console.log("Deleting account data...");
       hideConfirm();
       await deleteAccount();
       resetOnboarding();
@@ -274,11 +275,11 @@ export default function AccountScreen() {
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="man-outline" size={18} />
-          <Text style={styles.statChipText}>{profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
+          <Text style={styles.statChipText}>{profile?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM} cm</Text>
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
-          <Text style={styles.statChipText}>{profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+          <Text style={styles.statChipText}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
         </View>
       </View>
 
@@ -293,29 +294,81 @@ export default function AccountScreen() {
 
       {/* Your Journey Section */}
       <SectionHeader title={t.account.yourJourney} />
-      <View style={styles.journeyCard}>
-        <LinearGradient
-          colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
-          style={styles.journeyCardGradient}
-        >
-          <View style={styles.journeyIconBg}>
-            <Ionicons color={colors.primary} name="locate" size={32} />
-          </View>
-          <Text style={styles.journeyTitle}>{t.account.maintainingWeight}</Text>
-          <Text style={styles.journeySubtitle}>{t.account.updateWeightHint}</Text>
+      {(() => {
+        const startWeight = profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const currentWeightVal = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const targetWeightVal = profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
 
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: "40%" }]} />
-              <View style={[styles.progressKnob, { left: "40%" }]} />
-            </View>
-            <View style={styles.progressLabels}>
-              <Text style={styles.progressLabel}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
-              <Text style={styles.progressLabel}>{profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG} kg</Text>
-            </View>
+        let progressPct = 0;
+        const totalChangeNeeded = Math.abs(startWeight - targetWeightVal);
+
+        if (totalChangeNeeded > 0) {
+          const isLosing = startWeight > targetWeightVal;
+          if (isLosing) {
+            const currentChange = startWeight - currentWeightVal;
+            progressPct = Math.min(Math.max((currentChange / totalChangeNeeded) * 100, 0), 100);
+          } else {
+            const currentChange = currentWeightVal - startWeight;
+            progressPct = Math.min(Math.max((currentChange / totalChangeNeeded) * 100, 0), 100);
+          }
+        } else {
+          progressPct = 100;
+        }
+
+        const progressStr = `${progressPct.toFixed(0)}%`;
+
+        let journeyTitle: string = t.account.maintainingWeight;
+        if (startWeight > targetWeightVal) {
+          if (currentWeightVal <= targetWeightVal) {
+            journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu giảm cân!";
+          } else {
+            const lost = startWeight - currentWeightVal;
+            journeyTitle = lost >= 0 
+              ? `Bạn đã giảm được ${lost.toFixed(1)} kg` 
+              : `Bạn bị tăng ${Math.abs(lost).toFixed(1)} kg so với ban đầu`;
+          }
+        } else if (startWeight < targetWeightVal) {
+          if (currentWeightVal >= targetWeightVal) {
+            journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu tăng cân!";
+          } else {
+            const gained = currentWeightVal - startWeight;
+            journeyTitle = gained >= 0 
+              ? `Bạn đã tăng được ${gained.toFixed(1)} kg` 
+              : `Bạn bị giảm ${Math.abs(gained).toFixed(1)} kg so với ban đầu`;
+          }
+        }
+
+        const journeySubtitle = startWeight === targetWeightVal
+          ? `Mục tiêu giữ dáng ở mốc ${targetWeightVal} kg. Hiện tại: ${currentWeightVal} kg`
+          : `Bắt đầu: ${startWeight} kg • Hiện tại: ${currentWeightVal} kg • Mục tiêu: ${targetWeightVal} kg`;
+
+        return (
+          <View style={styles.journeyCard}>
+            <LinearGradient
+              colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
+              style={styles.journeyCardGradient}
+            >
+              <View style={styles.journeyIconBg}>
+                <Ionicons color={colors.primary} name="locate" size={32} />
+              </View>
+              <Text style={styles.journeyTitle}>{journeyTitle}</Text>
+              <Text style={styles.journeySubtitle}>{journeySubtitle}</Text>
+
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: progressStr as any }]} />
+                  <View style={[styles.progressKnob, { left: progressStr as any }]} />
+                </View>
+                <View style={styles.progressLabels}>
+                  <Text style={styles.progressLabel}>{startWeight} kg</Text>
+                  <Text style={styles.progressLabel}>{targetWeightVal} kg</Text>
+                </View>
+              </View>
+            </LinearGradient>
           </View>
-        </LinearGradient>
-      </View>
+        );
+      })()}
+
 
       {/* Nutrition Goals Section */}
       <SectionHeader title={t.account.nutritionGoals} />
@@ -431,53 +484,8 @@ export default function AccountScreen() {
   );
 }
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderText}>{title}</Text>
-      <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
-    </View>
-  );
-}
 
-function MacroItem({ color, label, percentage, value }: { color: string; label: string; percentage: string; value: string }) {
-  return (
-    <View style={styles.macroItem}>
-      <View style={styles.macroItemLeft}>
-        <Ionicons color={color} name="flash" size={14} />
-        <Text style={styles.macroItemLabel}>{label}</Text>
-      </View>
-      <View style={styles.macroItemRight}>
-        <Text style={styles.macroItemPercentage}>{percentage}</Text>
-        <Text style={styles.macroItemValue}>({value})</Text>
-      </View>
-    </View>
-  );
-}
 
-function StatIconButton({ color, icon, label, route }: { color: string; icon: keyof typeof Ionicons.glyphMap; label: string; route: string }) {
-  const router = useRouter();
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.statIconContainer, pressed && { opacity: 0.7 }]}
-      onPress={() => router.push(route as any)}
-    >
-      <View style={[styles.statIconCircle, { backgroundColor: color }]}>
-        <Ionicons color="#111020" name={icon} size={28} />
-      </View>
-      <Text style={styles.statIconLabel}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function SocialButton({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
-  return (
-    <Pressable style={styles.socialButton}>
-      <Ionicons color={colors.textPrimary} name={icon} size={28} />
-      <Text style={styles.socialButtonLabel}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const styles = StyleSheet.create({
   scrollContent: {
@@ -606,18 +614,7 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: colors.primary,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
-  },
-  sectionHeaderText: {
-    ...typography.h3,
-    fontSize: 18,
-    color: colors.textPrimary,
-  },
+
   journeyCard: {
     borderRadius: radius.lg,
     overflow: "hidden",
@@ -714,36 +711,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.sm,
   },
-  macroItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  macroItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  macroItemLabel: {
-    ...typography.body,
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  macroItemRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  macroItemPercentage: {
-    ...typography.bodyStrong,
-    fontSize: 10,
-    color: colors.textPrimary,
-  },
-  macroItemValue: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontSize: 12,
-  },
+
   customizeGoalButton: {
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
@@ -761,21 +729,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: spacing.xl,
   },
-  statIconContainer: {
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  statIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  statIconLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
+
   communityCard: {
     borderRadius: radius.xl,
     overflow: "hidden",
@@ -840,18 +794,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
   },
-  socialButton: {
-    flex: 1,
-    backgroundColor: colors.bgElevated,
-    paddingVertical: spacing.lg,
-    borderRadius: radius.md,
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  socialButtonLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
+
   supportButton: {
     flexDirection: "row",
     alignItems: "center",

@@ -3,12 +3,10 @@ import {
   StyleSheet,
   Text,
   View,
-  FlatList,
   TextInput,
   Pressable,
   ActivityIndicator,
   Image,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -20,7 +18,7 @@ import { SegmentedPillTabs } from "@/components/meal/SegmentedPillTabs";
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography, radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
-import { API_BASE } from "@/constants/api";
+import { useFoodList, FoodItem } from "@/hooks/api/useFoodApi";
 
 const tabs = [
   { key: "explore", label: t.mealPlan.tabs.explore },
@@ -28,27 +26,15 @@ const tabs = [
   { key: "history", label: t.mealPlan.tabs.history },
 ];
 
-interface FoodItem {
-  id: number;
-  name: string;
-  imageUrl: string | null;
-  category: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  servingSize: number;
-  description: string | null;
-}
-
+// FoodItem imported from useFoodApi
 export default function MealPlanScreen() {
   const [activeTab, setActiveTab] = useState("explore");
   const { isNarrowWidth } = useResponsiveLayout();
 
   // Foods state
-  const [foods, setFoods] = useState<FoodItem[]>([]);
+  const { data: foods = [], isLoading } = useFoodList();
+  
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAllFoods, setShowAllFoods] = useState(false); // Trạng thái xem thêm
@@ -67,13 +53,6 @@ export default function MealPlanScreen() {
     : filteredFoods.slice(0, DEFAULT_DISPLAY_COUNT);
   
   const hasMoreFoods = filteredFoods.length > DEFAULT_DISPLAY_COUNT;
-
-  // Load tất cả foods khi mount
-  useEffect(() => {
-    if (activeTab === "explore") {
-      loadAllFoods();
-    }
-  }, [activeTab]);
 
   // Filter foods khi search hoặc category thay đổi
   useEffect(() => {
@@ -101,23 +80,6 @@ export default function MealPlanScreen() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [searchQuery, selectedCategory, foods]);
-
-  async function loadAllFoods() {
-    setIsLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/Food`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setFoods(json.data ?? []);
-      setFilteredFoods(json.data ?? []);
-    } catch (error) {
-      console.error("Failed to load foods:", error);
-      setFoods([]);
-      setFilteredFoods([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   function handleFoodPress(food: FoodItem) {
     // Navigate to add-entry with pre-selected food

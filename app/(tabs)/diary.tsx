@@ -20,7 +20,10 @@ import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
 import { spacing, theme, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
+import { useDiary, useExercises, useAddMealEntry } from "@/hooks/api/useDiaryApi";
 import { formatShortDate } from "@/hooks/utils/date";
+import { calcNutrition } from "@/hooks/utils/nutrition";
+import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -38,9 +41,6 @@ export default function DiaryTimelineScreen() {
 
   const {
     selectedDate,
-    summary,
-    exercises,
-    isLoading,
     goToPrevDay,
     goToNextDay,
     fetchDiary,
@@ -49,23 +49,23 @@ export default function DiaryTimelineScreen() {
     updateMealEntry,
   } = useDiaryStore();
 
+  const { data: summary, isLoading: isDiaryLoading } = useDiary(selectedDate);
+  const { data: exercises = [], isLoading: isExercisesLoading } = useExercises(selectedDate);
+  const { mutateAsync: addMealEntry, isPending: isSaving } = useAddMealEntry();
+
+  const isLoading = isDiaryLoading || isExercisesLoading;
+
   // Modal state
   const [showFoodSelector, setShowFoodSelector] = useState(false);
   const [selectedHourForMeal, setSelectedHourForMeal] = useState<number>(currentHour);
   const [selectedFood, setSelectedFood] = useState<any>(null);
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
   const [grams, setGrams] = useState("100");
-  const [isSaving, setIsSaving] = useState(false);
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-
-  // Load dữ liệu khi màn hình mount hoặc ngày thay đổi
-  useEffect(() => {
-    fetchDiary(selectedDate);
-  }, [selectedDate, fetchDiary]);
 
   const macros: MacroInfo[] = [
     {
@@ -154,7 +154,8 @@ export default function DiaryTimelineScreen() {
       return;
     }
 
-    setIsSaving(true);
+    const nutrition = calcNutrition(selectedFood, gramNum);
+
     try {
       if (editingLogId !== null) {
         await updateMealEntry(editingLogId, gramNum);
@@ -183,15 +184,10 @@ export default function DiaryTimelineScreen() {
       setSelectedFood(null);
       setEditingLogId(null);
       setGrams("100");
-
-      // Refresh diary
-      await fetchDiary(selectedDate);
     } catch {
       setToastMessage("Không thể lưu bữa ăn. Vui lòng thử lại.");
       setToastType("error");
       setShowToast(true);
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -676,93 +672,5 @@ const styles = StyleSheet.create({
   mealPanelContent: {
     padding: spacing.lg,
     gap: spacing.md,
-  },
-  selectedFoodRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: theme.colors.surface,
-    padding: spacing.md,
-    borderRadius: 8,
-  },
-  selectedFoodName: {
-    ...typography.bodyStrong,
-    color: theme.colors.textPrimary,
-    flex: 1,
-  },
-  mealInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  mealInfoText: {
-    ...typography.body,
-    color: theme.colors.textSecondary,
-  },
-  gramRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  gramLabel: {
-    ...typography.body,
-    color: theme.colors.textSecondary,
-  },
-  gramInputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  stepBtn: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.surfaceAlt,
-  },
-  gramInput: {
-    width: 60,
-    height: 40,
-    textAlign: "center",
-    ...typography.bodyStrong,
-    color: theme.colors.textPrimary,
-    fontSize: 16,
-  },
-  nutritionPreview: {
-    backgroundColor: theme.colors.surface,
-    padding: spacing.sm,
-    borderRadius: 8,
-  },
-  nutritionPreviewText: {
-    ...typography.caption,
-    color: theme.colors.textSecondary,
-    textAlign: "center",
-  },
-  mealPanelButtons: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  mealPanelButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    backgroundColor: theme.colors.surface,
-  },
-  cancelButtonText: {
-    ...typography.bodyStrong,
-    color: theme.colors.textSecondary,
-  },
-  saveButton: {
-    backgroundColor: theme.colors.primary,
-  },
-  saveButtonText: {
-    ...typography.bodyStrong,
-    color: "#fff",
   },
 });

@@ -19,6 +19,8 @@ type OnboardingStepScaffoldProps = {
   continueDisabled?: boolean;
   hint?: string | null;
   scrollable?: boolean;
+  contentStyle?: any;
+  hideBottomCta?: boolean;
 };
 
 export function OnboardingStepScaffold({
@@ -32,11 +34,13 @@ export function OnboardingStepScaffold({
   continueDisabled = false,
   hint,
   scrollable = true,
+  contentStyle,
+  hideBottomCta = false,
 }: OnboardingStepScaffoldProps) {
   const content = (
     <>
       <MascotQuestionBubble text={question} />
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, contentStyle]}>{children}</View>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </>
   );
@@ -56,7 +60,9 @@ export function OnboardingStepScaffold({
         ) : (
           <View style={styles.staticContent}>{content}</View>
         )}
-        <BottomCtaBar disabled={continueDisabled} label={continueLabel} onPress={onContinue} />
+        {!hideBottomCta && (
+          <BottomCtaBar disabled={continueDisabled} label={continueLabel} onPress={onContinue} />
+        )}
       </View>
     </SafeScreen>
   );

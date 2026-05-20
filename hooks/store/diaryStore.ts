@@ -116,6 +116,7 @@ interface DiaryState {
   isLoading: boolean;
   error: string | null;
 
+  // Actions
   setDate: (dateISO: string) => void;
   goToPrevDay: () => void;
   goToNextDay: () => void;
@@ -145,7 +146,6 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
 
   setDate: (dateISO) => {
     set({ selectedDate: dateISO });
-    get().fetchDiary(dateISO);
   },
 
   goToPrevDay: () => {

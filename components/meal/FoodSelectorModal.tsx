@@ -13,26 +13,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
-import { foodService, FoodItemDto } from "@/services/foodService";
+import { useFoodList, FoodItem } from "@/hooks/api/useFoodApi";
 import { FoodDetailModal } from "./FoodDetailModal";
-
-/** Alias để UI không cần thay đổi */
-type FoodItem = FoodItemDto & {
-  /** alias: caloriesKcal */
-  calories: number;
-  /** alias: proteinG */
-  protein: number;
-  /** alias: carbsG */
-  carbs: number;
-  /** alias: fatG */
-  fat: number;
-  /** alias: servingSizeG */
-  servingSize: number;
-  name: string;
-  category: string;
-  imageUrl: string | null;
-  description: string | null;
-};
 
 interface FoodSelectorModalProps {
   visible: boolean;
@@ -42,9 +24,9 @@ interface FoodSelectorModalProps {
 
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
-  const [initialFoods, setInitialFoods] = useState<FoodItem[]>([]);
+  const { data: foods = [], isLoading } = useFoodList();
+
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [showAllFoods, setShowAllFoods] = useState(false);
@@ -72,11 +54,11 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
 
   const getTabFilteredFoods = () => {
     if (activeTab === "created") {
-      return filteredFoods.filter((f) => f.source === 3);
+      return filteredFoods.filter((f) => (f as any).source === 3);
     }
     if (activeTab === "favorite") {
       // Lọc các món ăn có đuôi/tên phổ biến hoặc source === 1/2 làm yêu thích
-      return filteredFoods.filter((f) => f.source === 1 || f.source === 2 || f.name.includes("Cơm") || f.name.includes("luộc") || f.name.includes("bơ"));
+      return filteredFoods.filter((f) => (f as any).source === 1 || (f as any).source === 2 || f.name.includes("Cơm") || f.name.includes("luộc") || f.name.includes("bơ"));
     }
     return filteredFoods;
   };
@@ -87,125 +69,36 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
 
   const hasMoreFoods = getTabFilteredFoods().length > DEFAULT_DISPLAY_COUNT;
 
-  // DRY helper để map DTO thành dạng FoodItem phù hợp giao diện
-  function mapDto(dto: any): FoodItem {
-    const catName = categories.find((c) => c.id === dto.categoryId)?.name || "Khác";
-    return {
-      ...dto,
-      id: dto.id,
-      name: dto.nameVi,
-      category: catName,
-      categoryId: dto.categoryId,
-      calories: dto.caloriesKcal ?? 0,
-      protein: dto.proteinG ?? 0,
-      carbs: dto.carbsG ?? 0,
-      fat: dto.fatG ?? 0,
-      servingSize: dto.servingSizeG ?? 100,
-      imageUrl: dto.imageUrl ?? null,
-      description: null,
-    };
-  }
-
-  // 1. Tải danh sách 50 món ăn ban đầu làm dữ liệu nguồn (Master list) khi Modal mở
+  // Filter foods based on search query and selected category
   useEffect(() => {
-    if (visible) {
-      loadInitialFoods();
-    }
-  }, [visible]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-  async function loadInitialFoods() {
-    setIsLoading(true);
-    try {
-      // Gọi API danh sách món ăn mặc định (GET /api/foods)
-      const rawList = await foodService.getAllFoods(1, 50);
+    debounceRef.current = setTimeout(() => {
+      let result = foods;
 
-      const mapped = rawList.map(mapDto);
-      setInitialFoods(mapped);
-      setFilteredFoods(mapped);
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách món ăn ban đầu:", error);
-      setInitialFoods([]);
-      setFilteredFoods([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // 2. Lắng nghe thay đổi tìm kiếm & danh mục để phối hợp Tìm kiếm Lai (Hybrid Search)
-  useEffect(() => {
-    if (!visible) return;
-
-    // A. Thử lọc cục bộ (Client-side) trước tiên từ danh sách 50 món đã tải ban đầu
-    let localResult = initialFoods;
-    if (selectedCategoryId) {
-      localResult = localResult.filter((f) => f.categoryId === selectedCategoryId);
-    }
-    if (searchQuery.trim().length > 0) {
-      const q = searchQuery.toLowerCase().trim();
-      localResult = localResult.filter((f) => f.name.toLowerCase().includes(q));
-    }
-
-    // B. Điều phối hiển thị / Fallback gọi API Server
-    if (searchQuery.trim() === "") {
-      // Nếu ô tìm kiếm trống, chỉ hiển thị danh sách lọc theo danh mục cục bộ (không gọi API)
-      setFilteredFoods(localResult);
-      setShowAllFoods(false);
-      return;
-    }
-
-    if (localResult.length > 0) {
-      // Nếu bộ lọc cục bộ tìm thấy kết quả, sử dụng ngay lập tức (Zero-latency!)
-      setFilteredFoods(localResult);
-      setShowAllFoods(false);
-    } else {
-      // Nếu cục bộ không thấy món này, tự động kích hoạt gọi Server Search nâng cao (Debounced 300ms)
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-
-      debounceRef.current = setTimeout(async () => {
-        setIsLoading(true);
-        try {
-          const res = await foodService.searchFoods({
-            q: searchQuery.trim(),
-            categoryId: selectedCategoryId ?? undefined,
-            page: 1,
-            pageSize: 50,
-          });
-
-          const mapped = res.items.map(mapDto);
-          setFilteredFoods(mapped);
-          setShowAllFoods(false);
-        } catch (error) {
-          console.error("Lỗi khi tìm kiếm nâng cao từ server:", error);
-          setFilteredFoods([]);
-        } finally {
-          setIsLoading(false);
+      if (selectedCategoryId) {
+        const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name;
+        if (selectedCategoryName) {
+          result = result.filter((f) => f.category === selectedCategoryName);
         }
-      }, 300);
-    }
+      }
+
+      if (searchQuery.trim().length > 0) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter((f) => f.name.toLowerCase().includes(query));
+      }
+
+      setFilteredFoods(result);
+      setShowAllFoods(false);
+    }, 300);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery, selectedCategoryId, initialFoods, visible]);
+  }, [searchQuery, selectedCategoryId, foods]);
 
-  async function handleSelectFood(food: FoodItem) {
-    try {
-      const full = await foodService.getFoodById(food.id);
-      if (full) {
-        onSelectFood({
-          ...food,
-          protein: full.proteinG ?? 0,
-          carbs: full.carbsG ?? 0,
-          fat: full.fatG ?? 0,
-          calories: full.caloriesKcal ?? 0,
-          servingSize: full.servingSizeG ?? 100,
-        });
-      } else {
-        onSelectFood(food);
-      }
-    } catch {
-      onSelectFood(food);
-    }
+  function handleSelectFood(food: FoodItem) {
+    onSelectFood(food);
     // Reset state
     setSearchQuery("");
     setSelectedCategoryId(null);
@@ -383,19 +276,9 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                         {displayedFoods.map((item) => (
                           <Pressable
                             key={item.id}
-                            onPress={async () => {
-                              setIsLoading(true);
-                              try {
-                                const full = await foodService.getFoodById(item.id);
-                                setDetailFood(full ? mapDto(full) : item);
-                                setDetailVisible(true);
-                              } catch (error) {
-                                console.error("Lỗi khi tải chi tiết món ăn:", error);
-                                setDetailFood(item);
-                                setDetailVisible(true);
-                              } finally {
-                                setIsLoading(false);
-                              }
+                            onPress={() => {
+                              setDetailFood(item);
+                              setDetailVisible(true);
                             }}
                             style={styles.foodCard}
                           >
