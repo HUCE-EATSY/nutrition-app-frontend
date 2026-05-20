@@ -10,25 +10,21 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFoodSearch, FoodDto } from '@/hooks/api';
+import { useFoodList, FoodItem } from '@/hooks/api/useFoodApi';
 import { colors, spacing, typography, radius } from '@/constants';
 
 interface FoodSearchModalProps {
   visible: boolean;
   onClose: () => void;
-  onSelectFood: (food: FoodDto) => void;
+  onSelectFood: (food: FoodItem) => void;
 }
 
 export function FoodSearchModal({ visible, onClose, onSelectFood }: FoodSearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   
-  const { data, isLoading, error } = useFoodSearch({
-    query: searchQuery,
-    page: 1,
-    pageSize: 20,
-  });
+  const { data: foods, isLoading, error } = useFoodList(searchQuery);
 
-  const handleSelectFood = (food: FoodDto) => {
+  const handleSelectFood = (food: FoodItem) => {
     onSelectFood(food);
     setSearchQuery('');
     onClose();
@@ -91,17 +87,17 @@ export function FoodSearchModal({ visible, onClose, onSelectFood }: FoodSearchMo
             </View>
           )}
 
-          {!isLoading && !error && searchQuery.length >= 2 && data?.foods.length === 0 && (
+          {!isLoading && !error && searchQuery.length >= 2 && (!foods || foods.length === 0) && (
             <View style={styles.centerContainer}>
               <Ionicons name="sad-outline" size={48} color={colors.textMuted} />
               <Text style={styles.emptyText}>Không tìm thấy món ăn nào</Text>
             </View>
           )}
 
-          {data && data.foods.length > 0 && (
+          {foods && foods.length > 0 && (
             <FlatList
-              data={data.foods}
-              keyExtractor={(item) => item.id}
+              data={foods}
+              keyExtractor={(item) => String(item.id)}
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.foodItem}
@@ -111,14 +107,14 @@ export function FoodSearchModal({ visible, onClose, onSelectFood }: FoodSearchMo
                     <Ionicons name="restaurant-outline" size={24} color={colors.warning} />
                   </View>
                   <View style={styles.foodInfo}>
-                    <Text style={styles.foodName}>{item.nameVi}</Text>
+                    <Text style={styles.foodName}>{item.name}</Text>
                     <Text style={styles.foodDetails}>
-                      {Math.round(item.caloriesKcal)} kcal • {item.servingSizeG}g • {item.categoryNameVi}
+                      {Math.round(item.calories)} kcal • {item.servingSize}g • {item.category}
                     </Text>
                     <View style={styles.macroRow}>
-                      <Text style={styles.macroText}>P: {item.proteinG}g</Text>
-                      <Text style={styles.macroText}>C: {item.carbsG}g</Text>
-                      <Text style={styles.macroText}>F: {item.fatG}g</Text>
+                      <Text style={styles.macroText}>P: {item.protein}g</Text>
+                      <Text style={styles.macroText}>C: {item.carbs}g</Text>
+                      <Text style={styles.macroText}>F: {item.fat}g</Text>
                     </View>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />

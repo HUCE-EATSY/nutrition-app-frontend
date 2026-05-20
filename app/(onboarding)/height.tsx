@@ -1,30 +1,51 @@
-import { router } from "expo-router";
+import { Controller } from "react-hook-form";
+import * as z from "zod";
 
 import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPicker";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { DEFAULT_HEIGHT_CM, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
+import { useOnboardingForm } from "@/hooks/useOnboardingForm";
+import { DEFAULT_HEIGHT_CM } from "@/domain/onboarding";
+
+const heightSchema = z.object({
+  heightCm: z.number().min(140).max(220),
+});
 
 export default function HeightScreen() {
-  const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
-  const setHeightCm = useOnboardingStore((state) => state.setHeightCm);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("Height");
+  const { control, isValid, meta, onContinue, onBack } = useOnboardingForm(
+    "Height",
+    "heightCm",
+    heightSchema,
+    DEFAULT_HEIGHT_CM
+  );
 
   return (
     <OnboardingStepScaffold
-      onBack={() => router.replace(getPreviousOnboardingPath("Height"))}
-      onContinue={() => {
-        setHeightCm(heightCm);
-        markStepCompleted("Height");
-        router.replace(getNextOnboardingPath("Height"));
-      }}
+      scrollable={false}
+      contentStyle={{ flex: 1, justifyContent: "center" }}
+      continueDisabled={!isValid}
+      onBack={onBack}
+      onContinue={onContinue}
       question={t.onboarding.questions.Height}
       step={meta.step}
       totalSteps={meta.totalSteps}
     >
-      <HorizontalRulerPicker majorTickEvery={5} max={220} min={140} onChange={setHeightCm} step={1} unit="cm" value={heightCm} />
+      <Controller
+        control={control}
+        name="heightCm"
+        render={({ field: { onChange, value } }) => (
+          <HorizontalRulerPicker
+            majorTickEvery={10}
+            max={220}
+            min={140}
+            onChange={onChange}
+            step={1}
+            unit="cm"
+            value={value}
+          />
+        )}
+      />
     </OnboardingStepScaffold>
   );
 }
+

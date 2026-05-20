@@ -1,3 +1,4 @@
+import React, { useMemo, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { t } from "@/constants/i18n";
@@ -18,14 +19,42 @@ function getDaysInMonth(month: number, year: number) {
   return new Date(year, month, 0).getDate();
 }
 
-export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }: WheelDatePickerProps) {
-  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const maxDay = getDaysInMonth(month, year);
-  const days = Array.from({ length: maxDay }, (_, i) => i + 1);
+// 1. Đưa các hằng số không thay đổi ra ngoài component
+const ITEM_HEIGHT = 54;
+const VISIBLE_ITEMS = 5;
+const HIGHLIGHT_TOP = Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT;
 
-  const ITEM_HEIGHT = 54;
-  const VISIBLE_ITEMS = 5;
+export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }: WheelDatePickerProps) {
+  // 2. Dùng useMemo để tránh khởi tạo lại mảng mỗi lần render
+  const years = useMemo(() => {
+    return Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
+  }, [minYear, maxYear]);
+
+  const months = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => i + 1);
+  }, []);
+
+  const days = useMemo(() => {
+    const maxDay = getDaysInMonth(month, year);
+    return Array.from({ length: maxDay }, (_, i) => i + 1);
+  }, [month, year]);
+
+  // 3. Dùng useCallback để tránh tạo lại function reference, giúp RollingWheelPicker không bị re-render vô cớ
+  const handleDayChange = useCallback((d: number) => {
+    onChange({ day: d, month, year });
+  }, [month, year, onChange]);
+
+  const handleMonthChange = useCallback((m: number) => {
+    const nextMaxDay = getDaysInMonth(m, year);
+    onChange({ day: Math.min(day, nextMaxDay), month: m, year });
+  }, [day, year, onChange]);
+
+  const handleYearChange = useCallback((y: number) => {
+    const nextMaxDay = getDaysInMonth(month, y);
+    onChange({ day: Math.min(day, nextMaxDay), month, year: y });
+  }, [day, month, onChange]);
+
+  const formatMonthLabel = useCallback((m: number) => `${t.onboarding.wheelDate.month} ${m}`, []);
 
   return (
     <View style={styles.container}>
@@ -36,7 +65,7 @@ export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }
           styles.highlightBar,
           {
             height: ITEM_HEIGHT,
-            top: Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT,
+            top: HIGHLIGHT_TOP,
           },
         ]}
       />
@@ -45,28 +74,22 @@ export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }
         <RollingWheelPicker
           data={days}
           itemHeight={ITEM_HEIGHT}
-          onValueChange={(d) => onChange({ day: d, month, year })}
+          onValueChange={handleDayChange}
           selectedValue={day}
           visibleItems={VISIBLE_ITEMS}
         />
         <RollingWheelPicker
           data={months}
-          formatLabel={(m) => `${t.onboarding.wheelDate.month} ${m}`}
+          formatLabel={formatMonthLabel}
           itemHeight={ITEM_HEIGHT}
-          onValueChange={(m) => {
-            const nextMaxDay = getDaysInMonth(m, year);
-            onChange({ day: Math.min(day, nextMaxDay), month: m, year });
-          }}
+          onValueChange={handleMonthChange}
           selectedValue={month}
           visibleItems={VISIBLE_ITEMS}
         />
         <RollingWheelPicker
           data={years}
           itemHeight={ITEM_HEIGHT}
-          onValueChange={(y) => {
-            const nextMaxDay = getDaysInMonth(month, y);
-            onChange({ day: Math.min(day, nextMaxDay), month, year: y });
-          }}
+          onValueChange={handleYearChange}
           selectedValue={year}
           visibleItems={VISIBLE_ITEMS}
         />

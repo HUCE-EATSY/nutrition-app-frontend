@@ -1,46 +1,22 @@
-import { router } from "expo-router";
-import { View } from "react-native";
+import * as z from "zod";
 
-import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { OptionCard } from "@/components/onboarding/OptionCard";
+import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
 import { t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath, goalOptions } from "@/domain/onboarding";
+import { goalOptions } from "@/domain/onboarding";
+
+const goalTypeSchema = z.object({
+  goalType: z.enum(["lose_weight", "maintain_weight", "gain_weight"]),
+});
 
 export default function GoalTypeScreen() {
-  const goalType = useOnboardingStore((state) => state.draft.goalType);
-  const setGoalType = useOnboardingStore((state) => state.setGoalType);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("GoalType");
-
   return (
-    <OnboardingStepScaffold
-      continueDisabled={!goalType}
-      onBack={() => router.replace(getPreviousOnboardingPath("GoalType"))}
-      onContinue={() => {
-        if (!goalType) {
-          return;
-        }
-        markStepCompleted("GoalType");
-        router.replace(getNextOnboardingPath("GoalType"));
-      }}
+    <OnboardingOptionSelection
+      stepName="GoalType"
+      fieldName="goalType"
+      schema={goalTypeSchema}
+      options={goalOptions}
       question={t.onboarding.questions.GoalType}
-      step={meta.step}
-      totalSteps={meta.totalSteps}
-    >
-      <View style={{ gap: 16 }}>
-        {goalOptions.map((option) => (
-          <OptionCard
-            key={option.value}
-            accent={option.accent}
-            icon={option.value === "lose_weight" ? "↘" : option.value === "maintain_weight" ? "◎" : "↗"}
-            onPress={() => setGoalType(option.value)}
-            selected={goalType === option.value}
-            subtitle={option.subtitle}
-            title={option.title}
-          />
-        ))}
-      </View>
-    </OnboardingStepScaffold>
+      getIcon={(value) => (value === "lose_weight" ? "↘" : value === "maintain_weight" ? "◎" : "↗")}
+    />
   );
 }

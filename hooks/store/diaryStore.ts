@@ -39,27 +39,10 @@ export interface CreateExercisePayload {
 // ── Store ─────────────────────────────────────────────────────────────────────
 interface DiaryState {
   selectedDate: string;
-  summary: DiaryDaySummary | null;
-  exercises: ExerciseLog[];
-  isLoading: boolean;
-  error: string | null;
-
   // Actions
   setDate: (dateISO: string) => void;
   goToPrevDay: () => void;
   goToNextDay: () => void;
-  fetchDiary: (dateISO?: string) => Promise<void>;
-  addMealEntry: (payload: CreateDiaryEntryPayload) => Promise<void>;
-  addExercise: (payload: CreateExercisePayload) => Promise<void>;
-  deleteEntry: (entryId: string) => Promise<void>;
-}
-
-function getHeaders() {
-  const token = useAuthStore.getState().accessToken;
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
 }
 
 function shiftDate(dateISO: string, days: number): string {
@@ -71,14 +54,9 @@ function shiftDate(dateISO: string, days: number): string {
 // ── Store implementation ─────────────────────────────────────────────────────
 export const useDiaryStore = create<DiaryState>((set, get) => ({
   selectedDate: getTodayDateISO(),
-  summary: null,
-  exercises: [],
-  isLoading: false,
-  error: null,
 
   setDate: (dateISO) => {
     set({ selectedDate: dateISO });
-    get().fetchDiary(dateISO);
   },
 
   goToPrevDay: () => {
@@ -91,78 +69,5 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
     const next = shiftDate(get().selectedDate, 1);
     // Không cho phép vượt quá hôm nay
     if (next <= today) get().setDate(next);
-  },
-
-  fetchDiary: async (dateISO) => {
-    const date = dateISO ?? get().selectedDate;
-    set({ isLoading: true, error: null });
-    try {
-      const res = await fetch(`${API_BASE}/api/diary?date=${date}`, {
-        headers: getHeaders(),
-      });
-      if (!res.ok) throw new Error("Không tải được nhật ký");
-      const json = await res.json();
-      set({ summary: json.data, isLoading: false });
-
-      // Lấy danh sách bài tập trong ngày
-      const exRes = await fetch(`${API_BASE}/api/diary/exercises?date=${date}`, {
-        headers: getHeaders(),
-      });
-      if (exRes.ok) {
-        const exJson = await exRes.json();
-        set({ exercises: exJson.data ?? [] });
-      }
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Không tải được nhật ký";
-      set({ isLoading: false, error: message });
-    }
-  },
-
-  addMealEntry: async (payload) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/diary/entries`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Ghi bữa ăn thất bại");
-      // Reload diary sau khi thêm thành công
-      await get().fetchDiary();
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Ghi bữa ăn thất bại";
-      set({ error: message });
-      throw e;
-    }
-  },
-
-  addExercise: async (payload) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/diary/exercises`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Ghi hoạt động thất bại");
-      await get().fetchDiary();
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Ghi hoạt động thất bại";
-      set({ error: message });
-      throw e;
-    }
-  },
-
-  deleteEntry: async (entryId) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/diary/entries/${entryId}`, {
-        method: "DELETE",
-        headers: getHeaders(),
-      });
-      if (!res.ok) throw new Error("Xóa thất bại");
-      await get().fetchDiary();
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Xóa thất bại";
-      set({ error: message });
-      throw e;
-    }
   },
 }));

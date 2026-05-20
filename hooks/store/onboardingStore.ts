@@ -38,26 +38,30 @@ type OnboardingStoreState = {
   setHydrated: (value: boolean) => void;
   setPublicFlowStep: (step: PublicFlowStep) => void;
   setServerPlan: (plan: NutritionPlan) => void;
-  setNickname: (nickname: string) => void;
-  setGender: (gender: Gender) => void;
-  setBirthDateISO: (birthDateISO: string) => void;
-  setHeightCm: (heightCm: number) => void;
-  setGoalType: (goalType: GoalType) => void;
-  setCurrentWeightKg: (currentWeightKg: number) => void;
-  setTargetWeightKg: (targetWeightKg: number) => void;
-  setActivityLevel: (activityLevel: ActivityLevel) => void;
-  setWeeklyGoalKg: (weeklyGoalKg: number) => void;
+  updateDraft: (patch: Partial<OnboardingDraft>) => void;
   markStepCompleted: (step: OnboardingRouteName) => void;
   completeOnboarding: () => void;
   reset: () => void;
 };
 
 function updateDraft(draft: OnboardingDraft, patch: Partial<OnboardingDraft>): OnboardingDraft {
-  return {
+  const merged = {
     ...draft,
     ...patch,
     updatedAt: getTodayISO(),
   };
+  
+  if (merged.goalType === "maintain_weight") {
+    merged.weeklyGoalKg = 0;
+    if (merged.currentWeightKg !== null) {
+      merged.targetWeightKg = merged.currentWeightKg;
+    }
+  } else {
+    if (patch.goalType !== undefined && (merged.weeklyGoalKg === null || merged.weeklyGoalKg === 0)) {
+      merged.weeklyGoalKg = getDefaultWeeklyGoal(patch.goalType);
+    }
+  }
+  return merged;
 }
 
 export const useOnboardingStore = create<OnboardingStoreState>()(
@@ -71,22 +75,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       setHydrated: (value: boolean) => set(() => ({ hydrated: value })),
       setPublicFlowStep: (step: PublicFlowStep) => set(() => ({ publicFlowStep: step })),
       setServerPlan: (plan: NutritionPlan) => set(() => ({ serverPlan: plan })),
-      setNickname: (nickname) => set((state) => ({ draft: updateDraft(state.draft, { nickname }) })),
-      setGender: (gender) => set((state) => ({ draft: updateDraft(state.draft, { gender }) })),
-      setBirthDateISO: (birthDateISO) => set((state) => ({ draft: updateDraft(state.draft, { birthDateISO }) })),
-      setHeightCm: (heightCm) => set((state) => ({ draft: updateDraft(state.draft, { heightCm }) })),
-      setGoalType: (goalType) =>
-        set((state) => ({
-          draft: updateDraft(state.draft, {
-            goalType,
-            weeklyGoalKg:
-              state.draft.weeklyGoalKg === null ? getDefaultWeeklyGoal(goalType) : state.draft.weeklyGoalKg,
-          }),
-        })),
-      setCurrentWeightKg: (currentWeightKg) => set((state) => ({ draft: updateDraft(state.draft, { currentWeightKg }) })),
-      setTargetWeightKg: (targetWeightKg) => set((state) => ({ draft: updateDraft(state.draft, { targetWeightKg }) })),
-      setActivityLevel: (activityLevel) => set((state) => ({ draft: updateDraft(state.draft, { activityLevel }) })),
-      setWeeklyGoalKg: (weeklyGoalKg) => set((state) => ({ draft: updateDraft(state.draft, { weeklyGoalKg }) })),
+      updateDraft: (patch) => set((state) => ({ draft: updateDraft(state.draft, patch) })),
       markStepCompleted: (step) =>
         set((state) => ({
           draft: updateDraft(state.draft, {

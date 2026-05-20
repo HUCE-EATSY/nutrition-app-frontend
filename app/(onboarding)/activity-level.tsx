@@ -1,46 +1,22 @@
-import { router } from "expo-router";
-import { View } from "react-native";
+import * as z from "zod";
 
-import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { OptionCard } from "@/components/onboarding/OptionCard";
+import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
 import { t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { activityOptions, getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/domain/onboarding";
+import { activityOptions } from "@/domain/onboarding";
+
+const activityLevelSchema = z.object({
+  activityLevel: z.enum(["sedentary", "light", "moderate", "active", "very_active"]),
+});
 
 export default function ActivityLevelScreen() {
-  const activityLevel = useOnboardingStore((state) => state.draft.activityLevel);
-  const setActivityLevel = useOnboardingStore((state) => state.setActivityLevel);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("ActivityLevel");
-
   return (
-    <OnboardingStepScaffold
-      continueDisabled={!activityLevel}
-      onBack={() => router.replace(getPreviousOnboardingPath("ActivityLevel"))}
-      onContinue={() => {
-        if (!activityLevel) {
-          return;
-        }
-        markStepCompleted("ActivityLevel");
-        router.replace(getNextOnboardingPath("ActivityLevel"));
-      }}
+    <OnboardingOptionSelection
+      stepName="ActivityLevel"
+      fieldName="activityLevel"
+      schema={activityLevelSchema}
+      options={activityOptions}
       question={t.onboarding.questions.ActivityLevel}
-      step={meta.step}
-      totalSteps={meta.totalSteps}
-    >
-      <View style={{ gap: 16 }}>
-        {activityOptions.map((option) => (
-          <OptionCard
-            key={option.value}
-            accent={option.accent}
-            icon="⚑"
-            onPress={() => setActivityLevel(option.value)}
-            selected={activityLevel === option.value}
-            subtitle={option.subtitle}
-            title={option.title}
-          />
-        ))}
-      </View>
-    </OnboardingStepScaffold>
+      getIcon={() => "⚑"}
+    />
   );
 }
