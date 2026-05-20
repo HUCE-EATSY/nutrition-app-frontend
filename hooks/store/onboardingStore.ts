@@ -50,8 +50,16 @@ function updateDraft(draft: OnboardingDraft, patch: Partial<OnboardingDraft>): O
     ...patch,
     updatedAt: getTodayISO(),
   };
-  if (patch.goalType !== undefined && merged.weeklyGoalKg === null) {
-    merged.weeklyGoalKg = getDefaultWeeklyGoal(patch.goalType);
+  
+  if (merged.goalType === "maintain_weight") {
+    merged.weeklyGoalKg = 0;
+    if (merged.currentWeightKg !== null) {
+      merged.targetWeightKg = merged.currentWeightKg;
+    }
+  } else {
+    if (patch.goalType !== undefined && (merged.weeklyGoalKg === null || merged.weeklyGoalKg === 0)) {
+      merged.weeklyGoalKg = getDefaultWeeklyGoal(patch.goalType);
+    }
   }
   return merged;
 }

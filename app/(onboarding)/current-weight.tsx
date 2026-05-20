@@ -1,8 +1,6 @@
-import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller } from "react-hook-form";
 import * as z from "zod";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
@@ -14,54 +12,36 @@ import { t } from "@/constants/i18n";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
-  getNextOnboardingPath,
-  getOnboardingMeta,
-  getPreviousOnboardingPath,
   showBmiReferencesAlert,
 } from "@/domain/onboarding";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 
 const currentWeightSchema = z.object({
   currentWeightKg: z.number().min(35).max(160),
 });
 
-type CurrentWeightFormData = z.infer<typeof currentWeightSchema>;
-
 export default function CurrentWeightScreen() {
-  const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
-  const updateDraft = useOnboardingStore((state) => state.updateDraft);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("CurrentWeight");
+  
+  const { control, isValid, meta, onContinue, onBack } = useOnboardingForm(
+    "CurrentWeight",
+    "currentWeightKg",
+    currentWeightSchema,
+    DEFAULT_CURRENT_WEIGHT_KG
+  );
 
-  // Track local weight dynamically to update BMI card as user scrolls
-  const [localWeight, setLocalWeight] = useState(currentWeightKg);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { isValid },
-  } = useForm<CurrentWeightFormData>({
-    resolver: zodResolver(currentWeightSchema),
-    defaultValues: {
-      currentWeightKg,
-    },
-    mode: "onChange",
-  });
-
-  const onSubmit = (data: CurrentWeightFormData) => {
-    updateDraft({ currentWeightKg: data.currentWeightKg });
-    markStepCompleted("CurrentWeight");
-    router.replace(getNextOnboardingPath("CurrentWeight"));
-  };
+  // Read direct value from store for initial localWeight
+  const initialWeight = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
+  const [localWeight, setLocalWeight] = useState(initialWeight);
 
   return (
     <OnboardingStepScaffold
       scrollable={false}
       hideBottomCta={true}
       contentStyle={{ flex: 1, justifyContent: "space-between" }}
-      onBack={() => router.replace(getPreviousOnboardingPath("CurrentWeight"))}
-      onContinue={handleSubmit(onSubmit)}
+      onBack={onBack}
+      onContinue={onContinue}
       question={t.onboarding.questions.CurrentWeight}
       step={meta.step}
       totalSteps={meta.totalSteps}
@@ -102,7 +82,7 @@ export default function CurrentWeightScreen() {
           <GradientButton
             disabled={!isValid}
             label={t.common.continue}
-            onPress={handleSubmit(onSubmit)}
+            onPress={onContinue}
             style={styles.continueButton}
           />
         </View>

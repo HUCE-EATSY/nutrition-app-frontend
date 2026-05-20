@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
-import { useEffect, useCallback } from "react";
+import { useCallback } from "react";
 
 import { SocialAuthButton } from "@/components/buttons/SocialAuthButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -14,14 +14,7 @@ import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 export default function SocialLoginScreen() {
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const { isNarrowWidth, isShortHeight } = useResponsiveLayout();
-  const { signIn, userInfo, loading, error } = useGoogleAuth();
-
-  useEffect(() => {
-    if (userInfo) {
-      setPublicFlowStep("mascot-intro");
-      router.push("/(public)/mascot-intro");
-    }
-  }, [userInfo, setPublicFlowStep]);
+  const { signIn, loading, error } = useGoogleAuth();
 
   const handleClose = useCallback(() => {
     setPublicFlowStep("welcome");

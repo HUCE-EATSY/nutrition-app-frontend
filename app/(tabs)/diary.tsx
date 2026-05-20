@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Text,
   View,
-  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
@@ -21,6 +20,7 @@ import { formatShortDate } from "@/hooks/utils/date";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { Toast } from "@/components/common/Toast";
 import { calcNutrition } from "@/hooks/utils/nutrition";
+import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -329,84 +329,16 @@ export default function DiaryTimelineScreen() {
       {selectedFood && (
         <View style={styles.mealPanel}>
           <View style={styles.mealPanelContent}>
-            {/* Món đã chọn */}
-            <View style={styles.selectedFoodRow}>
-              <Ionicons color={theme.colors.warning} name="restaurant-outline" size={20} />
-              <Text style={styles.selectedFoodName} numberOfLines={1}>
-                {selectedFood.name}
-              </Text>
-              <Pressable hitSlop={8} onPress={() => setSelectedFood(null)}>
-                <Ionicons color={theme.colors.textMuted} name="close" size={20} />
-              </Pressable>
-            </View>
-
-            {/* Giờ */}
-            <View style={styles.mealInfoRow}>
-              <Ionicons color={theme.colors.warning} name="time-outline" size={16} />
-              <Text style={styles.mealInfoText}>
-                {selectedHourForMeal.toString().padStart(2, "0")}:00
-              </Text>
-            </View>
-
-            {/* Input gram */}
-            <View style={styles.gramRow}>
-              <Text style={styles.gramLabel}>Số gram</Text>
-              <View style={styles.gramInputWrap}>
-                <Pressable
-                  onPress={() => setGrams((g) => String(Math.max(1, parseFloat(g) - 10)))}
-                  style={styles.stepBtn}
-                >
-                  <Ionicons color={theme.colors.textPrimary} name="remove" size={18} />
-                </Pressable>
-                <TextInput
-                  keyboardType="numeric"
-                  onChangeText={setGrams}
-                  style={styles.gramInput}
-                  value={grams}
-                />
-                <Pressable
-                  onPress={() => setGrams((g) => String(parseFloat(g) + 10))}
-                  style={styles.stepBtn}
-                >
-                  <Ionicons color={theme.colors.textPrimary} name="add" size={18} />
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Nutrition preview */}
-            {(() => {
-              const gramNum = parseFloat(grams) || 0;
-              const nutrition = calcNutrition(selectedFood, gramNum);
-              return (
-                <View style={styles.nutritionPreview}>
-                  <Text style={styles.nutritionPreviewText}>
-                    {nutrition.calories} kcal • {nutrition.protein}g protein • {nutrition.carb}g
-                    carbs • {nutrition.fat}g fat
-                  </Text>
-                </View>
-              );
-            })()}
-
-            {/* Buttons */}
-            <View style={styles.mealPanelButtons}>
-              <Pressable
-                onPress={() => setSelectedFood(null)}
-                style={[styles.mealPanelButton, styles.cancelButton]}
-              >
-                <Text style={styles.cancelButtonText}>Hủy</Text>
-              </Pressable>
-              <Pressable
-                disabled={isSaving}
-                onPress={handleSaveMeal}
-                style={[styles.mealPanelButton, styles.saveButton, isSaving && { opacity: 0.6 }]}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Lưu</Text>
-                )}
-              </Pressable>
-            </View>
+            <MealPortionEditor
+              foodName={selectedFood.name}
+              grams={grams}
+              setGrams={setGrams}
+              nutrition={calcNutrition(selectedFood, parseFloat(grams) || 0)}
+              onSave={handleSaveMeal}
+              onCancel={() => setSelectedFood(null)}
+              isSaving={isSaving}
+              selectedHour={selectedHourForMeal}
+            />
           </View>
         </View>
       )}
@@ -568,93 +500,5 @@ const styles = StyleSheet.create({
   mealPanelContent: {
     padding: spacing.lg,
     gap: spacing.md,
-  },
-  selectedFoodRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: theme.colors.surface,
-    padding: spacing.md,
-    borderRadius: 8,
-  },
-  selectedFoodName: {
-    ...typography.bodyStrong,
-    color: theme.colors.textPrimary,
-    flex: 1,
-  },
-  mealInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  mealInfoText: {
-    ...typography.body,
-    color: theme.colors.textSecondary,
-  },
-  gramRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  gramLabel: {
-    ...typography.body,
-    color: theme.colors.textSecondary,
-  },
-  gramInputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  stepBtn: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: theme.colors.surfaceAlt,
-  },
-  gramInput: {
-    width: 60,
-    height: 40,
-    textAlign: "center",
-    ...typography.bodyStrong,
-    color: theme.colors.textPrimary,
-    fontSize: 16,
-  },
-  nutritionPreview: {
-    backgroundColor: theme.colors.surface,
-    padding: spacing.sm,
-    borderRadius: 8,
-  },
-  nutritionPreviewText: {
-    ...typography.caption,
-    color: theme.colors.textSecondary,
-    textAlign: "center",
-  },
-  mealPanelButtons: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  mealPanelButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    backgroundColor: theme.colors.surface,
-  },
-  cancelButtonText: {
-    ...typography.bodyStrong,
-    color: theme.colors.textSecondary,
-  },
-  saveButton: {
-    backgroundColor: theme.colors.primary,
-  },
-  saveButtonText: {
-    ...typography.bodyStrong,
-    color: "#fff",
   },
 });

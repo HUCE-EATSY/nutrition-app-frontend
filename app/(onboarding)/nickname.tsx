@@ -1,15 +1,12 @@
 import { router } from "expo-router";
 import { StyleSheet, TextInput } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller } from "react-hook-form";
 import * as z from "zod";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { getNextOnboardingPath, getOnboardingMeta } from "@/domain/onboarding";
+import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { t } from "@/constants/i18n";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/constants";
-
 
 const nicknameSchema = z.object({
   nickname: z
@@ -19,38 +16,19 @@ const nicknameSchema = z.object({
     .max(24, t.validators.nicknameMax),
 });
 
-type NicknameFormData = z.infer<typeof nicknameSchema>;
-
 export default function NicknameScreen() {
-  const nickname = useOnboardingStore((state) => state.draft.nickname ?? "");
-  const updateDraft = useOnboardingStore((state) => state.updateDraft);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("Nickname");
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<NicknameFormData>({
-    resolver: zodResolver(nicknameSchema),
-    defaultValues: {
-      nickname,
-    },
-    mode: "onChange",
-  });
-
-  const onSubmit = (data: NicknameFormData) => {
-    updateDraft({ nickname: data.nickname });
-    markStepCompleted("Nickname");
-    router.replace(getNextOnboardingPath("Nickname"));
-  };
+  const { control, error, isValid, meta, onContinue } = useOnboardingForm(
+    "Nickname",
+    "nickname",
+    nicknameSchema
+  );
 
   return (
     <OnboardingStepScaffold
       continueDisabled={!isValid}
-      hint={errors.nickname?.message ?? t.onboarding.nicknameHint}
+      hint={error ?? t.onboarding.nicknameHint}
       onBack={() => router.replace("/(public)/mascot-intro")}
-      onContinue={handleSubmit(onSubmit)}
+      onContinue={onContinue}
       question={t.onboarding.questions.Nickname}
       step={meta.step}
       totalSteps={meta.totalSteps}
@@ -87,3 +65,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
   },
 });
+

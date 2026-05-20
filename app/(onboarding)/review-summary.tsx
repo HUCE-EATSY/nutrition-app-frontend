@@ -82,7 +82,13 @@ export default function ReviewSummaryScreen() {
             compact={isCompact}
             label={t.onboarding.reviewTarget}
             value={`${resolvedTargetWeightKg} kg`}
-            onPress={() => router.replace("/(onboarding)/target-weight")}
+            onPress={() => {
+              if (draft.goalType === "maintain_weight") {
+                router.replace("/(onboarding)/current-weight");
+              } else {
+                router.replace("/(onboarding)/target-weight");
+              }
+            }}
           />
         </View>
       </SurfaceCard>

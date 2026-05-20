@@ -11,6 +11,8 @@ import {
 } from "@/constants/types/contracts";
 import { t } from "@/constants/i18n";
 import { clamp, getAgeFromBirthDate } from "@/hooks/utils/date";
+import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,22 +67,46 @@ export const activityOptions: OptionItem<ActivityLevel>[] = [
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-export function getOnboardingMeta(routeName: OnboardingRouteName) {
-  const index = ONBOARDING_STEPS.findIndex((step) => step.name === routeName);
+export function getOnboardingSteps(goalType?: GoalType | null) {
+  const resolvedGoal = goalType !== undefined ? goalType : useOnboardingStore.getState().draft.goalType;
+  return ONBOARDING_STEPS.filter((step) => {
+    if (resolvedGoal === "maintain_weight") {
+      return step.name !== "TargetWeight" && step.name !== "WeeklyGoal";
+    }
+    return true;
+  });
+}
+
+export function getOnboardingMeta(routeName: OnboardingRouteName, goalType?: GoalType | null) {
+  const steps = getOnboardingSteps(goalType);
+  const index = steps.findIndex((step) => step.name === routeName);
+  const reviewSummaryIndex = steps.findIndex((step) => step.name === "ReviewSummary");
+  const totalSteps = reviewSummaryIndex !== -1 ? reviewSummaryIndex + 1 : steps.length;
+  
   return {
-    step: Math.max(index + 1, 1),
-    totalSteps: 9,
+    step: index !== -1 ? index + 1 : 1,
+    totalSteps,
   };
 }
 
-export function getNextOnboardingPath(routeName: OnboardingRouteName): OnboardingRoutePath {
-  const currentIndex = ONBOARDING_STEPS.findIndex((step) => step.name === routeName);
-  return ONBOARDING_STEPS[Math.min(currentIndex + 1, ONBOARDING_STEPS.length - 1)].path;
+export function getNextOnboardingPath(routeName: OnboardingRouteName, goalType?: GoalType | null): OnboardingRoutePath {
+  const steps = getOnboardingSteps(goalType);
+  const currentIndex = steps.findIndex((step) => step.name === routeName);
+  if (currentIndex === -1) {
+    const originalIndex = ONBOARDING_STEPS.findIndex((step) => step.name === routeName);
+    return ONBOARDING_STEPS[Math.min(originalIndex + 1, ONBOARDING_STEPS.length - 1)].path;
+  }
+  return steps[Math.min(currentIndex + 1, steps.length - 1)].path;
 }
 
-export function getPreviousOnboardingPath(routeName: OnboardingRouteName): OnboardingRoutePath {
-  const currentIndex = ONBOARDING_STEPS.findIndex((step) => step.name === routeName);
-  return ONBOARDING_STEPS[Math.max(currentIndex - 1, 0)].path;
+export function getPreviousOnboardingPath(routeName: OnboardingRouteName, goalType?: GoalType | null): OnboardingRoutePath {
+  const steps = getOnboardingSteps(goalType);
+  const currentIndex = steps.findIndex((step) => step.name === routeName);
+  if (currentIndex === -1) {
+    const originalIndex = ONBOARDING_STEPS.findIndex((step) => step.name === routeName);
+    return ONBOARDING_STEPS[Math.max(originalIndex - 1, 0)].path;
+  }
+  return steps[Math.max(currentIndex - 1, 0)].path;
 }
 
 export function getDefaultWeeklyGoal(goalType: GoalType | null) {
@@ -104,13 +130,32 @@ export function getDraftResumePath(draft: OnboardingDraft): OnboardingRoutePath 
   if (!draft.heightCm) return "/(onboarding)/height";
   if (!draft.goalType) return "/(onboarding)/goal-type";
   if (!draft.currentWeightKg) return "/(onboarding)/current-weight";
-  if (!draft.targetWeightKg) return "/(onboarding)/target-weight";
+  
+  if (draft.goalType !== "maintain_weight") {
+    if (!draft.targetWeightKg) return "/(onboarding)/target-weight";
+  }
+  
   if (!draft.activityLevel) return "/(onboarding)/activity-level";
-  if (draft.weeklyGoalKg === null) return "/(onboarding)/weekly-goal";
+  
+  if (draft.goalType !== "maintain_weight") {
+    if (draft.weeklyGoalKg === null) return "/(onboarding)/weekly-goal";
+  }
+  
   return "/(onboarding)/review-summary";
 }
 
 export function isOnboardingReady(draft: OnboardingDraft) {
+  if (draft.goalType === "maintain_weight") {
+    return Boolean(
+      draft.nickname &&
+        draft.gender &&
+        draft.birthDateISO &&
+        draft.heightCm &&
+        draft.goalType &&
+        draft.currentWeightKg &&
+        draft.activityLevel
+    );
+  }
   return Boolean(
     draft.nickname &&
       draft.gender &&
@@ -120,7 +165,7 @@ export function isOnboardingReady(draft: OnboardingDraft) {
       draft.currentWeightKg &&
       draft.targetWeightKg &&
       draft.activityLevel &&
-      draft.weeklyGoalKg !== null,
+      draft.weeklyGoalKg !== null
   );
 }
 

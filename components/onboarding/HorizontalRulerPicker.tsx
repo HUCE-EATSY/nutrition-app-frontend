@@ -54,6 +54,7 @@ const TickItem = memo(({ item, min, step, majorTickEvery, isSelected }: {
   // Tối ưu hóa: Chỉ so sánh isSelected vì các prop khác không bao giờ đổi
   return prevProps.isSelected === nextProps.isSelected;
 });
+TickItem.displayName = "TickItem";
 
 export function HorizontalRulerPicker({
   min,
@@ -104,6 +105,7 @@ export function HorizontalRulerPicker({
       }
     }
     // Gỡ internalValue ra khỏi dependency, chỉ trigger khi `value` từ cha đổi
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, isReady, containerWidth, data, step]);
 
   useEffect(() => {

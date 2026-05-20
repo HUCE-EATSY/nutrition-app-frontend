@@ -262,8 +262,8 @@ export const vi = {
       surplusDaily: "Thặng dư mỗi ngày",
       deltaDaily: "Chênh lệch mỗi ngày",
       macroSplit: "Tỷ lệ macro",
-      roadmapTitle: "Lộ trình ",
-      roadmapBody: "Chưa làm xong",
+      roadmapTitle: "Lộ trình đề xuất",
+      roadmapBody: "Mục tiêu dinh dưỡng cá nhân đã được thiết lập. Hãy bắt đầu ghi chép các bữa ăn đầu tiên trong ngày, theo dõi lượng calo/macro nạp vào và duy trì thói quen lành mạnh để sớm đạt mục tiêu!",
       cta: "Bắt đầu hành trình",
     },
     genderOptions: {

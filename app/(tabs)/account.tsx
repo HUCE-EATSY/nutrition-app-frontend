@@ -16,6 +16,7 @@ import { colors, radius, spacing, typography } from "@/constants";
 import { getAgeFromBirthDate } from "@/hooks/utils/date";
 import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/domain/onboarding";
 import { useUserInfo } from "@/hooks/api/useUserApi";
+import { SectionHeader, MacroItem, StatIconButton, SocialButton } from "@/components/account/AccountComponents";
 
 export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
@@ -72,7 +73,6 @@ export default function AccountScreen() {
 
   const handleLogout = async () => {
     try {
-      console.log("Logging out...");
       hideConfirm();
       await logout();
       resetOnboarding();
@@ -86,7 +86,6 @@ export default function AccountScreen() {
 
   const handleDeleteData = async () => {
     try {
-      console.log("Deleting account data...");
       hideConfirm();
       await deleteAccount();
       resetOnboarding();
@@ -368,49 +367,7 @@ export default function AccountScreen() {
   );
 }
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionHeaderText}>{title}</Text>
-      <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
-    </View>
-  );
-}
 
-function MacroItem({ color, label, percentage, value }: { color: string; label: string; percentage: string; value: string }) {
-  return (
-    <View style={styles.macroItem}>
-      <View style={styles.macroItemLeft}>
-        <Ionicons color={color} name="flash" size={14} />
-        <Text style={styles.macroItemLabel}>{label}</Text>
-      </View>
-      <View style={styles.macroItemRight}>
-        <Text style={styles.macroItemPercentage}>{percentage}</Text>
-        <Text style={styles.macroItemValue}>({value})</Text>
-      </View>
-    </View>
-  );
-}
-
-function StatIconButton({ color, icon, label }: { color: string; icon: keyof typeof Ionicons.glyphMap; label: string }) {
-  return (
-    <View style={styles.statIconContainer}>
-      <View style={[styles.statIconCircle, { backgroundColor: color }]}>
-        <Ionicons color="#111020" name={icon} size={28} />
-      </View>
-      <Text style={styles.statIconLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function SocialButton({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
-  return (
-    <Pressable style={styles.socialButton}>
-      <Ionicons color={colors.textPrimary} name={icon} size={28} />
-      <Text style={styles.socialButtonLabel}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const styles = StyleSheet.create({
   scrollContent: {
@@ -536,18 +493,7 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: colors.primary,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
-  },
-  sectionHeaderText: {
-    ...typography.h3,
-    fontSize: 18,
-    color: colors.textPrimary,
-  },
+
   journeyCard: {
     borderRadius: radius.lg,
     overflow: "hidden",
@@ -644,36 +590,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.sm,
   },
-  macroItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  macroItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  macroItemLabel: {
-    ...typography.body,
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  macroItemRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  macroItemPercentage: {
-    ...typography.bodyStrong,
-    fontSize: 10,
-    color: colors.textPrimary,
-  },
-  macroItemValue: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontSize: 12,
-  },
+
   customizeGoalButton: {
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
@@ -691,21 +608,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: spacing.xl,
   },
-  statIconContainer: {
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  statIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  statIconLabel: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
+
   communityCard: {
     borderRadius: radius.xl,
     overflow: "hidden",
@@ -770,18 +673,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
   },
-  socialButton: {
-    flex: 1,
-    backgroundColor: colors.bgElevated,
-    paddingVertical: spacing.lg,
-    borderRadius: radius.md,
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  socialButtonLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
+
   supportButton: {
     flexDirection: "row",
     alignItems: "center",

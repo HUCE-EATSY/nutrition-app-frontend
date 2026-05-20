@@ -7,6 +7,7 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { WelcomeHeroIllustration } from "@/components/WelcomeHeroIllustration";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { useAuthStore } from "@/hooks/store/authStore";
 import { colors, radius, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { trackEvent } from "@/hooks/utils/analytics";
@@ -21,6 +22,7 @@ const FLOATING_POSITIONS: ViewStyle[] = [
 
 export default function MascotIntroScreen() {
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const { width, isNarrowWidth, isShortHeight } = useResponsiveLayout();
   
   const isCompactLayout = isNarrowWidth || isShortHeight;
@@ -49,9 +51,10 @@ export default function MascotIntroScreen() {
   }, [setPublicFlowStep]);
 
   const handleClose = useCallback(() => {
+    clearAuth();
     setPublicFlowStep("social-login");
     router.replace("/(public)/social-login");
-  }, [setPublicFlowStep]);
+  }, [clearAuth, setPublicFlowStep]);
 
   return (
     <SafeScreen>

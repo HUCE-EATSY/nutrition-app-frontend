@@ -1,8 +1,6 @@
-import { router } from "expo-router";
 import { useState, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller } from "react-hook-form";
 import * as z from "zod";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
@@ -15,12 +13,10 @@ import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
   DEFAULT_TARGET_WEIGHT_KG,
-  getNextOnboardingPath,
-  getOnboardingMeta,
-  getPreviousOnboardingPath,
   showBmiReferencesAlert,
 } from "@/domain/onboarding";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { GoalType } from "@/constants/types/contracts";
 
 const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: number) => {
@@ -33,7 +29,6 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
         (val) => {
           if (!goalType) return false;
           if (goalType === "lose_weight") return val < currentWeightKg;
-          if (goalType === "gain_weight" && val <= currentWeightKg) return false; // wait, let's keep the exact original logic: val > currentWeightKg
           if (goalType === "gain_weight") return val > currentWeightKg;
           if (goalType === "maintain_weight") return Math.abs(val - currentWeightKg) <= 1;
           return true;
@@ -50,53 +45,32 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
   });
 };
 
-type TargetWeightFormData = {
-  targetWeightKg: number;
-};
-
 export default function TargetWeightScreen() {
   const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
-  const targetWeightKg = useOnboardingStore((state) => state.draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG);
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   const goalType = useOnboardingStore((state) => state.draft.goalType);
-  const updateDraft = useOnboardingStore((state) => state.updateDraft);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("TargetWeight");
-
-  // Track local weight dynamically
-  const [localTargetWeight, setLocalTargetWeight] = useState(targetWeightKg);
 
   const targetWeightSchema = useMemo(() => {
     return createTargetWeightSchema(goalType, currentWeightKg);
   }, [goalType, currentWeightKg]);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<TargetWeightFormData>({
-    resolver: zodResolver(targetWeightSchema),
-    defaultValues: {
-      targetWeightKg,
-    },
-    mode: "onChange",
-  });
+  const { control, error, isValid, meta, onContinue, onBack } = useOnboardingForm(
+    "TargetWeight",
+    "targetWeightKg",
+    targetWeightSchema,
+    DEFAULT_TARGET_WEIGHT_KG
+  );
 
-  const error = errors.targetWeightKg?.message;
-
-  const onSubmit = (data: TargetWeightFormData) => {
-    updateDraft({ targetWeightKg: data.targetWeightKg });
-    markStepCompleted("TargetWeight");
-    router.replace(getNextOnboardingPath("TargetWeight"));
-  };
+  const initialTargetWeight = useOnboardingStore((state) => state.draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG);
+  const [localTargetWeight, setLocalTargetWeight] = useState(initialTargetWeight);
 
   return (
     <OnboardingStepScaffold
       scrollable={false}
       hideBottomCta={true}
       contentStyle={{ flex: 1, justifyContent: "space-between" }}
-      onBack={() => router.replace(getPreviousOnboardingPath("TargetWeight"))}
-      onContinue={handleSubmit(onSubmit)}
+      onBack={onBack}
+      onContinue={onContinue}
       question={t.onboarding.questions.TargetWeight}
       step={meta.step}
       totalSteps={meta.totalSteps}
@@ -142,7 +116,7 @@ export default function TargetWeightScreen() {
           <GradientButton
             disabled={!isValid}
             label={t.common.continue}
-            onPress={handleSubmit(onSubmit)}
+            onPress={onContinue}
             style={styles.continueButton}
           />
         </View>

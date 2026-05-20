@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_URLS } from "@/constants/api";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { OnboardingDraft } from "@/constants/types/contracts";
@@ -6,6 +6,7 @@ import axiosClient from "./axiosClient";
 
 export function useOnboardUser() {
   const { accessToken } = useAuthStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (draft: OnboardingDraft) => {
@@ -43,6 +44,9 @@ export function useOnboardUser() {
         throw err;
       }
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user", "info"] });
+    },
   });
 }
 
@@ -57,5 +61,7 @@ export function useUserInfo() {
       return response.data.data;
     },
     enabled: !!accessToken,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }

@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from "react-native";
-import { BMIStatus } from "@/constants/types/contracts";
 import { colors, radius, spacing, typography } from "@/constants";
 import { getBmiStatusLabel, t } from "@/constants/i18n";
 import { calculateBmi, getBmiStatus, getBmiStatusColors, getTargetBmiDesc } from "@/domain/onboarding";

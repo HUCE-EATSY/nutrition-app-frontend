@@ -1,20 +1,16 @@
-import { router } from "expo-router";
 import { useMemo } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller } from "react-hook-form";
 import * as z from "zod";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { WeeklyGoalSlider } from "@/components/onboarding/WeeklyGoalSlider";
 import {
-  getNextOnboardingPath,
-  getOnboardingMeta,
-  getPreviousOnboardingPath,
   getWeeklyGoalBounds,
   sanitizeWeeklyGoal,
 } from "@/domain/onboarding";
 import { t } from "@/constants/i18n";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
+import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { GoalType } from "@/constants/types/contracts";
 
 const createWeeklyGoalSchema = (goalType: GoalType | null) => {
@@ -27,49 +23,27 @@ const createWeeklyGoalSchema = (goalType: GoalType | null) => {
   });
 };
 
-type WeeklyGoalFormData = {
-  weeklyGoalKg: number;
-};
-
 export default function WeeklyGoalScreen() {
   const goalType = useOnboardingStore((state) => state.draft.goalType);
-  const weeklyGoalKg = useOnboardingStore((state) => state.draft.weeklyGoalKg ?? getWeeklyGoalBounds(goalType).recommended);
-  const updateDraft = useOnboardingStore((state) => state.updateDraft);
-  const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
-  const meta = getOnboardingMeta("WeeklyGoal");
   const bounds = getWeeklyGoalBounds(goalType);
-
   const weeklyGoalSchema = useMemo(() => createWeeklyGoalSchema(goalType), [goalType]);
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors, isValid },
-  } = useForm<WeeklyGoalFormData>({
-    resolver: zodResolver(weeklyGoalSchema),
-    defaultValues: {
-      weeklyGoalKg,
-    },
-    mode: "onChange",
-  });
+  const { control, error, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
+    "WeeklyGoal",
+    "weeklyGoalKg",
+    weeklyGoalSchema,
+    bounds.recommended
+  );
 
-  const currentWeeklyGoalKg = watch("weeklyGoalKg");
+  const currentWeeklyGoalKg = watch("weeklyGoalKg") ?? bounds.recommended;
   const estimatedDailyCalories = Math.round((currentWeeklyGoalKg * 7700) / 7);
-  const error = errors.weeklyGoalKg?.message;
-
-  const onSubmit = (data: WeeklyGoalFormData) => {
-    updateDraft({ weeklyGoalKg: data.weeklyGoalKg });
-    markStepCompleted("WeeklyGoal");
-    router.replace(getNextOnboardingPath("WeeklyGoal"));
-  };
 
   return (
     <OnboardingStepScaffold
       continueDisabled={!isValid}
       hint={error ?? t.onboarding.weeklyGoalHint}
-      onBack={() => router.replace(getPreviousOnboardingPath("WeeklyGoal"))}
-      onContinue={handleSubmit(onSubmit)}
+      onBack={onBack}
+      onContinue={onContinue}
       question={t.onboarding.questions.WeeklyGoal}
       step={meta.step}
       totalSteps={meta.totalSteps}
@@ -92,3 +66,4 @@ export default function WeeklyGoalScreen() {
     </OnboardingStepScaffold>
   );
 }
+

@@ -32,7 +32,6 @@ axiosClient.interceptors.response.use(
   async (error) => {
     // Xử lý lỗi 401 (Unauthorized) - có thể refresh token ở đây
     if (error.response?.status === 401) {
-      console.log('Phiên làm việc hết hạn');
       // Tùy chọn: Gọi refresh token hoặc logout
       // useAuthStore.getState().clearAuth();
     }
