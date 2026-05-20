@@ -22,7 +22,7 @@ import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-// ── Types ────────────────────────────────────────────────────────────────────
+
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();

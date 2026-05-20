@@ -31,6 +31,9 @@ export const useGoogleAuth = () => {
       // Clear query client cache to avoid cross-user/cross-session leaks
       queryClient.clear();
 
+      // Thêm dòng này để lấy token dùng cho Swagger
+      console.log(">>> TOKEN DÙNG CHO SWAGGER:", data.accessToken);
+
       if (data.isNewUser === false) {
         completeOnboarding();
       } else {

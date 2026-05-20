@@ -82,3 +82,27 @@ export function hourLabel(hour: number) {
   return `${`${hour}`.padStart(2, "0")}:00`;
 }
 
+/**
+ * Map a weight/stats period string to a {from, to} date range.
+ * "1month" = last 30 days, "6months" = last 180 days, "1year" = last 365 days.
+ */
+export function getDateRangeForPeriod(period: string): { from: string; to: string } {
+  const today = new Date();
+  const to = today.toISOString().slice(0, 10);
+
+  const from = new Date(today);
+  switch (period) {
+    case "6months":
+      from.setDate(today.getDate() - 180);
+      break;
+    case "1year":
+      from.setDate(today.getDate() - 365);
+      break;
+    case "1month":
+    default:
+      from.setDate(today.getDate() - 30);
+      break;
+  }
+
+  return { from: from.toISOString().slice(0, 10), to };
+}

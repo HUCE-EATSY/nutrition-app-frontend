@@ -185,3 +185,48 @@ export interface OptionItem<TValue extends string> {
   subtitle: string;
   accent: string;
 }
+
+export interface DailyTargetDto {
+  target_calories: number;
+  target_protein_g: number;
+  target_carbs_g: number;
+  target_fat_g: number;
+  calories_pct: number;
+  protein_pct: number;
+  carbs_pct: number;
+  fat_pct: number;
+}
+
+export interface DailySummaryResponse {
+  date: string;
+  total_calories: number;
+  total_protein_g: number;
+  total_carbs_g: number;
+  total_fat_g: number;
+  target: DailyTargetDto | null;
+}
+
+export interface WeightLogEntry {
+  id: number;
+  weight_kg: number;
+  log_date: string; // "YYYY-MM-DD"
+  note: string | null;
+  created_at: string;
+}
+
+export interface UserGoalApiResponse {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  activity_level: number;
+  goal_type: number;
+  goal_weight_kg: number | null;
+  bmr_kcal: number;
+  tdee_kcal: number;
+  target_calories: number;
+  target_protein_g: number;
+  target_carbs_g: number;
+  target_fat_g: number;
+  is_active: boolean;
+  created_at: string;
+}
