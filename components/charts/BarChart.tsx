@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View } from "react-native";
 import Svg, { Rect, Line as SvgLine, G, Text as SvgText } from "react-native-svg";
 
 export interface BarData {

@@ -21,8 +21,10 @@ import * as ImagePicker from "expo-image-picker";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
 import { Toast } from "@/components/common/Toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateFoodScreen() {
+  const queryClient = useQueryClient();
   const categories = [
     { id: 1, name: "Cơm & Xôi" },
     { id: 2, name: "Phở & Bún" },
@@ -67,7 +69,7 @@ export default function CreateFoodScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "images",
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -133,6 +135,9 @@ export default function CreateFoodScreen() {
           carbsG: parseFloat(carbs) || 0,
         },
       });
+
+      // Invalidate cache to refetch updated food items list immediately
+      queryClient.invalidateQueries({ queryKey: ["food"] });
 
       showToastMsg("Tạo thực phẩm thành công!", "success");
 

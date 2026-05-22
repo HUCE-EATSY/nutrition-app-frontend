@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { colors, spacing, typography } from "@/constants";
 import { t } from "@/constants/i18n";
-import { ACTIVITIES } from "@/domain/catalogs/activities";
+import { ACTIVITIES, ActivityId } from "@/domain/catalogs/activities";
 import { getExerciseNameFromActivity } from "@/constants/exerciseMapping";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 
@@ -28,7 +28,7 @@ export function ActivityGrid() {
     }
   }
 
-  function handleActivityPress(activityId: string) {
+  function handleActivityPress(activityId: ActivityId) {
     const exerciseName = getExerciseNameFromActivity(activityId);
     
     // Tìm exercise theo tên (NameEn)

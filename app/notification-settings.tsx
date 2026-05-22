@@ -55,7 +55,7 @@ export default function NotificationSettingsScreen() {
             : s
         )
       );
-    } catch (error) {
+    } catch {
       Alert.alert("Lỗi", "Không thể cập nhật cài đặt");
     } finally {
       setUpdating(null);

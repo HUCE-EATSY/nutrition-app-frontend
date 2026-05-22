@@ -23,11 +23,7 @@ export default function ExerciseDiaryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getTodayDateISO());
 
-  useEffect(() => {
-    loadLogs();
-  }, [selectedDate]);
-
-  async function loadLogs() {
+  const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
       // Lấy logs trong vòng 30 ngày gần nhất
@@ -44,7 +40,11 @@ export default function ExerciseDiaryScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -66,7 +66,7 @@ export default function ExerciseDiaryScreen() {
               await exerciseService.deleteLog(id);
               setLogs(prev => prev.filter(log => log.id !== id));
               Alert.alert("Thành công", "Đã xóa nhật ký");
-            } catch (error) {
+            } catch {
               Alert.alert("Lỗi", "Không thể xóa nhật ký");
             }
           },

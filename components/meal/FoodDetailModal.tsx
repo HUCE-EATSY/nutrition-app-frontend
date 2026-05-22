@@ -8,9 +8,9 @@ import {
   Image,
   Modal,
   ScrollView,
-  SafeAreaView,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
@@ -127,7 +127,7 @@ export function FoodDetailModal({
       onRequestClose={onClose}
     >
       <View style={styles.detailOverlay}>
-        <SafeAreaView style={styles.detailContent}>
+        <SafeAreaView style={styles.detailContent} edges={["top", "bottom"]}>
           {/* Header */}
           <View style={styles.detailHeader}>
             <Pressable hitSlop={12} style={styles.detailHeaderBtn} onPress={onClose}>
@@ -146,7 +146,7 @@ export function FoodDetailModal({
             </Pressable>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.detailScrollContent}>
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={styles.detailScrollContent}>
             {/* Food Image */}
             <View style={styles.detailImageContainer}>
               {food.imageUrl ? (
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   detailScrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
-    paddingBottom: 120,
+    paddingBottom: spacing.lg,
   },
   detailImageContainer: {
     width: 220,
@@ -694,10 +694,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   detailFooter: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: "#110b26",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

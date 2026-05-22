@@ -22,6 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService, FoodItemDto } from "@/services/foodService";
 import { Toast } from "@/components/common/Toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface RecipeComponentState {
   childFoodId: string;
@@ -39,6 +40,7 @@ interface RecipeComponentState {
 }
 
 export default function CreateRecipeScreen() {
+  const queryClient = useQueryClient();
   const categories = [
     { id: 1, name: "Cơm & Xôi" },
     { id: 2, name: "Phở & Bún" },
@@ -224,7 +226,7 @@ export default function CreateRecipeScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "images",
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -287,6 +289,9 @@ export default function CreateRecipeScreen() {
           quantity_g: c.quantityG,
         })),
       });
+
+      // Invalidate cache to refetch updated food items list immediately
+      queryClient.invalidateQueries({ queryKey: ["food"] });
 
       showToastMsg("Lưu công thức thành công!", "success");
       setTimeout(() => {

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -9,7 +9,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,8 +21,6 @@ import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { useDiary, useExercises, useAddMealEntry } from "@/hooks/api/useDiaryApi";
 import { formatShortDate } from "@/hooks/utils/date";
-import { calcNutrition } from "@/hooks/utils/nutrition";
-import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -44,14 +41,13 @@ export default function DiaryTimelineScreen() {
     goToPrevDay,
     goToNextDay,
     fetchDiary,
-    addMealEntry,
     deleteFoodLog,
     updateMealEntry,
   } = useDiaryStore();
 
   const { data: summary, isLoading: isDiaryLoading } = useDiary(selectedDate);
   const { data: exercises = [], isLoading: isExercisesLoading } = useExercises(selectedDate);
-  const { mutateAsync: addMealEntry, isPending: isSaving } = useAddMealEntry();
+  const { mutateAsync: addMealEntry } = useAddMealEntry();
 
   const isLoading = isDiaryLoading || isExercisesLoading;
 
@@ -153,8 +149,6 @@ export default function DiaryTimelineScreen() {
       setShowToast(true);
       return;
     }
-
-    const nutrition = calcNutrition(selectedFood, gramNum);
 
     try {
       if (editingLogId !== null) {

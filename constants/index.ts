@@ -14,6 +14,8 @@ export const colors = {
   textSecondary: "#C7C3D8",
   textMuted: "#9B97AE",
   borderSoft: "rgba(255,255,255,0.08)",
+  border: "rgba(255,255,255,0.08)",
+  info: "#3D8BFF",
   warning: "#F2B437",
   success: "#5CD67A",
   protein: "#FF5A5F",

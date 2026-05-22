@@ -30,6 +30,7 @@ export const API_URLS = {
     components: (id: string) => `${API_BASE}/api/foods/${id}/components`, // GET /:uuid/components
     barcode: (code: number) => `${API_BASE}/api/foods/barcode/${code}`,   // GET /barcode/:int64
     create: `${API_BASE}/api/foods`,                // POST multipart/form-data
+    createRecipe: `${API_BASE}/api/foods/recipes`,  // POST multipart/form-data
   },
   /** Food + Weight logs */
   logs: {

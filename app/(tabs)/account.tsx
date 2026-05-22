@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useRouter } from "expo-router";
+import { router } from "expo-router";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Portal, Dialog, Button } from "react-native-paper";
-import Svg, { Circle } from "react-native-svg";
 import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -91,7 +90,7 @@ export default function AccountScreen() {
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: "images",
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -296,7 +295,7 @@ export default function AccountScreen() {
       <SectionHeader title={t.account.yourJourney} />
       {(() => {
         const startWeight = profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
-        const currentWeightVal = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const currentWeightVal = profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
         const targetWeightVal = profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
 
         let progressPct = 0;

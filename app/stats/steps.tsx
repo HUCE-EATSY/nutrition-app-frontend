@@ -8,7 +8,7 @@ import { BarChart } from "@/components/charts/BarChart";
 
 export default function StepsStatsScreen() {
   const router = useRouter();
-  const { period, activeTabLabel, tabs, handleTabChange } = useStepsStats();
+  const { activeTabLabel, tabs, handleTabChange } = useStepsStats();
 
   const barData = [
     { label: "T2", value: 3000 },

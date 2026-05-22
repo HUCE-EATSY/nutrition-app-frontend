@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-keep-awake/src/index.ts b/node_modules/expo-keep-awake/src/index.ts
+index b7a856e..a6eac81 100644
+--- a/node_modules/expo-keep-awake/src/index.ts
++++ b/node_modules/expo-keep-awake/src/index.ts
+@@ -34,7 +34,7 @@ export function useKeepAwake(tag?: string, options?: KeepAwakeOptions): void {
+       if (isMounted && ExpoKeepAwake.addListenerForTag && options?.listener) {
+         addListener(tagOrDefault, options.listener);
+       }
+-    });
++    }).catch(() => {});
+     return () => {
+       isMounted = false;
+       if (options?.suppressDeactivateWarnings) {

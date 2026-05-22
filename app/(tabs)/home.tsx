@@ -5,7 +5,7 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { t } from "@/constants/i18n";
-import { colors, theme, spacing, typography, radius } from "@/constants";
+import { colors, theme, spacing, typography } from "@/constants";
 import { HomeHeader, DateScroller } from "@/components/dashboard/HomeHeader";
 import { CalorieOverview } from "@/components/dashboard/CalorieOverview";
 import { MacroProgressRow } from "@/components/dashboard/MacroProgressRow";

@@ -5,13 +5,7 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 
-// Conditionally require DateTimePicker cho mobile
-let DateTimePicker: any = null;
-if (Platform.OS !== "web") {
-  try {
-    DateTimePicker = require("@react-native-community/datetimepicker").default;
-  } catch (e) {}
-}
+
 
 import { colors, spacing, typography, radius } from "@/constants";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -24,7 +18,7 @@ export default function LogWeightScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { currentWeight, resolvedTarget } = useWeightStats();
-  
+
   // Khởi tạo cân nặng bằng cân nặng gần nhất hoặc 60kg làm mặc định
   const [weight, setWeight] = useState(currentWeight || 60);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,7 +39,7 @@ export default function LogWeightScreen() {
 
   const handleSave = async () => {
     if (isSaving) return;
-    
+
     // Kiểm tra định dạng ngày nhập YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(logDateStr)) {
@@ -56,14 +50,14 @@ export default function LogWeightScreen() {
     setIsSaving(true);
     try {
       await saveWeightLog(weight, logDateStr);
-      
+
       // Invalidate react-query cache for user profile (Account & Physical Profile)
       queryClient.invalidateQueries({ queryKey: ["user"] });
-      
+
       // Reload weight store so home page chart and weight value updates instantly
       const { period, fetchWeightData } = useWeightStore.getState();
       await fetchWeightData(period);
-      
+
       router.back();
     } catch (error: any) {
       Alert.alert("Lỗi", error.message || "Không thể lưu cân nặng. Vui lòng thử lại.");
@@ -77,8 +71,8 @@ export default function LogWeightScreen() {
 
   return (
     <SafeScreen contentContainerStyle={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.flex1} 
+      <KeyboardAvoidingView
+        style={styles.flex1}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         {/* Header */}
@@ -111,8 +105,8 @@ export default function LogWeightScreen() {
 
           <View style={styles.stepperContainer}>
             {/* Nút Trừ */}
-            <Pressable 
-              style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]} 
+            <Pressable
+              style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
               onPress={decrementWeight}
               disabled={isSaving}
             >
@@ -123,8 +117,8 @@ export default function LogWeightScreen() {
             <Text style={styles.weightValue}>{weight} Kg</Text>
 
             {/* Nút Cộng */}
-            <Pressable 
-              style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]} 
+            <Pressable
+              style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
               onPress={incrementWeight}
               disabled={isSaving}
             >
@@ -136,7 +130,7 @@ export default function LogWeightScreen() {
         {/* Form Fields (Date Picker) */}
         <View style={styles.formSection}>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Ngày cân (YYYY-MM-DD)</Text>
+            <Text style={styles.dateLabel}>Ngày cân</Text>
             <View style={styles.dateRight}>
               <TextInput
                 style={styles.dateInput}
@@ -157,8 +151,8 @@ export default function LogWeightScreen() {
 
       {/* Footer Action */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <Pressable 
-          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]} 
+        <Pressable
+          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
           onPress={handleSave}
           disabled={isSaving}
         >
@@ -284,7 +278,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
     paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xxs,
+    paddingVertical: spacing.xs,
     textAlign: "right",
     minWidth: 110,
   },

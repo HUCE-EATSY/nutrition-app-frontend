@@ -29,7 +29,7 @@ export default function IndexScreen() {
 
   // Nếu chưa đăng nhập, chuyển đến màn hình chào mừng
   if (!isAuthenticated) {
-    return <Redirect href="/(tabs)/home" />;
+    return <Redirect href="/(public)/welcome" />;
   }
 
   // Nếu đã đăng nhập và hoàn thành onboarding, vào màn hình chính

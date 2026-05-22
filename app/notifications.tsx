@@ -60,7 +60,7 @@ export default function NotificationsScreen() {
       setNotifications(prev =>
         prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
       );
-    } catch (error) {
+    } catch {
       Alert.alert("Lỗi", "Không thể đánh dấu tất cả");
     }
   }
@@ -78,7 +78,7 @@ export default function NotificationsScreen() {
             try {
               await notificationService.deleteNotification(id);
               setNotifications(prev => prev.filter(n => n.id !== id));
-            } catch (error) {
+            } catch {
               Alert.alert("Lỗi", "Không thể xóa thông báo");
             }
           },

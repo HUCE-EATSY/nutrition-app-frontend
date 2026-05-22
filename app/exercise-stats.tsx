@@ -21,33 +21,32 @@ export default function ExerciseStatsScreen() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
 
   useEffect(() => {
+    async function loadStats() {
+      try {
+        setLoading(true);
+        const endDate = new Date().toISOString().split("T")[0];
+        const startDate = new Date();
+        
+        if (period === "week") {
+          startDate.setDate(startDate.getDate() - 7);
+        } else if (period === "month") {
+          startDate.setMonth(startDate.getMonth() - 1);
+        } else {
+          startDate.setFullYear(startDate.getFullYear() - 1);
+        }
+        
+        const startDateISO = startDate.toISOString().split("T")[0];
+        const data = await exerciseService.getLogs(startDateISO, endDate);
+        setLogs(data);
+      } catch (error) {
+        Alert.alert("Lỗi", "Không thể tải thống kê");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadStats();
   }, [period]);
-
-  async function loadStats() {
-    try {
-      setLoading(true);
-      const endDate = new Date().toISOString().split("T")[0];
-      const startDate = new Date();
-      
-      if (period === "week") {
-        startDate.setDate(startDate.getDate() - 7);
-      } else if (period === "month") {
-        startDate.setMonth(startDate.getMonth() - 1);
-      } else {
-        startDate.setFullYear(startDate.getFullYear() - 1);
-      }
-      
-      const startDateISO = startDate.toISOString().split("T")[0];
-      const data = await exerciseService.getLogs(startDateISO, endDate);
-      setLogs(data);
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải thống kê");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   // Tính toán thống kê
   const totalCalories = logs.reduce((sum, log) => sum + log.caloriesBurned, 0);

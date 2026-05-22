@@ -9,12 +9,12 @@ import { LineChart } from "@/components/charts/LineChart";
 export default function WeightStatsScreen() {
   const router = useRouter();
   const {
-    period, activeTabLabel, tabs, handleTabChange,
+    activeTabLabel, tabs, handleTabChange,
     actualChartData, targetChartData, resolvedTarget,
     bmiData,
     initialWeight, currentWeight, weightChange,
     currentBmi, bmiChange, bmiStatus, bmiStatusColor,
-    isLoading, error,
+    isLoading,
   } = useWeightStats();
 
   const hasData = actualChartData.length > 0;

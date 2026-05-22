@@ -9,7 +9,6 @@ import {
   Image,
   Modal,
   ScrollView,
-  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
@@ -22,6 +21,16 @@ interface FoodSelectorModalProps {
   onSelectFood: (food: FoodItem) => void;
 }
 
+const categories = [
+  { id: 1, name: "Cơm & Xôi" },
+  { id: 2, name: "Phở & Bún" },
+  { id: 3, name: "Bánh mì & Bánh" },
+  { id: 4, name: "Đồ uống" },
+  { id: 5, name: "Thực phẩm đóng gói" },
+  { id: 6, name: "Rau củ quả" },
+  { id: 7, name: "Thịt & Hải sản" },
+  { id: 10, name: "Khác" }
+];
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
   const { data: foods = [], isLoading } = useFoodList();
@@ -36,17 +45,6 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
   const [detailFood, setDetailFood] = useState<FoodItem | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const categories = [
-    { id: 1, name: "Cơm & Xôi" },
-    { id: 2, name: "Phở & Bún" },
-    { id: 3, name: "Bánh mì & Bánh" },
-    { id: 4, name: "Đồ uống" },
-    { id: 5, name: "Thực phẩm đóng gói" },
-    { id: 6, name: "Rau củ quả" },
-    { id: 7, name: "Thịt & Hải sản" },
-    { id: 10, name: "Khác" }
-  ];
 
   const DEFAULT_DISPLAY_COUNT = 4;
 
@@ -79,13 +77,13 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
       if (selectedCategoryId) {
         const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name;
         if (selectedCategoryName) {
-          result = result.filter((f) => f.category === selectedCategoryName);
+          result = result.filter((f: FoodItem) => f.category === selectedCategoryName);
         }
       }
 
       if (searchQuery.trim().length > 0) {
         const query = searchQuery.toLowerCase();
-        result = result.filter((f) => f.name.toLowerCase().includes(query));
+        result = result.filter((f: FoodItem) => f.name.toLowerCase().includes(query));
       }
 
       setFilteredFoods(result);

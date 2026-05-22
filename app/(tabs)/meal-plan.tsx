@@ -63,13 +63,13 @@ export default function MealPlanScreen() {
 
       // Filter by category
       if (selectedCategory) {
-        result = result.filter((f) => f.category === selectedCategory);
+        result = result.filter((f: FoodItem) => f.category === selectedCategory);
       }
 
       // Filter by search
       if (searchQuery.trim().length > 0) {
         const query = searchQuery.toLowerCase();
-        result = result.filter((f) => f.name.toLowerCase().includes(query));
+        result = result.filter((f: FoodItem) => f.name.toLowerCase().includes(query));
       }
 
       setFilteredFoods(result);

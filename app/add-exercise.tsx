@@ -28,7 +28,7 @@ import {
 const DEFAULT_WEIGHT_KG = 65;
 
 export default function AddExerciseScreen() {
-  const { date, exerciseName } = useLocalSearchParams<{ date: string; exerciseName?: string }>();
+  const { date } = useLocalSearchParams<{ date: string }>();
   const targetDate = date ?? getTodayDateISO();
   const currentHour = new Date().getHours();
 

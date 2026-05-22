@@ -29,22 +29,21 @@ export default function ExerciseDetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    async function loadExercise() {
+      try {
+        setLoading(true);
+        const data = await exerciseService.getExerciseById(exerciseId);
+        setExercise(data);
+      } catch (error: any) {
+        console.error("Load exercise error:", error);
+        Alert.alert("Lỗi", "Không thể tải thông tin bài tập");
+        router.back();
+      } finally {
+        setLoading(false);
+      }
+    }
     loadExercise();
   }, [exerciseId]);
-
-  async function loadExercise() {
-    try {
-      setLoading(true);
-      const data = await exerciseService.getExerciseById(exerciseId);
-      setExercise(data);
-    } catch (error: any) {
-      console.error("Load exercise error:", error);
-      Alert.alert("Lỗi", "Không thể tải thông tin bài tập");
-      router.back();
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const durationNum = parseFloat(duration) || 0;
   const met = exercise?.metValue || 0;

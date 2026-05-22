@@ -10,9 +10,9 @@ import { PieChart } from "@/components/charts/PieChart";
 export default function NutritionStatsScreen() {
   const router = useRouter();
   const { 
-    period, activeTabLabel, tabs, handleTabChange,
+    activeTabLabel, tabs, handleTabChange,
     dates, selectedDate, handleSelectDate,
-    summary, isLoading, error
+    summary, isLoading
   } = useNutritionStats();
   
   const targetCal = summary?.target?.target_calories ?? 0;
@@ -30,7 +30,7 @@ export default function NutritionStatsScreen() {
   const carbPct = summary?.target?.carbs_pct ?? 0;
   const fatPct = summary?.target?.fat_pct ?? 0;
 
-  const centerLabelPct = summary?.target?.calories_pct ? Math.round(summary.target.calories_pct) : 0;
+
 
   const macroData = [
     { label: "Chất đạm", value: proteinG, color: "#EF4444" },
