@@ -1,6 +1,7 @@
 import { apiClient } from "./apiClient";
 import { API_URLS } from "../constants/api";
 import { OnboardingDraft } from "../constants/types/contracts";
+import { Platform } from "react-native";
 import {
   mockGetUserInfoResponse,
   mockOnboardingResponse,
@@ -82,5 +83,40 @@ export const userService = {
     }
     const response = await apiClient.put(API_URLS.user.goal, data);
     return response.data.data;
+  },
+
+  /** POST /api/User/avatar → upload avatar (multipart/form-data) */
+  uploadAvatar: async (imageUri: string, mimeType = 'image/jpeg'): Promise<{ avatarUrl: string }> => {
+    const form = new FormData();
+    
+    if (Platform.OS === 'web') {
+      // Trên Web, cần fetch blob từ URI và append blob thực tế vào FormData
+      const res = await fetch(imageUri);
+      const blob = await res.blob();
+      form.append('avatar', blob, 'avatar.jpg');
+    } else {
+      // Trên Mobile, append object dạng { uri, name, type }
+      form.append('avatar', {
+        uri: imageUri,
+        name: 'avatar.jpg',
+        type: mimeType,
+      } as any);
+    }
+
+    const response = await apiClient.post(API_URLS.user.avatar, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    
+    const raw = response.data.data ?? response.data;
+    
+    // Backend trả về snake_case: { avatar_url: "..." }, chuẩn hóa về camelCase để khớp Destructure
+    return {
+      avatarUrl: raw?.avatar_url ?? raw?.avatarUrl ?? ""
+    };
+  },
+
+  /** DELETE /api/User/account → xóa tài khoản */
+  deleteAccount: async (): Promise<void> => {
+    await apiClient.delete(API_URLS.user.account);
   },
 };

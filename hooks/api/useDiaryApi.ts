@@ -27,7 +27,14 @@ export function useAddMealEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: CreateDiaryEntryPayload) => {
-      const response = await axiosClient.post(`/api/diary/entries`, payload);
+      const req = {
+        food_item_id: payload.foodItemId,
+        meal_type_id: payload.mealTypeId,
+        log_date: payload.dateISO,
+        quantity_g: payload.quantityG,
+        note: payload.note,
+      };
+      const response = await axiosClient.post(`/api/logs/food`, req);
       return response.data;
     },
     onSuccess: (_, variables) => {

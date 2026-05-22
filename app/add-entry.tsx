@@ -12,16 +12,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Toast } from "@/components/common/Toast";
 import { colors, spacing, typography, radius } from "@/constants";
 import { getTodayDateISO } from "@/hooks/utils/date";
 import { useAddMealEntry } from "@/hooks/api/useDiaryApi";
 import { useFoodList, useFoodDetails, FoodItem } from "@/hooks/api/useFoodApi";
 import { calcNutrition } from "@/hooks/utils/nutrition";
-import { Toast } from "@/components/common/Toast";
 import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+/** Chuyển giờ → meal_type_id: 1=Sáng(5-10), 2=Trưa(11-14), 3=Tối(18-22), 4=Phụ */
+function getMealTypeFromHour(hour: number): number {
+  if (hour >= 5 && hour <= 10) return 1;
+  if (hour >= 11 && hour <= 14) return 2;
+  if (hour >= 18 && hour <= 22) return 3;
+  return 4; // bữa phụ
+}
 
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
@@ -35,9 +42,18 @@ export default function AddEntryScreen() {
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [grams, setGrams] = useState("100");
+  
+  // State quản lý giờ được chọn (Tránh lỗi crash do biến selectedHour chưa được định nghĩa)
   const [selectedHour, setSelectedHour] = useState(
     hour ? parseInt(hour, 10) : new Date().getHours()
   );
+  
+  // mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Bữa phụ
+  const [mealTypeId, setMealTypeId] = useState(getMealTypeFromHour(selectedHour));
+  
+  useEffect(() => {
+    setMealTypeId(getMealTypeFromHour(selectedHour));
+  }, [selectedHour]);
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
@@ -78,25 +94,18 @@ export default function AddEntryScreen() {
     }
     try {
       await addMealEntry({
-        foodId: selected.id,
-        foodName: selected.name,
+        foodItemId: selected.id,           // UUID string
+        mealTypeId: mealTypeId,            // 1-4 từ đồng hồ
         dateISO: targetDate,
-        hour: selectedHour,
         quantityG: gramNum,
-        totalCalories: nutrition!.calories,
-        proteinGram: nutrition!.protein,
-        carbGram: nutrition!.carb,
-        fatGram: nutrition!.fat,
       });
 
-      // Hiện toast thành công
       setToastMessage(
-        `Đã lưu ${selected.name} (${gramNum}g) vào ${selectedHour.toString().padStart(2, "0")}:00`
+        `Đã lưu ${selected.name} (${gramNum}g)`
       );
       setToastType("success");
       setShowToast(true);
 
-      // Đợi 2s rồi quay về tab Thực đơn
       setTimeout(() => {
         router.replace("/(tabs)/meal-plan");
       }, 2000);
@@ -158,7 +167,9 @@ export default function AddEntryScreen() {
             }
             renderItem={({ item }) => (
               <Pressable
-                onPress={() => setSelected(item)}
+                onPress={() => {
+                  setSelected(item);
+                }}
                 style={styles.foodRow}
               >
                 <View style={styles.foodIcon}>

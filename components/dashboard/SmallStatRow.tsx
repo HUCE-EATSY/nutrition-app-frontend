@@ -1,36 +1,75 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
 
 export function SmallStatRow() {
+  const router = useRouter();
+  const { exercises } = useDiaryStore();
+  const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
+
   return (
     <View style={styles.container}>
-      <SurfaceCard style={styles.card}>
-        <Text style={styles.label}>{t.home.stepsTitle}</Text>
-        <View style={styles.content}>
-           <MaterialCommunityIcons name="google-fit" size={24} color={colors.primary} />
-           <Text style={styles.hint}>{t.home.connectHealth}</Text>
-        </View>
-      </SurfaceCard>
+      <View style={styles.cardWrapper}>
+        <SurfaceCard style={styles.card}>
+          <View style={styles.titleRow}>
+            <Text style={styles.label}>{t.home.stepsTitle}</Text>
+          </View>
+          <View style={styles.content}>
+            <View style={styles.iconWrapper}>
+              <MaterialCommunityIcons name="google-fit" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.hint}>{t.home.connectHealth}</Text>
+          </View>
+        </SurfaceCard>
+      </View>
 
-      <SurfaceCard style={styles.card}>
-        <View style={styles.titleRow}>
-          <Text style={styles.label}>{t.home.exercise}</Text>
-          <View style={styles.plusCircle}>
-             <MaterialCommunityIcons name="plus" size={14} color={colors.textPrimary} />
-          </View>
-        </View>
-        <View style={styles.content}>
-          <Text style={styles.emptyText}>{t.home.noData}</Text>
-          <View style={styles.burningRow}>
-             <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
-             <Text style={styles.statValue}>0</Text>
-          </View>
-        </View>
-      </SurfaceCard>
+      <View style={styles.cardWrapper}>
+        <TouchableOpacity 
+          activeOpacity={0.7}
+          onPress={() => router.push("/exercise-stats")}
+          style={styles.touchableCard}
+        >
+          <SurfaceCard style={styles.card}>
+            <View style={styles.titleRow}>
+              <Text style={styles.label}>{t.home.exercise}</Text>
+              <TouchableOpacity 
+                onPress={(e) => {
+                  e.stopPropagation();
+                  router.push("/add-exercise");
+                }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <View style={styles.plusCircle}>
+                   <MaterialCommunityIcons name="plus" size={14} color={colors.textPrimary} />
+                </View>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.content}>
+              {exercises.length > 0 ? (
+                <>
+                  <Text style={styles.emptyText}>{exercises.length} bài tập</Text>
+                  <View style={styles.burningRow}>
+                    <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
+                    <Text style={styles.statValue}>{burned} kcal</Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View style={styles.iconWrapper}>
+                    <MaterialCommunityIcons name="fire" size={20} color={colors.danger} />
+                  </View>
+                  <Text style={styles.emptyText}>{t.home.noData}</Text>
+                </>
+              )}
+            </View>
+          </SurfaceCard>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -40,15 +79,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.md,
   },
+  cardWrapper: {
+    flex: 1, // Mỗi wrapper chiếm đúng 50%
+  },
+  touchableCard: {
+    flex: 1, // TouchableOpacity cũng chiếm 100% wrapper
+  },
   card: {
     flex: 1,
     padding: spacing.md,
     justifyContent: "space-between",
+    minHeight: 110,
   },
   titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: spacing.sm,
+    height: 20,
   },
   label: {
     ...typography.caption,
@@ -56,12 +104,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   content: {
-    marginTop: spacing.sm,
-    gap: 4,
+    gap: 6,
+    alignItems: "flex-start",
+    flex: 1,
+  },
+  iconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   hint: {
     ...typography.caption,
-    fontSize: 10,
+    fontSize: 11,
     color: colors.textMuted,
   },
   emptyText: {

@@ -11,7 +11,6 @@ import {
 } from "@/constants/types/contracts";
 import { t } from "@/constants/i18n";
 import { clamp, getAgeFromBirthDate } from "@/hooks/utils/date";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -68,7 +67,11 @@ export const activityOptions: OptionItem<ActivityLevel>[] = [
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 export function getOnboardingSteps(goalType?: GoalType | null) {
-  const resolvedGoal = goalType !== undefined ? goalType : useOnboardingStore.getState().draft.goalType;
+  let resolvedGoal = goalType;
+  if (resolvedGoal === undefined) {
+    const { useOnboardingStore } = require("@/hooks/store/onboardingStore");
+    resolvedGoal = useOnboardingStore.getState().draft.goalType;
+  }
   return ONBOARDING_STEPS.filter((step) => {
     if (resolvedGoal === "maintain_weight") {
       return step.name !== "TargetWeight" && step.name !== "WeeklyGoal";

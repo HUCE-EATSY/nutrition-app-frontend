@@ -1,4 +1,3 @@
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
@@ -6,12 +5,25 @@ import { useOnboardingStore } from './store/onboardingStore';
 import { API_URLS } from '@/constants/api';
 import axiosClient from './api/axiosClient';
 
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID;
+let GoogleSignin: any = null;
+let statusCodes: any = {};
+let isGoogleSigninSupported = false;
 
-GoogleSignin.configure({
-  webClientId: WEB_CLIENT_ID,
-  offlineAccess: false,
-});
+try {
+  const GoogleModule = require('@react-native-google-signin/google-signin');
+  GoogleSignin = GoogleModule.GoogleSignin;
+  statusCodes = GoogleModule.statusCodes;
+
+  const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+
+  GoogleSignin.configure({
+    webClientId: WEB_CLIENT_ID,
+    offlineAccess: false,
+  });
+  isGoogleSigninSupported = true;
+} catch (e) {
+  console.warn('Google Sign-In is not supported in this environment (missing native module).', e);
+}
 
 export const useGoogleAuth = () => {
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +59,18 @@ export const useGoogleAuth = () => {
     },
     onError: (err) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';
+      console.error('=== LOGIN ERROR ===');
+      console.error('Error:', errorMessage);
       setError(errorMessage);
       console.error(err);
     }
   });
 
   const signIn = async () => {
+    if (!isGoogleSigninSupported || !GoogleSignin) {
+      setError('Google Sign-In không khả dụng trên thiết bị/trình giả lập này (thiếu Native Module). Vui lòng build lại ứng dụng bằng lệnh: npx expo run:android');
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -85,9 +103,16 @@ export const useGoogleAuth = () => {
 
   const logout = async () => {
     try {
-      await GoogleSignin.signOut();
+      // Gọi backend để vô hiệu hoá refresh token
+      const refreshToken = useAuthStore.getState().refreshToken;
+      if (refreshToken) {
+        await axiosClient.post(API_URLS.auth.logout, { refreshToken });
+      }
+      if (isGoogleSigninSupported && GoogleSignin) {
+        await GoogleSignin.signOut();
+      }
     } catch (e) {
-      console.error('Failed to sign out from Google:', e);
+      console.error('Failed to sign out:', e);
     }
     clearAuth();
     resetOnboarding();

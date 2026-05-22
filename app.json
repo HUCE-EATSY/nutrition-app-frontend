@@ -41,7 +41,14 @@
       ],
       "expo-secure-store",
       "expo-web-browser",
-      "@react-native-google-signin/google-signin/app.plugin.js"
+      "@react-native-google-signin/google-signin/app.plugin.js",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép ứng dụng truy cập thư viện ảnh để tải lên hình ảnh món ăn."
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": false,

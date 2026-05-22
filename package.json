@@ -9,12 +9,15 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
+    "@expo/ngrok": "^4.1.3",
     "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^5.2.2",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@tanstack/react-query": "^5.100.10",
     "axios": "^1.16.1",
@@ -25,6 +28,8 @@
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.9",
     "expo-font": "~14.0.11",
+    "expo-haptics": "~15.0.8",
+    "expo-image-picker": "~17.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.12",
     "expo-router": "~6.0.23",
@@ -52,6 +57,7 @@
     "@types/react": "~19.1.10",
     "eslint": "^8.57.0",
     "eslint-config-expo": "~10.0.0",
+    "patch-package": "^8.0.1",
     "typescript": "~5.9.2"
   },
   "private": true

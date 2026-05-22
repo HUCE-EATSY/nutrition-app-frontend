@@ -13,8 +13,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
 import { useFoodList, FoodItem } from "@/hooks/api/useFoodApi";
-
-// Used from useFoodApi.ts
+import { FoodDetailModal } from "./FoodDetailModal";
 
 interface FoodSelectorModalProps {
   visible: boolean;
@@ -22,39 +21,69 @@ interface FoodSelectorModalProps {
   onSelectFood: (food: FoodItem) => void;
 }
 
+const categories = [
+  { id: 1, name: "Cơm & Xôi" },
+  { id: 2, name: "Phở & Bún" },
+  { id: 3, name: "Bánh mì & Bánh" },
+  { id: 4, name: "Đồ uống" },
+  { id: 5, name: "Thực phẩm đóng gói" },
+  { id: 6, name: "Rau củ quả" },
+  { id: 7, name: "Thịt & Hải sản" },
+  { id: 10, name: "Khác" }
+];
+
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
   const { data: foods = [], isLoading } = useFoodList();
 
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [showAllFoods, setShowAllFoods] = useState(false);
+
+  // States quản lý Modal chi tiết món ăn (Detail view)
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [detailFood, setDetailFood] = useState<FoodItem | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const categories = ["Vietnamese", "Protein", "Vegetables", "Fruits", "Grains"];
   const DEFAULT_DISPLAY_COUNT = 4;
 
+  const [activeTab, setActiveTab] = useState<"recent" | "created" | "favorite">("recent");
+
+  const getTabFilteredFoods = () => {
+    if (activeTab === "created") {
+      return filteredFoods.filter((f) => (f as any).source === 3);
+    }
+    if (activeTab === "favorite") {
+      // Lọc các món ăn có đuôi/tên phổ biến hoặc source === 1/2 làm yêu thích
+      return filteredFoods.filter((f) => (f as any).source === 1 || (f as any).source === 2 || f.name.includes("Cơm") || f.name.includes("luộc") || f.name.includes("bơ"));
+    }
+    return filteredFoods;
+  };
+
   const displayedFoods = showAllFoods
-    ? filteredFoods
-    : filteredFoods.slice(0, DEFAULT_DISPLAY_COUNT);
+    ? getTabFilteredFoods()
+    : getTabFilteredFoods().slice(0, DEFAULT_DISPLAY_COUNT);
 
-  const hasMoreFoods = filteredFoods.length > DEFAULT_DISPLAY_COUNT;
+  const hasMoreFoods = getTabFilteredFoods().length > DEFAULT_DISPLAY_COUNT;
 
-  // Filter foods
+  // Filter foods based on search query and selected category
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
       let result = foods;
 
-      if (selectedCategory) {
-        result = result.filter((f) => f.category === selectedCategory);
+      if (selectedCategoryId) {
+        const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name;
+        if (selectedCategoryName) {
+          result = result.filter((f: FoodItem) => f.category === selectedCategoryName);
+        }
       }
 
       if (searchQuery.trim().length > 0) {
         const query = searchQuery.toLowerCase();
-        result = result.filter((f) => f.name.toLowerCase().includes(query));
+        result = result.filter((f: FoodItem) => f.name.toLowerCase().includes(query));
       }
 
       setFilteredFoods(result);
@@ -64,29 +93,37 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [searchQuery, selectedCategory, foods]);
+  }, [searchQuery, selectedCategoryId, foods]);
 
   function handleSelectFood(food: FoodItem) {
     onSelectFood(food);
     // Reset state
     setSearchQuery("");
-    setSelectedCategory(null);
+    setSelectedCategoryId(null);
     setShowAllFoods(false);
   }
 
+  const handleClose = () => {
+    setSearchQuery("");
+    setSelectedCategoryId(null);
+    setShowAllFoods(false);
+    onClose();
+  };
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
+    <>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleClose}
+      >
+        <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Chọn món ăn</Text>
-            <Pressable hitSlop={12} onPress={onClose}>
+            <Pressable hitSlop={12} onPress={handleClose}>
               <Ionicons color={colors.textPrimary} name="close" size={24} />
             </Pressable>
           </View>
@@ -98,28 +135,92 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                 <Ionicons color={colors.textMuted} name="search-outline" size={18} />
                 <TextInput
                   onChangeText={setSearchQuery}
-                  placeholder="Tìm món ăn..."
+                  placeholder="Tìm thực phẩm hoặc món ăn"
                   placeholderTextColor={colors.textMuted}
                   style={styles.searchInput}
                   value={searchQuery}
                 />
-                {searchQuery.length > 0 && (
+                {searchQuery.length > 0 ? (
                   <Pressable onPress={() => setSearchQuery("")}>
                     <Ionicons color={colors.textMuted} name="close-circle" size={18} />
                   </Pressable>
+                ) : (
+                  <Pressable hitSlop={8}>
+                    <Ionicons color={colors.textPrimary} name="scan-outline" size={20} />
+                  </Pressable>
                 )}
+              </View>
+
+              {/* Premium Tabs: Gần đây • Tạo bởi tôi • Yêu thích */}
+              <View style={styles.tabsContainer}>
+                <Pressable
+                  onPress={() => setActiveTab("recent")}
+                  style={[styles.tabButton, activeTab === "recent" && styles.tabButtonActive]}
+                >
+                  <Text style={[styles.tabButtonText, activeTab === "recent" && styles.tabButtonTextActive]}>
+                    Gần đây
+                  </Text>
+                  {activeTab === "recent" && <View style={styles.activeLine} />}
+                </Pressable>
+                
+                <Pressable
+                  onPress={() => setActiveTab("created")}
+                  style={[styles.tabButton, activeTab === "created" && styles.tabButtonActive]}
+                >
+                  <Text style={[styles.tabButtonText, activeTab === "created" && styles.tabButtonTextActive]}>
+                    Tạo bởi tôi
+                  </Text>
+                  {activeTab === "created" && <View style={styles.activeLine} />}
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setActiveTab("favorite")}
+                  style={[styles.tabButton, activeTab === "favorite" && styles.tabButtonActive]}
+                >
+                  <Text style={[styles.tabButtonText, activeTab === "favorite" && styles.tabButtonTextActive]}>
+                    Yêu thích
+                  </Text>
+                  {activeTab === "favorite" && <View style={styles.activeLine} />}
+                </Pressable>
+              </View>
+
+              {/* Premium Quick Action Cards */}
+              <View style={styles.quickActionsRow}>
+                {/* Barcode scan */}
+                <Pressable style={styles.quickActionCard}>
+                  <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(59, 130, 246, 0.15)" }]}>
+                    <Ionicons color="#3b82f6" name="barcode-outline" size={22} />
+                  </View>
+                  <Text style={styles.quickActionText}>Quét mã vạch</Text>
+                </Pressable>
+
+                {/* AI Dishes Recognition */}
+                <Pressable style={styles.quickActionCard}>
+                  <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
+                    <Ionicons color="#10b981" name="sparkles-outline" size={22} />
+                  </View>
+                  <Text style={styles.quickActionText}>Nhận diện món ăn</Text>
+                </Pressable>
+
+                {/* Voice Record */}
+                <Pressable style={styles.quickActionCard}>
+                  <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(239, 68, 68, 0.15)" }]}>
+                    <Ionicons color="#ef4444" name="mic-outline" size={22} />
+                  </View>
+                  <Text style={styles.quickActionText}>Ghi bằng giọng nói</Text>
+                </Pressable>
               </View>
 
               {/* Category filters */}
               <View style={styles.categoryRow}>
                 <Pressable
-                  onPress={() => setSelectedCategory(null)}
-                  style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
+                  onPress={() => setSelectedCategoryId(null)}
+                  style={[styles.categoryChip, !selectedCategoryId && styles.categoryChipActive]}
                 >
                   <Text
                     style={[
                       styles.categoryText,
-                      !selectedCategory && styles.categoryTextActive,
+                      !selectedCategoryId && styles.categoryTextActive,
                     ]}
                   >
                     Tất cả
@@ -127,20 +228,20 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                 </Pressable>
                 {categories.map((cat) => (
                   <Pressable
-                    key={cat}
-                    onPress={() => setSelectedCategory(cat)}
+                    key={cat.id}
+                    onPress={() => setSelectedCategoryId(cat.id)}
                     style={[
                       styles.categoryChip,
-                      selectedCategory === cat && styles.categoryChipActive,
+                      selectedCategoryId === cat.id && styles.categoryChipActive,
                     ]}
                   >
                     <Text
                       style={[
                         styles.categoryText,
-                        selectedCategory === cat && styles.categoryTextActive,
+                        selectedCategoryId === cat.id && styles.categoryTextActive,
                       ]}
                     >
-                      {cat}
+                      {cat.name}
                     </Text>
                   </Pressable>
                 ))}
@@ -162,7 +263,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                     <View style={styles.emptyList}>
                       <Ionicons color={colors.textMuted} name="restaurant-outline" size={48} />
                       <Text style={styles.emptyListText}>
-                        {searchQuery || selectedCategory
+                        {searchQuery || selectedCategoryId
                           ? "Không tìm thấy món ăn nào"
                           : "Chưa có món ăn nào"}
                       </Text>
@@ -173,7 +274,10 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                         {displayedFoods.map((item) => (
                           <Pressable
                             key={item.id}
-                            onPress={() => handleSelectFood(item)}
+                            onPress={() => {
+                              setDetailFood(item);
+                              setDetailVisible(true);
+                            }}
                             style={styles.foodCard}
                           >
                             {/* Food image */}
@@ -261,6 +365,27 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
         </View>
       </View>
     </Modal>
+
+      {/* Giao diện chi tiết món ăn chuẩn premium độc lập và tái sử dụng */}
+      <FoodDetailModal
+        visible={detailVisible}
+        food={detailFood}
+        onClose={() => setDetailVisible(false)}
+        onAdd={(food, grams) => {
+          const ratio = grams / food.servingSize;
+          onSelectFood({
+            ...food,
+            protein: food.protein * ratio,
+            carbs: food.carbs * ratio,
+            fat: food.fat * ratio,
+            calories: food.calories * ratio,
+            servingSize: grams,
+          });
+          setDetailVisible(false);
+          handleClose();
+        }}
+      />
+    </>
   );
 }
 
@@ -289,6 +414,70 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h3,
     color: colors.textPrimary,
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#221a3a",
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: spacing.sm + 4,
+    alignItems: "center",
+    position: "relative",
+  },
+  tabButtonActive: {},
+  tabButtonText: {
+    ...typography.bodyStrong,
+    color: colors.textSecondary,
+    fontSize: 15,
+  },
+  tabButtonTextActive: {
+    color: colors.textPrimary,
+    fontWeight: "bold",
+  },
+  activeLine: {
+    position: "absolute",
+    bottom: 0,
+    left: "15%",
+    right: "15%",
+    height: 3,
+    backgroundColor: colors.primary,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  quickActionsRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  quickActionCard: {
+    flex: 1,
+    backgroundColor: "#181231",
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: "#282142",
+  },
+  quickActionIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  quickActionText: {
+    color: colors.textPrimary,
+    fontWeight: "600",
+    fontSize: 11,
+    textAlign: "center",
   },
   foodsCard: {
     padding: spacing.lg,

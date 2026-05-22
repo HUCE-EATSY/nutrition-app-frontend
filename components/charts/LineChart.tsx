@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Path, Circle, G, Text as SvgText, Line } from "react-native-svg";
 
@@ -44,7 +44,6 @@ export const LineChart: React.FC<LineChartProps> = ({
   const chartHeight = height - padding.top - padding.bottom;
 
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const svgRef = useRef<any>(null);
 
   const allValues = [
     ...actualData.map((d) => d.value),
