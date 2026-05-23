@@ -18,7 +18,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.k7625.nutritionappfrontend"
+      "package": "com.k7625.nutritionappfrontend",
+      "permissions": [
+        "android.permission.health.READ_STEPS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -48,7 +51,16 @@
           "photosPermission": "Cho phép ứng dụng truy cập thư viện ảnh để tải lên hình ảnh món ăn."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false,
