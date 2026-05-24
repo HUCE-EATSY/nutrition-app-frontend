@@ -16,7 +16,6 @@ export default function StepsStatsScreen() {
     isConnected,
     isLoading,
     error,
-    todaySteps,
     stepGoal,
     averageSteps,
     previousAverageSteps,

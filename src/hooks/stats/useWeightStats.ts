@@ -25,7 +25,7 @@ export const useWeightStats = () => {
   // Auto-fetch whenever period changes
   useEffect(() => {
     fetchWeightData(period);
-  }, [period]);
+  }, [period, fetchWeightData]);
 
   const handleTabChange = (tab: string) => {
     const selectedKey = Object.keys(WEIGHT_PERIOD_LABELS).find(

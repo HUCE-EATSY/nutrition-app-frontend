@@ -1,3 +1,6 @@
+import { format, parseISO, differenceInYears, addDays as addDaysFns, formatISO } from "date-fns";
+import { vi } from "date-fns/locale";
+
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -5,9 +8,6 @@ export function clamp(value: number, min: number, max: number) {
 export function roundToStep(value: number, step: number) {
   return Math.round(value / step) * step;
 }
-
-import { format, parseISO, differenceInYears, addDays as addDaysFns, formatISO } from "date-fns";
-import { vi } from "date-fns/locale";
 
 export function formatShortDate(dateISO: string) {
   try {

@@ -19,7 +19,6 @@ export function SmallStatRow() {
     todaySteps,
     stepGoal,
     checkConnection,
-    connectAndSync,
     fetchTodaySteps,
   } = useStepsStore();
 
@@ -44,7 +43,7 @@ export function SmallStatRow() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [checkConnection, fetchTodaySteps]);
 
   const handlePressSteps = () => {
     router.push("/stats/steps");

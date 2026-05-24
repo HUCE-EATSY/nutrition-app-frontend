@@ -1,7 +1,4 @@
-import { DiaryDaySummary, MealPlan, Testimonial } from "@/types/contracts";
-import { getTodayDateISO, hourLabel } from "@/utils/date";
-
-const baseDateISO = getTodayDateISO();
+import { Testimonial } from "@/types/contracts";
 
 export const testimonials: Testimonial[] = [
   {

@@ -28,7 +28,7 @@ export const useStepsStats = () => {
       }
     };
     init();
-  }, [period]);
+  }, [period, checkConnection, fetchHistory]);
 
   const handleTabChange = (tab: string) => {
     const selectedKey = Object.keys(STEPS_PERIOD_LABELS).find(

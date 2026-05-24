@@ -19,6 +19,7 @@ import {
 export function getOnboardingSteps(goalType?: GoalType | null) {
   let resolvedGoal = goalType;
   if (resolvedGoal === undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useOnboardingStore } = require("@/store/onboardingStore");
     resolvedGoal = useOnboardingStore.getState().draft.goalType;
   }

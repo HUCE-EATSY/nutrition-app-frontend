@@ -37,7 +37,7 @@ export const useNutritionStats = () => {
 
   useEffect(() => {
     fetchSummary(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, fetchSummary]);
 
   const handleTabChange = (tab: string) => {
     const selectedKey = Object.keys(NUTRITION_PERIOD_LABELS).find(

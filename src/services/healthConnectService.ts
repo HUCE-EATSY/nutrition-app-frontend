@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 let HealthConnect: any = null;
 try {
   if (Platform.OS === "android") {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     HealthConnect = require("react-native-health-connect");
   }
 } catch (e) {
@@ -13,9 +14,7 @@ try {
 const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === "true" || Platform.OS !== "android";
 
 // Dữ liệu mock lịch sử bước chân để phát triển và test
-const MOCK_HISTORY_STEPS: Record<string, number> = {
-  // Sẽ được cập nhật dựa trên ngày thực tế khi chạy hàm
-};
+
 
 function getMockStepsForDate(dateStr: string): number {
   // Sinh số bước chân ngẫu nhiên nhưng ổn định cho mỗi ngày
@@ -88,7 +87,7 @@ export const healthConnectService = {
       const isGranted = await this.checkStepsPermission();
       if (isGranted) return true;
 
-      const result = await HealthConnect.requestPermission([
+      await HealthConnect.requestPermission([
         {
           recordType: "Steps",
           accessType: "read",

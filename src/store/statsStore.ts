@@ -250,7 +250,7 @@ export const useWeightStore = create<WeightState>((set) => ({
       let goal = null;
       try {
         goal = await getUserGoal();
-      } catch (e) {
+      } catch {
         // Ignore goal fetch errors
       }
 
