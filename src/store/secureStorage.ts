@@ -3,26 +3,107 @@ import * as SecureStore from "expo-secure-store";
 import { StateStorage } from "zustand/middleware";
 
 const isWeb = Platform.OS === "web";
+const CHUNK_SIZE = 1000;
+const CHUNK_PREFIX = "___chunked___:";
 
 export const secureStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
     if (isWeb) {
       return localStorage.getItem(name);
     }
-    return await SecureStore.getItemAsync(name);
+    try {
+      const val = await SecureStore.getItemAsync(name);
+      if (val && val.startsWith(CHUNK_PREFIX)) {
+        const numChunks = parseInt(val.substring(CHUNK_PREFIX.length), 10);
+        if (isNaN(numChunks)) {
+          return val;
+        }
+        let combined = "";
+        for (let i = 0; i < numChunks; i++) {
+          const chunk = await SecureStore.getItemAsync(`${name}_chunk_${i}`);
+          if (chunk) {
+            combined += chunk;
+          }
+        }
+        return combined;
+      }
+      return val;
+    } catch (error) {
+      console.error(`Error reading from SecureStore for key ${name}:`, error);
+      return null;
+    }
   },
   setItem: async (name: string, value: string): Promise<void> => {
     if (isWeb) {
       localStorage.setItem(name, value);
-    } else {
-      await SecureStore.setItemAsync(name, value);
+      return;
+    }
+    try {
+      if (value.length <= CHUNK_SIZE) {
+        // Clean up any previous chunks if they existed
+        const oldVal = await SecureStore.getItemAsync(name);
+        if (oldVal && oldVal.startsWith(CHUNK_PREFIX)) {
+          const numChunks = parseInt(oldVal.substring(CHUNK_PREFIX.length), 10);
+          if (!isNaN(numChunks)) {
+            for (let i = 0; i < numChunks; i++) {
+              await SecureStore.deleteItemAsync(`${name}_chunk_${i}`);
+            }
+          }
+        }
+        await SecureStore.setItemAsync(name, value);
+      } else {
+        const chunks: string[] = [];
+        for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+          chunks.push(value.substring(i, i + CHUNK_SIZE));
+        }
+
+        // Clean up extra old chunks if new value has fewer chunks
+        const oldVal = await SecureStore.getItemAsync(name);
+        let oldChunksCount = 0;
+        if (oldVal && oldVal.startsWith(CHUNK_PREFIX)) {
+          const parsed = parseInt(oldVal.substring(CHUNK_PREFIX.length), 10);
+          if (!isNaN(parsed)) {
+            oldChunksCount = parsed;
+          }
+        }
+
+        // Write new chunks
+        for (let i = 0; i < chunks.length; i++) {
+          await SecureStore.setItemAsync(`${name}_chunk_${i}`, chunks[i]);
+        }
+
+        // Clean up remaining old chunks
+        if (oldChunksCount > chunks.length) {
+          for (let i = chunks.length; i < oldChunksCount; i++) {
+            await SecureStore.deleteItemAsync(`${name}_chunk_${i}`);
+          }
+        }
+
+        // Write chunk manifest
+        await SecureStore.setItemAsync(name, `${CHUNK_PREFIX}${chunks.length}`);
+      }
+    } catch (error) {
+      console.error(`Error writing to SecureStore for key ${name}:`, error);
     }
   },
   removeItem: async (name: string): Promise<void> => {
     if (isWeb) {
       localStorage.removeItem(name);
-    } else {
+      return;
+    }
+    try {
+      const val = await SecureStore.getItemAsync(name);
+      if (val && val.startsWith(CHUNK_PREFIX)) {
+        const numChunks = parseInt(val.substring(CHUNK_PREFIX.length), 10);
+        if (!isNaN(numChunks)) {
+          for (let i = 0; i < numChunks; i++) {
+            await SecureStore.deleteItemAsync(`${name}_chunk_${i}`);
+          }
+        }
+      }
       await SecureStore.deleteItemAsync(name);
+    } catch (error) {
+      console.error(`Error deleting from SecureStore for key ${name}:`, error);
     }
   },
 };

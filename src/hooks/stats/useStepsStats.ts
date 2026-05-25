@@ -10,10 +10,6 @@ export const useStepsStats = () => {
     isLoading,
     error,
     todaySteps,
-    stepGoal,
-    averageSteps,
-    previousAverageSteps,
-    historyData,
     checkConnection,
     fetchHistory,
     connectAndSync,
@@ -37,32 +33,7 @@ export const useStepsStats = () => {
     if (selectedKey) setPeriod(selectedKey as StepsPeriod);
   };
 
-  const getFormattedDateRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-
-    let daysCount = 7;
-    if (period === StepsPeriod.WEEK) {
-      daysCount = 7;
-    } else if (period === StepsPeriod.MONTH) {
-      daysCount = 30;
-    } else if (period === StepsPeriod.SIX_MONTHS) {
-      daysCount = 180;
-    }
-
-    startDate.setDate(endDate.getDate() - (daysCount - 1));
-
-    const formatDate = (date: Date) => {
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      return `${day}/${month}`;
-    };
-
-    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
-  };
-
   return {
-    period,
     activeTabLabel: STEPS_PERIOD_LABELS[period],
     tabs: Object.values(STEPS_PERIOD_LABELS),
     handleTabChange,
@@ -72,11 +43,6 @@ export const useStepsStats = () => {
     isLoading,
     error,
     todaySteps,
-    stepGoal,
-    averageSteps,
-    previousAverageSteps,
-    historyData,
-    dateRangeText: getFormattedDateRange(),
     connectAndSync,
   };
 };

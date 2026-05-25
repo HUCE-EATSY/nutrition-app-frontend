@@ -97,7 +97,7 @@ export const vi = {
     water: "Uống nước",
     latestWeight: "Cân nặng gần nhất",
     update: "Cập nhật",
-    connectHealth: "Kết nối Google Health để tự động cập nhật",
+    connectHealth: "Cho phép đếm bước chân để tự động cập nhật",
     exerciseTitle: "Hoạt động tập luyện",
     stepsTitle: "Bước chân",
     waterTitle: "Uống nước",

@@ -15,20 +15,18 @@ export function SmallStatRow() {
   const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
 
   const {
+    hydrated,
     isConnected,
     todaySteps,
     stepGoal,
     checkConnection,
-    fetchTodaySteps,
   } = useStepsStore();
 
   useEffect(() => {
+    if (!hydrated) return;
+
     // Kiểm tra kết nối khi mở ứng dụng
-    checkConnection().then((connected) => {
-      if (connected) {
-        fetchTodaySteps();
-      }
-    });
+    checkConnection();
 
     // Tự động làm mới khi quay lại ứng dụng
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -43,7 +41,7 @@ export function SmallStatRow() {
     return () => {
       subscription.remove();
     };
-  }, [checkConnection, fetchTodaySteps]);
+  }, [hydrated, checkConnection]);
 
   const handlePressSteps = () => {
     router.push("/stats/steps");
@@ -85,7 +83,7 @@ export function SmallStatRow() {
             ) : (
               <View style={styles.content}>
                 <View style={styles.iconWrapper}>
-                  <MaterialCommunityIcons name="google-fit" size={20} color={colors.primary} />
+                  <Ionicons name="footsteps" size={20} color={colors.primary} />
                 </View>
                 <Text style={styles.hint}>{t.home.connectHealth}</Text>
               </View>

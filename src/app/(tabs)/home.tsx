@@ -14,9 +14,12 @@ import { SmallStatRow } from "@/components/dashboard/SmallStatRow";
 import { WaterIntakeCard } from "@/components/dashboard/WaterIntakeCard";
 import { WeightChartCard } from "@/components/dashboard/WeightChartCard";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useStepsStore } from "@/store/statsStore";
+import { getTodayDateISO } from "@/utils/date";
 
 export default function HomeScreen() {
   const { summary, rawLogs, exercises, fetchDiary, selectedDate } = useDiaryStore();
+  const { todaySteps, isConnected, stepRecords } = useStepsStore();
 
   useEffect(() => {
     fetchDiary(selectedDate);
@@ -24,7 +27,14 @@ export default function HomeScreen() {
 
   const goal = Math.round(summary?.targetCalories ?? 2000);
   const consumed = Math.round(summary?.consumedCalories ?? 0);
-  const burned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
+  
+  // Calculate exercise calories and step calories for the selected date
+  const exerciseBurned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
+  const todayStr = getTodayDateISO();
+  const stepsForSelectedDate = selectedDate === todayStr ? todaySteps : ((stepRecords || {})[selectedDate] || 0);
+  const stepBurned = isConnected ? Math.round(stepsForSelectedDate * 0.04) : 0;
+
+  const burned = exerciseBurned + stepBurned;
   const remaining = Math.round(Math.max(goal - consumed + burned, 0));
   const percentage = Math.round(Math.min((consumed / goal) * 100, 100));
 
