@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userService } from "../../services/userService";
-import { OnboardingDraft, UserProfile } from "@/types/contracts";
+import { OnboardingDraft } from "@/types/contracts";
 
 export const USER_QUERY_KEYS = {
   all: ["user"] as const,
@@ -25,27 +25,3 @@ export const useOnboardUser = () => {
     },
   });
 };
-
-export const useUpdateProfile = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: Partial<UserProfile>) => userService.updateProfile(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.info() });
-    },
-  });
-};
-
-export const useUpdateGoal = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: any) => userService.updateGoal(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.info() });
-    },
-  });
-};
-
-
