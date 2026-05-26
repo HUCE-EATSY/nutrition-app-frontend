@@ -15,10 +15,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export default function ExerciseStatsScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
@@ -52,7 +53,7 @@ export default function ExerciseStatsScreen() {
       }
     }
     loadStats();
-  }, [period]);
+  }, [period, t]);
 
   // Tính toán thống kê
   const totalCalories = logs.reduce((sum, log) => sum + log.caloriesBurned, 0);

@@ -4,7 +4,7 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
 import { HomeHeader, DateScroller } from "@/components/dashboard/HomeHeader";
@@ -19,6 +19,7 @@ import { useStepsStore } from "@/store/statsStore";
 import { getTodayDateISO } from "@/utils/date";
 
 export default function HomeScreen() {
+  const t = useTranslation();
   const { summary, rawLogs, exercises, fetchDiary, selectedDate } = useDiaryStore();
   const { todaySteps, isConnected, stepRecords } = useStepsStore();
   const colors = useAppColors();

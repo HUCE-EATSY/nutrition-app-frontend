@@ -1,7 +1,7 @@
 import React from 'react';
 import { colors } from "@/constants";
 import { View, Text, StyleSheet } from 'react-native';
-import { t } from '@/constants/i18n';
+import { useTranslation } from "@/constants/i18n";
 
 interface EnergyMetricsCardProps {
   bmr: number;
@@ -10,6 +10,7 @@ interface EnergyMetricsCardProps {
 }
 
 export function EnergyMetricsCard({ bmr, tdee, addedCalories }: EnergyMetricsCardProps) {
+  const t = useTranslation();
 
   return (
     <View style={styles.card}>

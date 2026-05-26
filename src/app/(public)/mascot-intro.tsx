@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { WelcomeHeroIllustration } from "@/components/WelcomeHeroIllustration";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { colors, radius, spacing, typography } from "@/constants";
@@ -21,6 +21,7 @@ const FLOATING_POSITIONS: ViewStyle[] = [
 ];
 
 export default function MascotIntroScreen() {
+  const t = useTranslation();
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const { width, isNarrowWidth, isShortHeight } = useResponsiveLayout();

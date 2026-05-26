@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Pressable } from "react-nativ
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography, radius } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
@@ -11,6 +11,7 @@ import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
 
 export function WaterIntakeCard() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   

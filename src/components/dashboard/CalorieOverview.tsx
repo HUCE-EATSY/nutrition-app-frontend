@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Pressable } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography, radius } from "@/constants";
 
@@ -16,6 +16,7 @@ interface CalorieOverviewProps {
 }
 
 export function CalorieOverview({ remaining, goal, consumed, burned, percentage }: CalorieOverviewProps) {
+  const t = useTranslation();
   const router = useRouter();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);

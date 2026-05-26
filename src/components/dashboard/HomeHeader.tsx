@@ -5,10 +5,11 @@ import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 
 
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export function HomeHeader() {
+  const t = useTranslation();
   const router = useRouter();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);

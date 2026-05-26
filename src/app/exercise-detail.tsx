@@ -18,9 +18,10 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 import { useSettingsStore } from "@/store/settingsStore";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 export default function ExerciseDetailScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
@@ -49,7 +50,7 @@ export default function ExerciseDetailScreen() {
       }
     }
     loadExercise();
-  }, [exerciseId]);
+  }, [exerciseId, t]);
 
   const durationNum = parseFloat(duration) || 0;
   const met = exercise?.metValue || 0;

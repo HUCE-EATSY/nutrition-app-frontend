@@ -12,7 +12,7 @@ import {
 import { Portal, Dialog, Button, RadioButton } from "react-native-paper";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAuthStore } from "@/store/authStore";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
@@ -23,6 +23,7 @@ import { radius, spacing, typography } from "@/constants";
 import { setStringAsync } from "expo-clipboard";
 
 export default function SettingsScreen() {
+  const t = useTranslation();
   const { userInfo } = useAuthStore();
   const { data: serverUserInfo } = useGetUserInfo();
   const resetOnboarding = useOnboardingStore((state) => state.reset);

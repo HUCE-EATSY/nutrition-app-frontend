@@ -5,7 +5,7 @@ import { Alert, StyleSheet, Text, View } from "react-native";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { LoadingStepRow } from "@/components/onboarding/LoadingStepRow";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { testimonials } from "@/constants/mocks/data";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
@@ -13,6 +13,7 @@ import { trackEvent } from "@/utils/analytics";
 import { useOnboardUser } from "@/hooks/queries/useUserQueries";
 
 export default function CalculatingPlanScreen() {
+  const t = useTranslation();
   const labels = t.onboarding.calculating.labels;
   const [stage, setStage] = useState(0);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);

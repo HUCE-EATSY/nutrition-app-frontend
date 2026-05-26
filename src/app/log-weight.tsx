@@ -15,9 +15,10 @@ import { getTodayDateISO } from "@/utils/date";
 import { useWeightStore } from "@/store/statsStore";
 import { useWeightStats } from "@/hooks/stats/useWeightStats";
 import { useSettingsStore } from "@/store/settingsStore";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 export default function LogWeightScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();

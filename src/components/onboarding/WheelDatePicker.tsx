@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { radius } from "@/constants";
 
 import { RollingWheelPicker } from "./RollingWheelPicker";
@@ -25,6 +25,7 @@ const VISIBLE_ITEMS = 5;
 const HIGHLIGHT_TOP = Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT;
 
 export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }: WheelDatePickerProps) {
+  const t = useTranslation();
   // 2. Dùng useMemo để tránh khởi tạo lại mảng mỗi lần render
   const years = useMemo(() => {
     return Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);

@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,13 +16,14 @@ import { GradientButton } from "@/components/buttons/GradientButton";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { SegmentedPillTabs } from "@/components/meal/SegmentedPillTabs";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography, radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 
 export default function MealPlanScreen() {
+  const t = useTranslation();
   const [activeTab, setActiveTab] = useState("explore");
   const { isNarrowWidth } = useResponsiveLayout();
   const colors = useAppColors();
@@ -34,7 +36,7 @@ export default function MealPlanScreen() {
 
   // Foods state
   const { data: foods = [], isLoading } = useFoodList();
-  
+
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -47,18 +49,18 @@ export default function MealPlanScreen() {
 
   // Số món hiển thị mặc định
   const DEFAULT_DISPLAY_COUNT = 4;
-  
+
   // Danh sách món để hiển thị (giới hạn hoặc full)
-  const displayedFoods = showAllFoods 
-    ? filteredFoods 
+  const displayedFoods = showAllFoods
+    ? filteredFoods
     : filteredFoods.slice(0, DEFAULT_DISPLAY_COUNT);
-  
+
   const hasMoreFoods = filteredFoods.length > DEFAULT_DISPLAY_COUNT;
 
   // Filter foods khi search hoặc category thay đổi
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    
+
     debounceRef.current = setTimeout(() => {
       let result = foods;
 
@@ -120,7 +122,7 @@ export default function MealPlanScreen() {
             </Pressable>
           )}
         </View>
-        
+
         {/* Category filters */}
         <View style={styles.categoryRow}>
           <Pressable
@@ -280,8 +282,8 @@ export default function MealPlanScreen() {
 
         {renderTabContent()}
 
-        <GradientButton label={t.mealPlan.createCta} onPress={() => undefined} />
-        <GradientButton disabled label={t.mealPlan.savedCta} onPress={() => undefined} />
+        <GradientButton label={t.mealPlan.createCta} onPress={() => Alert.alert(t.common.confirm, t.common.featureUnderDev)} />
+        <GradientButton disabled label={t.mealPlan.savedCta} onPress={() => Alert.alert(t.common.confirm, t.common.featureUnderDev)} />
       </View>
     </SafeScreen>
   );

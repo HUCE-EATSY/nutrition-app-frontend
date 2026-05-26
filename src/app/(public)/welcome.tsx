@@ -9,11 +9,12 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { trackEvent } from "@/utils/analytics";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 const BRAND = "Nutrition";
 
 export default function WelcomeScreen() {
+  const t = useTranslation();
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const { width, isNarrowWidth, isShortHeight } = useResponsiveLayout();
   const isCompactLayout = isNarrowWidth || isShortHeight;

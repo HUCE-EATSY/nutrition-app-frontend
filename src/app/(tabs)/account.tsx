@@ -7,7 +7,7 @@ import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { ProgressRingChart } from "@/components/charts/ProgressRingChart";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
@@ -22,6 +22,7 @@ import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG 
 import { SectionHeader, MacroItem, StatIconButton, SocialButton } from "@/components/account/AccountComponents";
 
 export default function AccountScreen() {
+  const t = useTranslation();
   const queryClient = useQueryClient();
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();

@@ -4,12 +4,13 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View, Switch } from "react-native";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useAppColors } from "@/hooks/useAppColors";
 import { radius, spacing, typography } from "@/constants";
 
 export default function PrivacyScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
 

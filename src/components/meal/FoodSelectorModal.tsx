@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { FoodDetailModal } from "./FoodDetailModal";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 interface FoodSelectorModalProps {
   visible: boolean;
@@ -34,6 +34,7 @@ const categories = [
 ];
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
+  const t = useTranslation();
   const { data: foods = [], isLoading } = useFoodList();
 
   const getCategoryUiLabel = (dbCategoryName: string) => {

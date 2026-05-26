@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { radius, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 
 type StreakChallengeSectionProps = {
@@ -13,6 +13,7 @@ type StreakChallengeSectionProps = {
 };
 
 export function StreakChallengeSection({ progress, onPressSeeMore }: StreakChallengeSectionProps) {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const pct = `${Math.max(0, Math.min(1, progress)) * 100}%` as const;

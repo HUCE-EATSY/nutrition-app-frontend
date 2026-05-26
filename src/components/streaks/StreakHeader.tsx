@@ -3,7 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { radius, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 
 type StreakHeaderProps = {
@@ -12,6 +12,7 @@ type StreakHeaderProps = {
 };
 
 export function StreakHeader({ streakDays, onBack }: StreakHeaderProps) {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
 

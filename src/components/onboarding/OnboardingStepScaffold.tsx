@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import { BottomCtaBar } from "@/components/layout/BottomCtaBar";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
@@ -37,6 +37,7 @@ export function OnboardingStepScaffold({
   contentStyle,
   hideBottomCta = false,
 }: OnboardingStepScaffoldProps) {
+  useTranslation();
   const content = (
     <>
       <MascotQuestionBubble text={question} />

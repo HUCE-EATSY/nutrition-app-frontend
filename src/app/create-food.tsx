@@ -23,9 +23,10 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { foodService } from "@/services/foodService";
 import { Toast } from "@/components/common/Toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 export default function CreateFoodScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const queryClient = useQueryClient();

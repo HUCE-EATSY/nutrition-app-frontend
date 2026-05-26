@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, radius } from '@/constants';
 
 import { useSettingsStore } from '@/store/settingsStore';
-import { t } from '@/constants/i18n';
+import { useTranslation } from "@/constants/i18n";
 
 // Cấu hình Locale tiếng Việt cho Lịch
 LocaleConfig.locales['vi'] = {
@@ -37,6 +37,7 @@ LocaleConfig.locales['en'] = {
 LocaleConfig.defaultLocale = 'vi';
 
 export default function CalendarPickerModal() {
+  const t = useTranslation();
   const language = useSettingsStore((state) => state.language);
   const theme = useSettingsStore((state) => state.theme);
   
@@ -81,7 +82,7 @@ export default function CalendarPickerModal() {
       return `Today, ${monthNamesEng[today.getMonth()]} ${today.getDate()}`;
     }
     return `${t.common.today}, ${today.getDate()} ${t.stats.periods.month} ${(today.getMonth() + 1).toString().padStart(2, '0')}`;
-  }, [language]);
+  }, [language, t]);
 
   const Container = Platform.OS === 'ios' ? BlurView : View;
   const containerProps = Platform.OS === 'ios' 

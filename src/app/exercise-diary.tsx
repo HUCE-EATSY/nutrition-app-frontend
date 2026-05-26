@@ -17,10 +17,11 @@ import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
 import { getTodayDateISO, formatShortDate } from "@/utils/date";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export default function ExerciseDiaryScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
@@ -46,7 +47,7 @@ export default function ExerciseDiaryScreen() {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, t]);
 
   useEffect(() => {
     loadLogs();

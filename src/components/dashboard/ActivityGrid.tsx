@@ -5,12 +5,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { ACTIVITIES, ActivityId } from "@/constants/activities";
 import { getExerciseNameFromActivity } from "@/constants/exerciseMapping";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 
 export function ActivityGrid() {
+  const t = useTranslation();
   const router = useRouter();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);

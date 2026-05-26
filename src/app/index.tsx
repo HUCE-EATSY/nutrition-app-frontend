@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
@@ -9,6 +9,7 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { getDraftResumePath, getPublicResumePath } from "@/utils/onboarding";
 
 export default function IndexScreen() {
+  const t = useTranslation();
   const onboardingHydrated = useOnboardingStore((state) => state.hydrated);
   const authHydrated = useAuthStore((state) => state.hydrated);
   const settingsHydrated = useSettingsStore((state) => state.hydrated);

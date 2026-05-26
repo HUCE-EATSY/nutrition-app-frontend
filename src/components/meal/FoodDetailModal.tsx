@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 
 /** Alias để khớp kiểu dữ liệu */
@@ -96,6 +96,7 @@ export function FoodDetailModal({
   submitButtonText,
   headerTitle,
 }: FoodDetailModalProps) {
+  const t = useTranslation();
   const language = useSettingsStore((state) => state.language);
   const [customServings, setCustomServings] = useState("1");
   const [showNutritionDetail, setShowNutritionDetail] = useState(false);

@@ -24,12 +24,13 @@ import {
   ActivityIntensity,
 } from "@/constants/activities";
 import { getMetValue } from "@/utils/activities";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 // Cân nặng mặc định nếu chưa có profile (kg)
 const DEFAULT_WEIGHT_KG = 65;
 
 export default function AddExerciseScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const { date } = useLocalSearchParams<{ date: string }>();

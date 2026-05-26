@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, radius } from '@/constants';
 import { GUIDES_VI, GUIDES_EN, GuideType } from '@/constants/guides';
 import { useSettingsStore } from '@/store/settingsStore';
-import { t } from '@/constants/i18n';
+import { useTranslation } from "@/constants/i18n";
 
 // Helper function to render text with **bold** formatting
 const renderFormattedText = (text: string) => {
@@ -26,6 +26,7 @@ const renderFormattedText = (text: string) => {
 };
 
 export default function GuideModalScreen() {
+  const t = useTranslation();
   const { type } = useLocalSearchParams<{ type: string }>();
   const insets = useSafeAreaInsets();
   

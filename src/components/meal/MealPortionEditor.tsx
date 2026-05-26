@@ -1,7 +1,7 @@
 import { View, Text, Pressable, TextInput, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 interface Nutrition {
   calories: number;
@@ -33,6 +33,7 @@ export function MealPortionEditor({
   selectedHour,
   setSelectedHour,
 }: MealPortionEditorProps) {
+  const t = useTranslation();
   const gramNum = parseFloat(grams) || 0;
 
   return (

@@ -17,7 +17,7 @@ import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
 import { spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useAppColors } from "@/hooks/useAppColors";
@@ -34,6 +34,7 @@ type MacroInfo = {
 };
 
 export default function DiaryTimelineScreen() {
+  const t = useTranslation();
   const { horizontalPadding } = useResponsiveLayout();
   const currentHour = new Date().getHours();
   const colors = useAppColors();

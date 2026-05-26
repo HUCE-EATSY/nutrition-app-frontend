@@ -7,9 +7,10 @@ import { TargetListItem } from '../../../components/account/targets/TargetListIt
 
 import { ProgressRingChart } from '../../../components/charts/ProgressRingChart';
 import { EnergyMetricsCard } from '../../../components/account/targets/EnergyMetricsCard';
-import { t } from '@/constants/i18n';
+import { useTranslation } from "@/constants/i18n";
 
 export default function TargetCustomizationScreen() {
+  const t = useTranslation();
   const router = useRouter();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);

@@ -12,13 +12,14 @@ import {
   getOnboardingMeta,
   getPreviousOnboardingPath,
 } from "@/utils/onboarding";
-import { getGoalTypeLabel, t } from "@/constants/i18n";
+import { getGoalTypeLabel, useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { getAgeFromBirthDate } from "@/utils/date";
 
 export default function ReviewSummaryScreen() {
+  const t = useTranslation();
   const draft = useOnboardingStore((state) => state.draft);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
   const meta = getOnboardingMeta("ReviewSummary");

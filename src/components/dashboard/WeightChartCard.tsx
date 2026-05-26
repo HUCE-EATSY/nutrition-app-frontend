@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "rea
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography, radius, layout } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
@@ -28,6 +28,7 @@ function formatLogDate(isoString?: string, language?: string) {
 }
 
 export function WeightChartCard() {
+  const t = useTranslation();
   const router = useRouter();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);

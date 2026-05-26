@@ -5,7 +5,7 @@ import * as z from "zod";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { WheelDatePicker } from "@/components/onboarding/WheelDatePicker";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import { createBirthDateISO, getDateParts, getAgeFromBirthDate } from "@/utils/date";
 
 const fallbackDate = { day: 15, month: 8, year: 2000 };
@@ -24,6 +24,7 @@ const birthDateSchema = z.object({
 });
 
 export default function BirthDateScreen() {
+  const t = useTranslation();
   const { control, error, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
     "BirthDate",
     "birthDateISO",

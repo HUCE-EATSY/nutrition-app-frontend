@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { radius, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 
 type WeeklyProgressCardProps = {
@@ -12,6 +12,7 @@ type WeeklyProgressCardProps = {
 };
 
 export function WeeklyProgressCard({ daysOfWeek, weeklyProgress }: WeeklyProgressCardProps) {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
 

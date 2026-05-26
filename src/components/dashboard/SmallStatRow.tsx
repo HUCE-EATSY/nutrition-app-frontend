@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, AppState } from "react-native
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
@@ -12,6 +12,7 @@ import { useStepsStore } from "@/store/statsStore";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export function SmallStatRow() {
+  const t = useTranslation();
   const router = useRouter();
   const language = useSettingsStore((state) => state.language);
   const colors = useAppColors();

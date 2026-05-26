@@ -8,7 +8,7 @@ import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPi
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { BmiCard } from "@/components/onboarding/BmiCard";
 import { colors, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
@@ -46,6 +46,7 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
 };
 
 export default function TargetWeightScreen() {
+  const t = useTranslation();
   const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   const goalType = useOnboardingStore((state) => state.draft.goalType);

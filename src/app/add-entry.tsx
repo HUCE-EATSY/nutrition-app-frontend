@@ -20,7 +20,7 @@ import { useDiaryStore } from "@/store/diaryStore";
 import { useFoodList, useFoodDetails, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { calcNutrition } from "@/utils/nutrition";
 import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +33,7 @@ function getMealTypeFromHour(hour: number): number {
 }
 
 export default function AddEntryScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();

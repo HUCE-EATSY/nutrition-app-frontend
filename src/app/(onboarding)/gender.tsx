@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { genderOptions } from "@/constants/onboarding";
 
 const genderSchema = z.object({
@@ -9,6 +9,7 @@ const genderSchema = z.object({
 });
 
 export default function GenderScreen() {
+  const t = useTranslation();
   return (
     <OnboardingOptionSelection
       stepName="Gender"

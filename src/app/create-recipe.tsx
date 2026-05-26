@@ -24,7 +24,7 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { foodService, FoodItemDto } from "@/services/foodService";
 import { Toast } from "@/components/common/Toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 interface RecipeComponentState {
   childFoodId: string;
@@ -42,6 +42,7 @@ interface RecipeComponentState {
 }
 
 export default function CreateRecipeScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const queryClient = useQueryClient();

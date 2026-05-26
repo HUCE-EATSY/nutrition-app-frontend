@@ -7,7 +7,7 @@ import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { MacroDonutChart } from "@/components/dashboard/MacroDonutChart";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { NutritionPlan } from "@/types/contracts";
 import { colors, spacing, typography } from "@/constants";
@@ -15,6 +15,7 @@ import { useResponsiveLayout } from "@/constants/responsive";
 import { formatDateForHero } from "@/utils/date";
 
 export default function PlanResultScreen() {
+  const t = useTranslation();
   const draft = useOnboardingStore((state) => state.draft);
   const serverPlan = useOnboardingStore((state) => state.serverPlan);
   const completeOnboarding = useOnboardingStore((state) => state.completeOnboarding);

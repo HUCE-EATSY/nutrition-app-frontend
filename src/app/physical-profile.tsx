@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { gradients, radius, spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -41,6 +41,7 @@ function calcEstimatedDate(goalWeightKg: number, currentWeightKg: number, weekly
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function PhysicalProfileScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();

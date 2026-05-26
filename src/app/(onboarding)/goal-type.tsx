@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { goalOptions } from "@/constants/onboarding";
 
 const goalTypeSchema = z.object({
@@ -9,6 +9,7 @@ const goalTypeSchema = z.object({
 });
 
 export default function GoalTypeScreen() {
+  const t = useTranslation();
   return (
     <OnboardingOptionSelection
       stepName="GoalType"

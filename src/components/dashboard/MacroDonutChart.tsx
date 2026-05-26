@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Pressable } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 
@@ -54,6 +54,7 @@ export function MacroDonutChart({
   carbGram,
   fatGram,
 }: MacroDonutChartProps) {
+  const t = useTranslation();
   const router = useRouter();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);

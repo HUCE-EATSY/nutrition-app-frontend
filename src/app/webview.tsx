@@ -7,7 +7,7 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useAppColors } from "@/hooks/useAppColors";
 import { useSettingsStore } from "@/store/settingsStore";
 import { radius, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 
 interface DocSection {
   title: string;
@@ -107,6 +107,7 @@ const privacyEn: DocSection[] = [
 ];
 
 export default function WebviewPlaceholderScreen() {
+  const t = useTranslation();
   const params = useLocalSearchParams<{ title?: string; url?: string; type?: "terms" | "privacy" }>();
   const colors = useAppColors();
   const language = useSettingsStore((state) => state.language);

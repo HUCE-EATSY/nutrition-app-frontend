@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
 import { useDiaryStore } from "@/store/diaryStore";
@@ -17,6 +17,7 @@ interface MacroItemProps {
 }
 
 function ProgressItem({ label, current, target, color, icon, type }: MacroItemProps) {
+  const t = useTranslation();
   const percentage = Math.min((current / target) * 100, 100);
   const router = useRouter();
   const colors = useAppColors();

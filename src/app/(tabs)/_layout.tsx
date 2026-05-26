@@ -4,7 +4,7 @@ import { Tabs, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 import { radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
@@ -14,6 +14,7 @@ function TabIcon({ color, name }: { color: string; name: keyof typeof Ionicons.g
 }
 
 export default function TabLayout() {
+  const t = useTranslation();
   const insets = useSafeAreaInsets();
   const { isCompactWidth } = useResponsiveLayout();
   const colors = useAppColors();

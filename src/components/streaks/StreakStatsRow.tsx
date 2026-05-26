@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
 
 type StreakStatsRowProps = {
@@ -13,6 +13,7 @@ type StreakStatsRowProps = {
 };
 
 export function StreakStatsRow({ currentStreak, shieldCount }: StreakStatsRowProps) {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
