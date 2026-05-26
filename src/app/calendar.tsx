@@ -8,6 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing, typography, radius } from '@/constants';
 
+import { useSettingsStore } from '@/store/settingsStore';
+import { t } from '@/constants/i18n';
+
 // Cấu hình Locale tiếng Việt cho Lịch
 LocaleConfig.locales['vi'] = {
   monthNames: [
@@ -19,9 +22,28 @@ LocaleConfig.locales['vi'] = {
   dayNamesShort: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
   today: 'Hôm nay'
 };
+
+LocaleConfig.locales['en'] = {
+  monthNames: [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ],
+  monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  dayNamesShort: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+  today: 'Today'
+};
+
 LocaleConfig.defaultLocale = 'vi';
 
 export default function CalendarPickerModal() {
+  const language = useSettingsStore((state) => state.language);
+  const theme = useSettingsStore((state) => state.theme);
+  
+  React.useEffect(() => {
+    LocaleConfig.defaultLocale = language;
+  }, [language]);
+
   const insets = useSafeAreaInsets();
   
   // Lấy ngày hiện tại format YYYY-MM-DD
@@ -48,13 +70,23 @@ export default function CalendarPickerModal() {
     }, 300);
   };
 
-  // Format header title: "Hôm nay, 29 Tháng 04"
-  const formattedHeader = `Hôm nay, ${today.getDate()} Tháng ${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+  // Format header title: "Hôm nay, 29 Tháng 04" / "Today, April 29"
+  const formattedHeader = React.useMemo(() => {
+    const today = new Date();
+    if (language === 'en') {
+      const monthNamesEng = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      return `Today, ${monthNamesEng[today.getMonth()]} ${today.getDate()}`;
+    }
+    return `${t.common.today}, ${today.getDate()} ${t.stats.periods.month} ${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+  }, [language]);
 
   const Container = Platform.OS === 'ios' ? BlurView : View;
   const containerProps = Platform.OS === 'ios' 
-    ? { intensity: 40, tint: "dark", style: styles.container } as any
-    : { style: [styles.container, { backgroundColor: "rgba(18, 16, 25, 0.95)" }] } as any;
+    ? { intensity: 40, tint: theme === "light" ? "light" : "dark", style: styles.container } as any
+    : { style: [styles.container, { backgroundColor: theme === "light" ? "rgba(244, 245, 247, 0.95)" : "rgba(18, 16, 25, 0.95)" }] } as any;
 
   return (
     <Container {...containerProps}>
@@ -68,9 +100,10 @@ export default function CalendarPickerModal() {
             <Ionicons name="calendar" size={24} color={colors.textPrimary} />
           </Pressable>
         </View>
-
+ 
         {/* Lịch */}
         <Calendar
+          key={`${language}-${theme}`}
           current={selected}
           onDayPress={handleDayPress}
           theme={{
@@ -81,7 +114,7 @@ export default function CalendarPickerModal() {
             selectedDayTextColor: colors.textPrimary,
             todayTextColor: colors.primary,
             dayTextColor: colors.textPrimary,
-            textDisabledColor: "rgba(255,255,255,0.1)",
+            textDisabledColor: theme === "light" ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.1)",
             dotColor: colors.primary,
             selectedDotColor: colors.textPrimary,
             arrowColor: colors.textPrimary,

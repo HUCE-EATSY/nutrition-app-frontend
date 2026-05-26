@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,11 +13,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
 import { exerciseService, Exercise } from "@/services/exerciseService";
+import { useSettingsStore } from "@/store/settingsStore";
+import { t } from "@/constants/i18n";
 
 export default function ExerciseDetailScreen() {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const language = useSettingsStore((state) => state.language);
   const { exerciseId, date } = useLocalSearchParams<{ exerciseId: string; date?: string }>();
   const targetDate = date ?? getTodayDateISO();
 
@@ -36,7 +42,7 @@ export default function ExerciseDetailScreen() {
         setExercise(data);
       } catch (error: any) {
         console.error("Load exercise error:", error);
-        Alert.alert("Lỗi", "Không thể tải thông tin bài tập");
+        Alert.alert(t.common.error, t.exercise.loadDetailError);
         router.back();
       } finally {
         setLoading(false);
@@ -58,7 +64,7 @@ export default function ExerciseDetailScreen() {
     if (!exercise) return;
     
     if (durationNum <= 0 || durationNum > 600) {
-      Alert.alert("Lỗi", "Thời gian phải từ 1 đến 600 phút.");
+      Alert.alert(t.common.error, t.exercise.durationRangeError);
       return;
     }
 
@@ -72,12 +78,12 @@ export default function ExerciseDetailScreen() {
         notes: notes.trim() || undefined,
       });
       
-      Alert.alert("Thành công", "Đã ghi nhật ký tập luyện!", [
+      Alert.alert(t.common.success, t.exercise.saveActivitySuccess, [
         { text: "OK", onPress: () => router.replace("/exercise-diary") }
       ]);
     } catch (error: any) {
       console.error("Save exercise error:", error);
-      Alert.alert("Thất bại", error?.message || "Không thể ghi hoạt động");
+      Alert.alert(t.common.error, error?.message || t.exercise.saveActivityError);
     } finally {
       setIsSaving(false);
     }
@@ -101,26 +107,26 @@ export default function ExerciseDetailScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>{exercise.nameVi}</Text>
+        <Text style={styles.headerTitle}>{language === "en" ? exercise.nameEn : exercise.nameVi}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>Bài tập</Text>
-          <Text style={styles.infoValue}>{exercise.nameVi}</Text>
-          <Text style={styles.infoSubtext}>{exercise.nameEn}</Text>
+          <Text style={styles.infoLabel}>{t.exercise.activityType}</Text>
+          <Text style={styles.infoValue}>{language === "en" ? exercise.nameEn : exercise.nameVi}</Text>
+          <Text style={styles.infoSubtext}>{language === "en" ? exercise.nameVi : exercise.nameEn}</Text>
           {exercise.description && (
             <Text style={styles.infoDescription}>{exercise.description}</Text>
           )}
         </View>
 
-        <Text style={styles.sectionLabel}>Cường độ</Text>
+        <Text style={styles.sectionLabel}>{t.exercise.intensityLabel}</Text>
         <View style={styles.intensityRow}>
           {[
-            { value: 1 as const, label: "Nhẹ", icon: "walk-outline" },
-            { value: 2 as const, label: "Trung bình", icon: "fitness-outline" },
-            { value: 3 as const, label: "Nặng", icon: "barbell-outline" },
+            { value: 1 as const, label: t.exercise.intensityLevels.light, icon: "walk-outline" },
+            { value: 2 as const, label: t.exercise.intensityLevels.moderate, icon: "fitness-outline" },
+            { value: 3 as const, label: t.exercise.intensityLevels.heavy, icon: "barbell-outline" },
           ].map((level) => (
             <Pressable
               key={level.value}
@@ -147,7 +153,7 @@ export default function ExerciseDetailScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionLabel}>Thời gian (phút)</Text>
+        <Text style={styles.sectionLabel}>{t.exercise.timeMinutes}</Text>
         <View style={styles.durationRow}>
           <Pressable
             onPress={() => setDuration((d) => String(Math.max(1, parseFloat(d) - 5)))}
@@ -169,12 +175,12 @@ export default function ExerciseDetailScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.sectionLabel}>Ghi chú (tùy chọn)</Text>
+        <Text style={styles.sectionLabel}>{t.exercise.notesLabel}</Text>
         <TextInput
           multiline
           numberOfLines={3}
           onChangeText={setNotes}
-          placeholder="Ví dụ: Chạy ở công viên, cảm thấy tốt..."
+          placeholder={t.exercise.notesPlaceholder}
           placeholderTextColor={colors.textMuted}
           style={styles.notesInput}
           value={notes}
@@ -186,7 +192,7 @@ export default function ExerciseDetailScreen() {
             <View>
               <Text style={styles.burnKcal}>{caloriesBurned} kcal</Text>
               <Text style={styles.burnNote}>
-                {durationNum} phút · {intensity === 1 ? "Nhẹ" : intensity === 3 ? "Nặng" : "Trung bình"}
+                {t.exercise.burnSummary(durationNum, caloriesBurned)}
               </Text>
             </View>
           </View>
@@ -202,7 +208,7 @@ export default function ExerciseDetailScreen() {
           ) : (
             <>
               <Ionicons color="#fff" name="checkmark-circle-outline" size={20} />
-              <Text style={styles.saveBtnText}>Ghi hoạt động</Text>
+              <Text style={styles.saveBtnText}>{t.exercise.logActivity}</Text>
             </>
           )}
         </Pressable>
@@ -211,7 +217,7 @@ export default function ExerciseDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgBase },
   loadingContainer: {
     flex: 1,

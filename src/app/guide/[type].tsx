@@ -6,7 +6,9 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing, typography, radius } from '@/constants';
-import { GUIDES, GuideType } from '@/constants/guides';
+import { GUIDES_VI, GUIDES_EN, GuideType } from '@/constants/guides';
+import { useSettingsStore } from '@/store/settingsStore';
+import { t } from '@/constants/i18n';
 
 // Helper function to render text with **bold** formatting
 const renderFormattedText = (text: string) => {
@@ -27,6 +29,10 @@ export default function GuideModalScreen() {
   const { type } = useLocalSearchParams<{ type: string }>();
   const insets = useSafeAreaInsets();
   
+  const language = useSettingsStore(state => state.language);
+  const theme = useSettingsStore(state => state.theme);
+  const GUIDES = language === 'en' ? GUIDES_EN : GUIDES_VI;
+
   // Default fallback if type is invalid
   const guideType = (type && GUIDES[type as GuideType]) ? (type as GuideType) : 'goal';
   const content = GUIDES[guideType];
@@ -41,8 +47,8 @@ export default function GuideModalScreen() {
 
   const Container = Platform.OS === 'ios' ? BlurView : View;
   const containerProps = Platform.OS === 'ios' 
-    ? { intensity: 40, tint: "dark", style: styles.container } as any
-    : { style: [styles.container, { backgroundColor: "rgba(18, 16, 25, 0.95)" }] } as any;
+    ? { intensity: 40, tint: theme === "light" ? "light" : "dark", style: styles.container } as any
+    : { style: [styles.container, { backgroundColor: theme === "light" ? "rgba(244, 245, 247, 0.95)" : "rgba(18, 16, 25, 0.95)" }] } as any;
 
   return (
     <Container {...containerProps}>
@@ -106,7 +112,7 @@ export default function GuideModalScreen() {
 
         <View style={styles.footerAction}>
           <Pressable style={styles.primaryBtn} onPress={handleClose}>
-            <Text style={styles.primaryBtnText}>Đã hiểu</Text>
+            <Text style={styles.primaryBtnText}>{t.common.gotIt}</Text>
           </Pressable>
         </View>
       </View>
@@ -200,7 +206,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#3D3450",
+    backgroundColor: colors.borderSoft,
     marginBottom: spacing.xl,
   },
   articleCard: {

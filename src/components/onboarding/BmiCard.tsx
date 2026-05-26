@@ -29,7 +29,7 @@ export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
       ? t.nutrition.bmiDescriptions[bmiStatus]
       : getTargetBmiDesc(bmiStatus);
 
-  const titleText = type === "current" ? "BMI của bạn: " : "BMI mục tiêu: ";
+  const titleText = type === "current" ? t.nutrition.yourBmi : t.nutrition.targetBmi;
 
   return (
     <View style={styles.bmiCard}>

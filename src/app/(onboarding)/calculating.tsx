@@ -12,9 +12,8 @@ import { colors, spacing, typography } from "@/constants";
 import { trackEvent } from "@/utils/analytics";
 import { useOnboardUser } from "@/hooks/queries/useUserQueries";
 
-const labels = t.onboarding.calculating.labels;
-
 export default function CalculatingPlanScreen() {
+  const labels = t.onboarding.calculating.labels;
   const [stage, setStage] = useState(0);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
   const setServerPlan = useOnboardingStore((state) => state.setServerPlan);
@@ -35,8 +34,8 @@ export default function CalculatingPlanScreen() {
 
   const handleError = (error: unknown) => {
     console.error("Onboarding API failed:", error);
-    Alert.alert("Lỗi", "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.", [
-      { text: "Quay lại", onPress: () => router.back() }
+    Alert.alert(t.common.error, t.onboarding.calculating.error, [
+      { text: t.common.back, onPress: () => router.back() }
     ]);
   };
 

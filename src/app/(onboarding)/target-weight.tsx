@@ -23,8 +23,8 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
   return z.object({
     targetWeightKg: z
       .number()
-      .min(35, "Cân nặng tối thiểu là 35kg")
-      .max(160, "Cân nặng tối đa là 160kg")
+      .min(35, t.validators.minWeight)
+      .max(160, t.validators.maxWeight)
       .refine(
         (val) => {
           if (!goalType) return false;
@@ -110,7 +110,7 @@ export default function TargetWeightScreen() {
         {/* References and continue */}
         <View style={styles.bottomSection}>
           <Pressable onPress={showBmiReferencesAlert} style={styles.refButton}>
-            <Text style={styles.refText}>Nguồn tham khảo</Text>
+            <Text style={styles.refText}>{t.nutrition.referenceSource}</Text>
           </Pressable>
 
           <GradientButton

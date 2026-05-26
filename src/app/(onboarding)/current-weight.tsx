@@ -76,7 +76,7 @@ export default function CurrentWeightScreen() {
         {/* References and continue */}
         <View style={styles.bottomSection}>
           <Pressable onPress={showBmiReferencesAlert} style={styles.refButton}>
-            <Text style={styles.refText}>Nguồn tham khảo</Text>
+            <Text style={styles.refText}>{t.nutrition.referenceSource}</Text>
           </Pressable>
 
           <GradientButton

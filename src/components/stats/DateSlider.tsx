@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/constants";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface DateItem {
@@ -48,24 +49,24 @@ const styles = StyleSheet.create({
     width: 48,
     height: 64,
     borderRadius: 12,
-    backgroundColor: "#1E1B2E",
+    backgroundColor: colors.bgElevated,
     alignItems: "center",
     justifyContent: "center",
   },
   activeDateBox: {
-    backgroundColor: "#8B5CF6",
+    backgroundColor: colors.primary,
   },
   dayText: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 12,
     marginBottom: 4,
   },
   dateText: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "bold",
   },
   activeText: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
   },
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAppColors } from "@/hooks/useAppColors";
 import {
   View,
   Text,
@@ -54,6 +55,8 @@ const getPeriodRange = (period: StepsPeriod, offset: number) => {
 };
 
 export default function StepsStatsScreen() {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
   const {
     activeTabLabel,
@@ -168,7 +171,7 @@ export default function StepsStatsScreen() {
           
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+              <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Bước chân</Text>
             <View style={{ width: 40 }} />
@@ -176,7 +179,7 @@ export default function StepsStatsScreen() {
 
           <View style={styles.connectContainer}>
             <View style={styles.iconCircleLarge}>
-              <Ionicons name="footsteps-outline" size={48} color="#22C55E" />
+              <Ionicons name="footsteps-outline" size={48} color={colors.success} />
             </View>
             <Text style={styles.connectTitle}>Tự động đếm bước chân</Text>
             <Text style={styles.connectDesc}>
@@ -289,7 +292,7 @@ export default function StepsStatsScreen() {
 
         {/* Goal Met Success Rate Pill */}
         <View style={styles.goalSuccessPill}>
-          <Ionicons name="checkbox" size={16} color="#22C55E" style={{ marginRight: 6 }} />
+          <Ionicons name="checkbox" size={16} color={colors.success} style={{ marginRight: 6 }} />
           <Text style={styles.goalSuccessText}>
             TB số ngày đạt mục tiêu: {metDaysCount}/{totalDaysInMonth} ngày
           </Text>
@@ -324,7 +327,7 @@ export default function StepsStatsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+            <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Bước chân</Text>
           <View style={{ width: 40 }} />
@@ -350,11 +353,11 @@ export default function StepsStatsScreen() {
 
           {/* Icon Circle or Circular progress indicator */}
           <View style={styles.todayCardRight}>
-            <View style={[styles.glowCircle, { borderColor: todaySteps >= stepGoal ? "#22C55E" : "#A56CFF" }]}>
+            <View style={[styles.glowCircle, { borderColor: todaySteps >= stepGoal ? colors.success : "#A56CFF" }]}>
               <Ionicons 
                 name={todaySteps >= stepGoal ? "trophy" : "footsteps"} 
                 size={32} 
-                color={todaySteps >= stepGoal ? "#22C55E" : "#A56CFF"} 
+                color={todaySteps >= stepGoal ? colors.success : "#A56CFF"} 
               />
             </View>
           </View>
@@ -363,13 +366,13 @@ export default function StepsStatsScreen() {
         {/* Small Stats Grid for Today (Distance, Calories, Time) */}
         <View style={styles.todayStatsGrid}>
           <View style={styles.todayStatItem}>
-            <MaterialCommunityIcons name="fire" size={20} color="#EF4444" />
+            <MaterialCommunityIcons name="fire" size={20} color={colors.danger} />
             <Text style={styles.todayStatVal}>{Math.round(todaySteps * 0.04)} kcal</Text>
             <Text style={styles.todayStatLbl}>Calo tiêu hao</Text>
           </View>
           
           <View style={styles.todayStatItem}>
-            <MaterialCommunityIcons name="map-marker-distance" size={20} color="#3B82F6" />
+            <MaterialCommunityIcons name="map-marker-distance" size={20} color={colors.info} />
             <Text style={styles.todayStatVal}>{(todaySteps * 0.00075).toFixed(2)} km</Text>
             <Text style={styles.todayStatLbl}>Quãng đường</Text>
           </View>
@@ -403,7 +406,7 @@ export default function StepsStatsScreen() {
         {/* Date Navigator */}
         <View style={styles.dateNavigator}>
           <TouchableOpacity onPress={() => setOffset(offset - 1)} style={styles.navArrow}>
-            <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+            <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.dateRangeText}>{getFormattedDateRange()}</Text>
           <TouchableOpacity 
@@ -411,18 +414,18 @@ export default function StepsStatsScreen() {
             disabled={offset >= 0}
             style={[styles.navArrow, offset >= 0 && { opacity: 0.3 }]}
           >
-            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+            <Ionicons name="chevron-forward" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
         {/* Chart Area */}
         {isLoading && historyData.length === 0 ? (
           <View style={styles.chartLoadingContainer}>
-            <ActivityIndicator size="large" color="#22C55E" />
+            <ActivityIndicator size="large" color={colors.success} />
           </View>
         ) : historyData.length === 0 ? (
           <View style={styles.chartEmptyContainer}>
-            <Ionicons name="footsteps-outline" size={40} color="#374151" />
+            <Ionicons name="footsteps-outline" size={40} color={colors.borderSoft} />
             <Text style={styles.emptyText}>Chưa có dữ liệu bước chân</Text>
           </View>
         ) : (
@@ -430,7 +433,7 @@ export default function StepsStatsScreen() {
             <BarChart 
               data={historyData} 
               averageValue={averageSteps}
-              barColor="#4ADE80" 
+              barColor={colors.success} 
               showYAxis={true} 
               showAveragePill={true}
               width={screenWidth - 32}
@@ -454,12 +457,12 @@ export default function StepsStatsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <View style={styles.iconCircle}>
-              <Ionicons name="footsteps" size={20} color="#FFFFFF" />
+              <Ionicons name="footsteps" size={20} color={colors.textPrimary} />
             </View>
             <View style={styles.headerTextContainer}>
               <View style={styles.titleWithInfo}>
                 <Text style={styles.cardTitle}>Thống kê bước chân</Text>
-                <Ionicons name="information-circle-outline" size={16} color="#9CA3AF" style={{ marginLeft: 6 }} />
+                <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} style={{ marginLeft: 6 }} />
               </View>
               <Text style={styles.subHeader}>
                 Mục tiêu: {stepGoal.toLocaleString("vi-VN")} bước/ngày
@@ -515,18 +518,18 @@ export default function StepsStatsScreen() {
               {/* Progress Legend */}
               <View style={styles.progressLegendRow}>
                 <View style={styles.legendDotItem}>
-                  <View style={[styles.legendDot, { backgroundColor: "#2E2A3A" }]} />
+                  <View style={[styles.legendDot, { backgroundColor: colors.borderSoft }]} />
                   <Text style={styles.legendDotLabel}>Chưa đạt</Text>
                 </View>
                 <View style={styles.legendDotItem}>
-                  <View style={[styles.legendDot, { backgroundColor: "#22C55E" }]} />
+                  <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
                   <Text style={styles.legendDotLabel}>Đạt mục tiêu</Text>
                 </View>
               </View>
 
               {/* Banner */}
               <View style={styles.noticeBanner}>
-                <Ionicons name="extension-puzzle-outline" size={18} color="#22C55E" style={styles.bannerIcon} />
+                <Ionicons name="extension-puzzle-outline" size={18} color={colors.success} style={styles.bannerIcon} />
                 <Text style={styles.bannerText}>
                   {getBannerText()}
                 </Text>
@@ -559,14 +562,14 @@ export default function StepsStatsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.cardTitle}>Bước chân & mức độ hoạt động</Text>
-            <Ionicons name="information-circle-outline" size={18} color="#9CA3AF" style={{ marginLeft: 8 }} />
+            <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} style={{ marginLeft: 8 }} />
           </View>
           
-          <ActivityLevelRow label="ÍT VẬN ĐỘNG" range="< 3,000" color="#EF4444" bgColor="#7F1D1D" iconName="chair" />
+          <ActivityLevelRow label="ÍT VẬN ĐỘNG" range="< 3,000" color={colors.danger} bgColor="#7F1D1D" iconName="chair" />
           <ActivityLevelRow label="NHẸ NHÀNG" range="3.000 - 6.499" color="#F59E0B" bgColor="#78350F" iconName="walking" />
-          <ActivityLevelRow label="TRUNG BÌNH" range="6,500 - 9,999" color="#3B82F6" bgColor="#1E3A8A" iconName="walking" />
-          <ActivityLevelRow label="RẤT NĂNG ĐỘNG" range="10,000 - 12,499" color="#22C55E" bgColor="#14532D" iconName="running" />
-          <ActivityLevelRow label="CỰC KỲ NĂNG ĐỘNG" range="> 12,500" color="#A78BFA" bgColor="#581C87" iconName="run-fast" iconFamily="MaterialCommunityIcons" />
+          <ActivityLevelRow label="TRUNG BÌNH" range="6,500 - 9,999" color={colors.info} bgColor="#1E3A8A" iconName="walking" />
+          <ActivityLevelRow label="RẤT NĂNG ĐỘNG" range="10,000 - 12,499" color={colors.success} bgColor="#14532D" iconName="running" />
+          <ActivityLevelRow label="CỰC KỲ NĂNG ĐỘNG" range="> 12,500" color={colors.primary} bgColor="#581C87" iconName="run-fast" iconFamily="MaterialCommunityIcons" />
 
           <Text style={styles.activityDisclaimer}>
             *** Bảng này giúp bạn hiểu bạn đang vận động ở mức nào dựa trên số bước trung bình mỗi ngày từ đó để hình dung mức calo tiêu hao tự nhiên (NEAT) của cơ thể.
@@ -583,7 +586,7 @@ export default function StepsStatsScreen() {
             <Text style={styles.actionLabel}>Điều chỉnh mục tiêu</Text>
             <View style={styles.actionRight}>
               <Text style={styles.actionValue}>{stepGoal.toLocaleString("vi-VN")} bước</Text>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
           
@@ -597,7 +600,7 @@ export default function StepsStatsScreen() {
             <Text style={styles.actionLabel}>Nhật ký bước chân</Text>
             <View style={styles.actionRight}>
               <Text style={styles.actionValue}>Xem lịch sử</Text>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
         </View>
@@ -613,7 +616,7 @@ export default function StepsStatsScreen() {
         <ScreenBackground withGlow={true}>
           <View style={styles.fullScreenModalHeader}>
             <TouchableOpacity onPress={() => setGoalModalVisible(false)} style={styles.headerBackBtn}>
-              <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+              <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
             <Text style={styles.fullScreenModalTitle}>Điều chỉnh mục tiêu</Text>
             <TouchableOpacity 
@@ -642,7 +645,7 @@ export default function StepsStatsScreen() {
                     onChangeText={setGoalInput}
                     keyboardType="number-pad"
                     placeholder="8000"
-                    placeholderTextColor="#4B5563"
+                    placeholderTextColor={colors.textMuted}
                   />
                 </View>
                 <Text style={styles.inputRowUnit}>Bước</Text>
@@ -651,7 +654,7 @@ export default function StepsStatsScreen() {
 
             {/* Info Banner */}
             <View style={styles.suggestionInfoBanner}>
-              <Ionicons name="information-circle" size={22} color="#22C55E" />
+              <Ionicons name="information-circle" size={22} color={colors.success} />
               <Text style={styles.suggestionInfoText}>
                 Dựa vào mức độ vận động bạn đã chọn, Wao gợi ý số bước phù hợp. Bạn vẫn có thể tự điều chỉnh mục tiêu theo nhu cầu.
               </Text>
@@ -660,7 +663,7 @@ export default function StepsStatsScreen() {
             {/* Suggestions Header */}
             <View style={styles.suggestionsHeader}>
               <Text style={styles.suggestionsHeaderText}>Gợi ý mục tiêu bước chân</Text>
-              <Ionicons name="information-circle-outline" size={16} color="#9CA3AF" style={{ marginLeft: 6 }} />
+              <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} style={{ marginLeft: 6 }} />
             </View>
 
             {/* Suggestions List Card */}
@@ -719,7 +722,7 @@ export default function StepsStatsScreen() {
             <View style={styles.historyModalHeader}>
               <Text style={styles.modalTitle}>Nhật ký bước chân</Text>
               <TouchableOpacity onPress={() => setHistoryModalVisible(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color="#FFFFFF" />
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -727,7 +730,7 @@ export default function StepsStatsScreen() {
 
             {loadingHistoryList ? (
               <View style={styles.historyLoading}>
-                <ActivityIndicator size="large" color="#22C55E" />
+                <ActivityIndicator size="large" color={colors.success} />
               </View>
             ) : (
               <FlatList
@@ -795,13 +798,15 @@ const ActivityLevelRow = ({
       : iconFamily === "Ionicons"
       ? Ionicons
       : FontAwesome5;
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   return (
     <View style={styles.levelRow}>
       {/* Pill Badge */}
       <View style={[styles.levelBadge, { backgroundColor: bgColor, borderColor: color + "40" }]}>
-        <IconComponent name={iconName as any} size={11} color="#FFFFFF" style={{ marginRight: 6 }} />
-        <Text style={[styles.levelLabelText, { color: "#FFFFFF" }]}>{label}</Text>
+        <IconComponent name={iconName as any} size={11} color={colors.textPrimary} style={{ marginRight: 6 }} />
+        <Text style={[styles.levelLabelText, { color: colors.textPrimary }]}>{label}</Text>
       </View>
       {/* Range Text */}
       <Text style={styles.levelRangeText}>{range}</Text>
@@ -826,6 +831,8 @@ const SuggestionRow = ({
   onPress: (val: number) => void;
 }) => {
   const IconComponent = iconFamily === "MaterialCommunityIcons" ? MaterialCommunityIcons : FontAwesome5;
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   return (
     <TouchableOpacity 
       style={[styles.suggestionRow, isLast && { borderBottomWidth: 0 }]}
@@ -834,7 +841,7 @@ const SuggestionRow = ({
     >
       <View style={styles.suggestionRowLeft}>
         <View style={styles.suggestionIconWrapper}>
-          <IconComponent name={iconName as any} size={14} color="#9CA3AF" />
+          <IconComponent name={iconName as any} size={14} color={colors.textSecondary} />
         </View>
         <Text style={styles.suggestionRowLabel}>{label}</Text>
       </View>
@@ -846,23 +853,23 @@ const SuggestionRow = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { paddingBottom: 40 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, paddingTop: Platform.OS === "ios" ? 60 : 44 },
   backBtn: { padding: 8 },
-  headerTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
+  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "bold" },
   
   // Custom tabs selector
   tabsContainer: {
     flexDirection: "row",
-    backgroundColor: "#16132A",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 4,
     marginHorizontal: 16,
     marginVertical: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   tabItem: {
     flex: 1,
@@ -871,15 +878,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   tabItemActive: {
-    backgroundColor: "#2E2A3A",
+    backgroundColor: colors.borderSoft,
   },
   tabText: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "500",
   },
   tabTextActive: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontWeight: "bold",
   },
 
@@ -894,7 +901,7 @@ const styles = StyleSheet.create({
   navArrow: {
     padding: 8,
   },
-  dateRangeText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
+  dateRangeText: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" },
 
   // Chart Section
   chartSection: {
@@ -913,12 +920,12 @@ const styles = StyleSheet.create({
     height: 190,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#1E1B2E",
+    backgroundColor: colors.bgElevated,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 24,
   },
-  emptyText: { color: "#9CA3AF", marginTop: 12 },
+  emptyText: { color: colors.textSecondary, marginTop: 12 },
 
   // Legends dưới chart
   legendContainer: {
@@ -944,37 +951,37 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   legendLabel: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 12,
   },
 
   // Card general
   card: { 
-    backgroundColor: "#1E1B2E", 
+    backgroundColor: colors.bgElevated, 
     borderRadius: 20, 
     padding: 16, 
     marginHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.03)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
   },
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  iconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#22C55E", alignItems: "center", justifyContent: "center" },
+  iconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.success, alignItems: "center", justifyContent: "center" },
   headerTextContainer: { marginLeft: 12 },
   titleWithInfo: { flexDirection: "row", alignItems: "center" },
-  cardTitle: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
-  subHeader: { color: "#9CA3AF", fontSize: 12, marginTop: 2 },
+  cardTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold" },
+  subHeader: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
   
   // Grid metrics
   gridMetrics: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginVertical: 8 },
   metricBox: { flex: 1, alignItems: "flex-start" },
-  metricValue: { color: "#FFFFFF", fontSize: 20, fontWeight: "bold", marginBottom: 2 },
-  metricUnit: { fontSize: 11, fontWeight: "normal", color: "#9CA3AF" },
-  metricLabel: { color: "#9CA3AF", fontSize: 12 },
+  metricValue: { color: colors.textPrimary, fontSize: 20, fontWeight: "bold", marginBottom: 2 },
+  metricUnit: { fontSize: 11, fontWeight: "normal", color: colors.textSecondary },
+  metricLabel: { color: colors.textSecondary, fontSize: 12 },
   verticalDivider: {
     width: 1,
     height: 36,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
     marginHorizontal: 12,
   },
 
@@ -982,7 +989,7 @@ const styles = StyleSheet.create({
   weekProgressSection: {
     marginTop: 20,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.05)",
+    borderTopColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     paddingTop: 16,
   },
   circlesRow: {
@@ -994,7 +1001,7 @@ const styles = StyleSheet.create({
   },
   circleDayLabel: {
     fontSize: 11,
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   circle: {
@@ -1004,16 +1011,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   circleMet: {
-    backgroundColor: "#22C55E",
+    backgroundColor: colors.success,
   },
   circleNotMet: {
-    backgroundColor: "#2E2A3A",
+    backgroundColor: colors.borderSoft,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   circleStepsVal: {
     fontSize: 10,
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontWeight: "500",
   },
 
@@ -1036,7 +1043,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   legendDotLabel: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 11,
   },
 
@@ -1067,7 +1074,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 10, 
     borderBottomWidth: 1, 
-    borderBottomColor: "rgba(255, 255, 255, 0.03)" 
+    borderBottomColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" 
   },
   levelBadge: {
     flexDirection: "row",
@@ -1081,7 +1088,7 @@ const styles = StyleSheet.create({
     fontSize: 10.5, 
     fontWeight: "bold",
   },
-  levelRangeText: { color: "#FFFFFF", fontSize: 13, fontWeight: "500" },
+  levelRangeText: { color: colors.textPrimary, fontSize: 13, fontWeight: "500" },
   activityDisclaimer: {
     color: "rgba(255, 255, 255, 0.4)",
     fontSize: 10.5,
@@ -1091,12 +1098,12 @@ const styles = StyleSheet.create({
 
   // Action card (bottom menu list)
   actionCard: {
-    backgroundColor: "#1E1B2E", 
+    backgroundColor: colors.bgElevated, 
     borderRadius: 20, 
     marginHorizontal: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.03)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
     overflow: "hidden",
   },
   actionItem: {
@@ -1107,7 +1114,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   actionLabel: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 15,
     fontWeight: "500",
   },
@@ -1116,13 +1123,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionValue: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 14,
     marginRight: 8,
   },
   actionSeparator: {
     height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     marginHorizontal: 20,
   },
 
@@ -1143,11 +1150,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 24,
   },
-  connectTitle: { fontSize: 20, fontWeight: "bold", color: "#FFFFFF", marginBottom: 12 },
-  connectDesc: { fontSize: 14, color: "#9CA3AF", textAlign: "center", lineHeight: 22, paddingHorizontal: 24, marginBottom: 32 },
-  connectButton: { backgroundColor: "#22C55E", paddingVertical: 14, paddingHorizontal: 28, borderRadius: 24, alignItems: "center", justifyContent: "center", width: "80%" },
-  connectButtonText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF" },
-  errorText: { color: "#EF4444", marginTop: 16, textAlign: "center" },
+  connectTitle: { fontSize: 20, fontWeight: "bold", color: colors.textPrimary, marginBottom: 12 },
+  connectDesc: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 22, paddingHorizontal: 24, marginBottom: 32 },
+  connectButton: { backgroundColor: colors.success, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 24, alignItems: "center", justifyContent: "center", width: "80%" },
+  connectButtonText: { fontSize: 16, fontWeight: "bold", color: colors.textPrimary },
+  errorText: { color: colors.danger, marginTop: 16, textAlign: "center" },
 
   // Modal Styles
   modalOverlay: {
@@ -1158,33 +1165,33 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "85%",
-    backgroundColor: "#1C1A2C",
+    backgroundColor: colors.bgElevated,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
   },
   modalTitle: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
   },
   modalSubtitle: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 13,
     marginBottom: 20,
   },
   modalInput: {
-    backgroundColor: "#16132A",
+    backgroundColor: colors.surface,
     borderRadius: 12,
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 22,
     fontWeight: "bold",
     padding: 12,
     textAlign: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
     marginBottom: 24,
   },
   modalButtons: {
@@ -1198,18 +1205,18 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   modalButtonCancel: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   modalButtonSave: {
     backgroundColor: "#8E57F5",
   },
   cancelBtnText: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "500",
   },
   saveBtnText: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: "bold",
   },
@@ -1229,7 +1236,7 @@ const styles = StyleSheet.create({
   closeBtn: {
     padding: 4,
     borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   historyLoading: {
     flex: 1,
@@ -1237,7 +1244,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyHistoryText: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     textAlign: "center",
     marginTop: 40,
   },
@@ -1247,7 +1254,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    borderBottomColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   historyItemLeft: {
     flexDirection: "row",
@@ -1259,18 +1266,18 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   historyDotMet: {
-    backgroundColor: "#22C55E",
+    backgroundColor: colors.success,
   },
   historyDotNotMet: {
-    backgroundColor: "#EF4444",
+    backgroundColor: colors.danger,
   },
   historyItemDate: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: "bold",
   },
   historyItemDay: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 11,
     marginTop: 2,
   },
@@ -1279,12 +1286,12 @@ const styles = StyleSheet.create({
     alignItems: "baseline",
   },
   historyItemSteps: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "bold",
   },
   historyItemUnit: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 12,
     marginLeft: 4,
   },
@@ -1296,7 +1303,7 @@ const styles = StyleSheet.create({
   },
   metricUnitInline: {
     fontSize: 11,
-    color: "#E5E7EB",
+    color: colors.textPrimary,
     marginLeft: 4,
   },
 
@@ -1305,7 +1312,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.05)",
+    borderTopColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   calendarHeaderRow: {
     flexDirection: "row",
@@ -1317,7 +1324,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   calendarHeaderLabel: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -1336,12 +1343,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   calendarDayBoxMet: {
-    backgroundColor: "#22C55E",
+    backgroundColor: colors.success,
   },
   calendarDayBoxNotMet: {
-    backgroundColor: "#2E2A3A",
+    backgroundColor: colors.borderSoft,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.03)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
   },
   calendarDayBoxEmpty: {
     backgroundColor: "transparent",
@@ -1356,11 +1363,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     marginTop: 16,
   },
   goalSuccessText: {
-    color: "#E5E7EB",
+    color: colors.textPrimary,
     fontSize: 12,
     fontWeight: "500",
   },
@@ -1395,13 +1402,13 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 60 : 44,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    borderBottomColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   headerBackBtn: {
     padding: 4,
   },
   fullScreenModalTitle: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: "bold",
   },
@@ -1430,10 +1437,10 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     marginHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+    borderBottomColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
   },
   inputRowLabel: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "500",
   },
@@ -1442,7 +1449,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   inputContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.12)",
     borderRadius: 12,
@@ -1454,7 +1461,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   inputRowField: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
@@ -1462,7 +1469,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   inputRowUnit: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "500",
   },
@@ -1492,17 +1499,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   suggestionsHeaderText: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "bold",
   },
   suggestionsCard: {
-    backgroundColor: "#1E1B2E",
+    backgroundColor: colors.bgElevated,
     borderRadius: 20,
     marginHorizontal: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.03)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
     marginBottom: 40,
   },
   suggestionsTableHeader: {
@@ -1510,11 +1517,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    borderBottomColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     marginBottom: 6,
   },
   suggestionsTableHeaderText: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -1524,7 +1531,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.03)",
+    borderBottomColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
   },
   suggestionRowLeft: {
     flexDirection: "row",
@@ -1535,17 +1542,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   suggestionRowLabel: {
-    color: "#D1D5DB",
+    color: colors.textSecondary,
     fontSize: 14,
     marginLeft: 8,
   },
   suggestionRowValue: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: "bold",
   },
   suggestionRowUnit: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 11,
     fontWeight: "normal",
   },
@@ -1553,13 +1560,13 @@ const styles = StyleSheet.create({
   // Today's prominent step card
   todayCard: {
     flexDirection: "row",
-    backgroundColor: "#1E1B2E",
+    backgroundColor: colors.bgElevated,
     borderRadius: 24,
     padding: 20,
     marginHorizontal: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.03)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
     alignItems: "center",
     justifyContent: "space-between",
   },
@@ -1568,26 +1575,26 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   todayCardLabel: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 11,
     fontWeight: "bold",
     letterSpacing: 1.5,
     marginBottom: 4,
   },
   todayStepsValue: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 32,
     fontWeight: "800",
   },
   todayStepsUnit: {
     fontSize: 16,
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontWeight: "normal",
   },
   todayProgressBg: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
     width: "100%",
     marginVertical: 10,
     overflow: "hidden",
@@ -1598,7 +1605,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#A56CFF",
   },
   todayGoalText: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 12,
   },
   todayCardRight: {
@@ -1612,7 +1619,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
   },
 
   // Today small stats grid
@@ -1625,22 +1632,22 @@ const styles = StyleSheet.create({
   },
   todayStatItem: {
     flex: 1,
-    backgroundColor: "#1E1B2E",
+    backgroundColor: colors.bgElevated,
     borderRadius: 16,
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.03)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
   },
   todayStatVal: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: "bold",
     marginTop: 6,
     marginBottom: 2,
   },
   todayStatLbl: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 10,
   },
 });

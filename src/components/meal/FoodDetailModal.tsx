@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
+import { t } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 /** Alias để khớp kiểu dữ liệu */
 interface FoodItem {
@@ -40,8 +42,30 @@ interface FoodDetailModalProps {
 }
 
 /** Tiện ích lấy danh sách nguyên liệu trực quan dựa vào tên món ăn để UI giống hệt screenshot */
-function getMockIngredients(foodName: string): string[] {
+function getMockIngredients(foodName: string, lang: string): string[] {
   const name = foodName.toLowerCase();
+  if (lang === "en") {
+    if (name.includes("salad") || name.includes("rau") || name.includes("bơ")) {
+      return ["Lettuce", "Avocado", "Tiger prawns", "Red onion", "Olive oil", "Lemon juice"];
+    }
+    if (name.includes("cơm") || name.includes("xôi")) {
+      return ["Fragrant rice", "Water", "Fried shallots", "Scallion oil", "Salt"];
+    }
+    if (name.includes("phở") || name.includes("bún")) {
+      return ["Fresh noodles", "Beef slices", "Beef broth", "Scallions", "Cilantro", "Lime & Chili"];
+    }
+    if (name.includes("bánh mì") || name.includes("bánh")) {
+      return ["All-purpose flour", "Yeast", "Warm water", "Eggs", "Sugar", "Butter"];
+    }
+    if (name.includes("thịt") || name.includes("hải sản") || name.includes("tôm") || name.includes("cá")) {
+      return ["Fresh meat", "Garlic & Onion", "Black pepper", "Fish sauce", "Oyster sauce"];
+    }
+    if (name.includes("đồ uống") || name.includes("trà") || name.includes("sữa")) {
+      return ["Jasmine tea", "Condensed milk", "Liquid sugar", "Ice cubes", "Boba pearls"];
+    }
+    return ["Fresh ingredients", "Herbs & spices", "Olive oil", "Pink salt"];
+  }
+
   if (name.includes("salad") || name.includes("rau") || name.includes("bơ")) {
     return ["Rau xà lách", "Quả bơ", "Tôm sú, sống", "Củ hành tím", "Dầu ô liu", "Nước cốt chanh vàng"];
   }
@@ -72,6 +96,7 @@ export function FoodDetailModal({
   submitButtonText,
   headerTitle,
 }: FoodDetailModalProps) {
+  const language = useSettingsStore((state) => state.language);
   const [customServings, setCustomServings] = useState("1");
   const [showNutritionDetail, setShowNutritionDetail] = useState(false);
   const [components, setComponents] = useState<any[]>([]);
@@ -136,7 +161,7 @@ export function FoodDetailModal({
             
             <View style={styles.detailHeaderTitleContainer}>
               <Text style={styles.detailHeaderTitle}>
-                {headerTitle || "Chi tiết món ăn"}
+                {headerTitle || t.foodDetail.title}
               </Text>
               <Ionicons color={colors.textPrimary} name="chevron-down" size={14} style={{ marginLeft: 4 }} />
             </View>
@@ -185,7 +210,7 @@ export function FoodDetailModal({
                   </Text>
                   <View style={styles.detailMacroLabelRow}>
                     <Ionicons color="#ff5c5c" name="flash" size={10} />
-                    <Text style={styles.detailMacroLabel}>CHẤT ĐẠM</Text>
+                    <Text style={styles.detailMacroLabel}>{t.foodDetail.protein}</Text>
                   </View>
                 </View>
 
@@ -201,7 +226,7 @@ export function FoodDetailModal({
                   </Text>
                   <View style={styles.detailMacroLabelRow}>
                     <Ionicons color="#3ea6ff" name="leaf" size={10} />
-                    <Text style={styles.detailMacroLabel}>ĐƯỜNG BỘT</Text>
+                    <Text style={styles.detailMacroLabel}>{t.foodDetail.carbs}</Text>
                   </View>
                 </View>
 
@@ -217,7 +242,7 @@ export function FoodDetailModal({
                   </Text>
                   <View style={styles.detailMacroLabelRow}>
                     <Ionicons color="#ffc72c" name="water" size={10} />
-                    <Text style={styles.detailMacroLabel}>CHẤT BÉO</Text>
+                    <Text style={styles.detailMacroLabel}>{t.foodDetail.fat}</Text>
                   </View>
                 </View>
               </View>
@@ -226,7 +251,7 @@ export function FoodDetailModal({
             {/* Verified Badge */}
             <View style={styles.verifiedRow}>
               <Ionicons color="#3ea6ff" name="checkmark-circle" size={16} />
-              <Text style={styles.verifiedText}>Được xác nhận bởi đội ngũ dinh dưỡng Wao</Text>
+              <Text style={styles.verifiedText}>{t.foodDetail.verifiedLabel}</Text>
             </View>
 
             {/* Nutritional Details Collapsible */}
@@ -234,32 +259,32 @@ export function FoodDetailModal({
               onPress={() => setShowNutritionDetail(!showNutritionDetail)}
               style={styles.dropdownBtn}
             >
-              <Text style={styles.dropdownBtnText}>Hiển thị giá trị dinh dưỡng</Text>
+              <Text style={styles.dropdownBtnText}>{t.foodDetail.showNutrition}</Text>
               <Ionicons color={colors.textSecondary} name={showNutritionDetail ? "chevron-up" : "chevron-down"} size={16} />
             </Pressable>
 
             {showNutritionDetail && (
               <View style={styles.dropdownContent}>
                 <View style={styles.nutritionRowDetail}>
-                  <Text style={styles.nutritionLabelDetail}>Calories (Calo)</Text>
+                  <Text style={styles.nutritionLabelDetail}>{language === "en" ? "Calories" : "Calories (Calo)"}</Text>
                   <Text style={styles.nutritionValDetail}>
                     {adjustedCalories} kcal
                   </Text>
                 </View>
                 <View style={styles.nutritionRowDetail}>
-                  <Text style={styles.nutritionLabelDetail}>Protein (Chất đạm)</Text>
+                  <Text style={styles.nutritionLabelDetail}>{t.stats.protein}</Text>
                   <Text style={styles.nutritionValDetail}>
                     {adjustedProtein.toFixed(1)}g
                   </Text>
                 </View>
                 <View style={styles.nutritionRowDetail}>
-                  <Text style={styles.nutritionLabelDetail}>Carbohydrates (Đường bột)</Text>
+                  <Text style={styles.nutritionLabelDetail}>{t.stats.carb}</Text>
                   <Text style={styles.nutritionValDetail}>
                     {adjustedCarbs.toFixed(1)}g
                   </Text>
                 </View>
                 <View style={styles.nutritionRowDetail}>
-                  <Text style={styles.nutritionLabelDetail}>Fat (Chất béo)</Text>
+                  <Text style={styles.nutritionLabelDetail}>{t.stats.fat}</Text>
                   <Text style={styles.nutritionValDetail}>
                     {adjustedFat.toFixed(1)}g
                   </Text>
@@ -271,8 +296,8 @@ export function FoodDetailModal({
             {isComponentsLoading ? (
               <View style={styles.ingredientsSection}>
                 <View style={styles.ingredientsHeader}>
-                  <Text style={styles.ingredientsTitle}>Nguyên liệu</Text>
-                  <ActivityIndicator size="small" color="#8b5cf6" />
+                  <Text style={styles.ingredientsTitle}>{t.foodDetail.ingredients}</Text>
+                  <ActivityIndicator size="small" color={colors.primary} />
                 </View>
               </View>
             ) : components.length > 0 ? (
@@ -282,7 +307,7 @@ export function FoodDetailModal({
                   style={styles.ingredientsHeader}
                 >
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={styles.ingredientsTitle}>Nguyên liệu</Text>
+                    <Text style={styles.ingredientsTitle}>{t.foodDetail.ingredients}</Text>
                   </View>
                   <Ionicons
                     color={colors.textPrimary}
@@ -304,7 +329,7 @@ export function FoodDetailModal({
                         )}
                         <View style={styles.ingredientInfo}>
                           <Text style={styles.ingredientName} numberOfLines={1}>
-                            {comp.child_food_name_vi || comp.child_food_name_en}
+                            {language === "en" ? (comp.child_food_name_en || comp.child_food_name_vi) : (comp.child_food_name_vi || comp.child_food_name_en)}
                           </Text>
                           <Text style={styles.ingredientWeight}>
                             {Math.round(Number(comp.quantity_g) * ratio)}g
@@ -320,13 +345,13 @@ export function FoodDetailModal({
               <View style={styles.ingredientsSection}>
                 <View style={styles.ingredientsHeader}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={styles.ingredientsTitle}>Nguyên liệu gợi ý</Text>
+                    <Text style={styles.ingredientsTitle}>{t.foodDetail.suggestedIngredients}</Text>
                     <Ionicons color={colors.textMuted} name="help-circle-outline" size={16} />
                   </View>
                 </View>
 
                 <View style={styles.ingredientsGrid}>
-                  {getMockIngredients(food.name).map((ing, idx) => (
+                  {getMockIngredients(food.name, language).map((ing, idx) => (
                     <View key={idx} style={styles.ingredientBadge}>
                       <Text style={styles.ingredientBadgeText}>{ing}</Text>
                     </View>
@@ -337,7 +362,7 @@ export function FoodDetailModal({
 
             {/* Custom Serving Box */}
             <View style={styles.servingContainer}>
-              <Text style={styles.servingTitle}>Khẩu phần tuỳ chỉnh</Text>
+              <Text style={styles.servingTitle}>{t.foodDetail.customServing}</Text>
               <View style={styles.servingInputRow}>
                 <TextInput
                   keyboardType="numeric"
@@ -347,7 +372,7 @@ export function FoodDetailModal({
                 />
                 <View style={styles.servingSeparator} />
                 <Pressable style={styles.servingDropdown}>
-                  <Text style={styles.servingDropdownText}>Khẩu phần ({food.servingSize.toString().replace('.', ',')}g)</Text>
+                  <Text style={styles.servingDropdownText}>{t.foodDetail.servingLabel(food.servingSize.toString().replace('.', ','))}</Text>
                   <Ionicons color={colors.textPrimary} name="chevron-down" size={16} />
                 </Pressable>
               </View>
@@ -360,7 +385,7 @@ export function FoodDetailModal({
               onPress={() => onAdd(food, currentGrams)}
               style={styles.detailAddButton}
             >
-              <Text style={styles.detailAddButtonText}>{submitButtonText || "Thêm vào"}</Text>
+              <Text style={styles.detailAddButtonText}>{submitButtonText || t.foodDetail.addButtonText}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -372,7 +397,7 @@ export function FoodDetailModal({
 const styles = StyleSheet.create({
   detailOverlay: {
     flex: 1,
-    backgroundColor: "#110b26",
+    backgroundColor: colors.bgBase,
   },
   detailContent: {
     flex: 1,
@@ -384,7 +409,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
   },
   detailHeaderBtn: {
     width: 40,
@@ -416,7 +441,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: "#30284e",
+    borderColor: colors.borderSoft,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -431,7 +456,7 @@ const styles = StyleSheet.create({
   detailImagePlaceholder: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#1f1837",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -447,12 +472,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     padding: spacing.lg,
     borderRadius: radius.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
   },
   detailCircle: {
     width: 86,
@@ -462,7 +487,7 @@ const styles = StyleSheet.create({
     borderColor: "#ff5c5c",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1e1738",
+    backgroundColor: colors.surface,
   },
   detailCircleVal: {
     color: colors.textPrimary,
@@ -523,14 +548,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1e1738",
+    backgroundColor: colors.surface,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.md,
     marginBottom: spacing.md,
     gap: spacing.xs,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
   },
   dropdownBtnText: {
     color: colors.textSecondary,
@@ -538,13 +563,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   dropdownContent: {
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
     gap: spacing.sm,
   },
   nutritionRowDetail: {
@@ -583,14 +608,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     padding: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
   },
   ingredientBadge: {
-    backgroundColor: "#221c3c",
+    backgroundColor: colors.surface,
     paddingHorizontal: 12,
     paddingVertical: spacing.xs,
     borderRadius: radius.pill,
@@ -601,10 +626,10 @@ const styles = StyleSheet.create({
   },
   // Style mới cho danh sách nguyên liệu dạng Card
   ingredientsList: {
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
     overflow: "hidden",
     marginTop: spacing.xs,
   },
@@ -613,7 +638,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
   },
   ingredientImg: {
     width: 44,
@@ -625,7 +650,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: radius.sm,
-    backgroundColor: "#20183e",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginRight: spacing.md,
@@ -664,10 +689,10 @@ const styles = StyleSheet.create({
   servingInputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
     height: 48,
     paddingHorizontal: spacing.md,
   },
@@ -680,7 +705,7 @@ const styles = StyleSheet.create({
   servingSeparator: {
     width: 1,
     height: 24,
-    backgroundColor: "#2e274a",
+    backgroundColor: colors.surfaceAlt,
     marginHorizontal: spacing.md,
   },
   servingDropdown: {
@@ -694,26 +719,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   detailFooter: {
-    backgroundColor: "#110b26",
+    backgroundColor: colors.bgBase,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#221a3a",
+    borderTopColor: colors.borderSoft,
   },
   detailAddButton: {
-    backgroundColor: "#8b5cf6",
+    backgroundColor: colors.primary,
     borderRadius: radius.pill,
     height: 48,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#8b5cf6",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 4,
   },
   detailAddButtonText: {
-    color: "#ffffff",
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: "bold",
   },

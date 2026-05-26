@@ -2,6 +2,7 @@ import { apiClient } from "./apiClient";
 import { API_URLS } from "../constants/api";
 import { OnboardingDraft } from "@/types/contracts";
 import { Platform } from "react-native";
+import { useAuthStore } from "../store/authStore";
 import {
   mockGetUserInfoResponse,
   mockOnboardingResponse,
@@ -21,6 +22,12 @@ const activityLevelMap: Record<string, number> = {
   very_active: 5,
 };
 
+const goalTypeMap: Record<string, number> = {
+  lose_weight: 1,
+  gain_weight: 2,
+  maintain_weight: 3,
+};
+
 export const userService = {
   /** POST /api/User/onboarding → UserGoalResponse */
   onboardUser: async (draft: OnboardingDraft) => {
@@ -29,15 +36,22 @@ export const userService = {
       return mockOnboardingResponse;
     }
 
+    console.log("userService.onboardUser called with draft:", JSON.stringify(draft, null, 2));
+
+    const emailPrefix = useAuthStore.getState().userInfo?.email?.split("@")[0];
     const body = {
-      displayName: draft.nickname,
+      displayName: draft.nickname || emailPrefix || "User",
       gender: draft.gender === "male" ? 1 : 2,
-      dateOfBirth: draft.birthDateISO?.split("T")[0],
-      heightCm: draft.heightCm,
-      weightKg: draft.currentWeightKg,
-      goalWeightKg: draft.targetWeightKg,
+      dateOfBirth: draft.birthDateISO?.split("T")[0] ?? "2000-01-01",
+      heightCm: draft.heightCm ?? 170,
+      weightKg: draft.currentWeightKg ?? 60,
+      goalWeightKg: draft.targetWeightKg ?? draft.currentWeightKg ?? 60,
       activityLevel: activityLevelMap[draft.activityLevel || "sedentary"],
+      goalType: goalTypeMap[draft.goalType || "maintain_weight"],
     };
+
+    console.log("userService.onboardUser sending body:", JSON.stringify(body, null, 2));
+
 
     try {
       const response = await apiClient.post(API_URLS.user.onboarding, body);
@@ -45,7 +59,19 @@ export const userService = {
     } catch (error: any) {
       const errorData = error.response?.data;
       const errorCode = errorData?.code || errorData?.extensions?.code;
-      const errorDetail = errorData?.detail || errorData?.message || error.message;
+      let errorDetail = errorData?.detail || errorData?.message || error.message;
+
+      if (errorData?.errors && typeof errorData.errors === "object") {
+        const validationErrors = Object.entries(errorData.errors)
+          .map(([field, messages]) => {
+            const msgStr = Array.isArray(messages) ? messages.join(", ") : String(messages);
+            return `${field}: ${msgStr}`;
+          })
+          .join("; ");
+        if (validationErrors) {
+          errorDetail = `${errorDetail} (${validationErrors})`;
+        }
+      }
 
       if (errorCode === "USER_ALREADY_ONBOARDED" || errorDetail?.includes("already onboarded")) {
         const infoRes = await apiClient.get(API_URLS.user.info);

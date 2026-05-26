@@ -65,5 +65,5 @@ export const API_URLS = {
     markAllAsRead: `${API_BASE}/api/notifications/mark-all-as-read`,
     delete: (id: string) => `${API_BASE}/api/notifications/${id}`,
     unreadCount: `${API_BASE}/api/notifications/unread-count`,
-  }
+  },
 };

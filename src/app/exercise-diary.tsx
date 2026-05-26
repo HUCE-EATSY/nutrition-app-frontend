@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,11 +13,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
 import { getTodayDateISO, formatShortDate } from "@/utils/date";
+import { t } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function ExerciseDiaryScreen() {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const language = useSettingsStore((state) => state.language);
   const [logs, setLogs] = useState<ExerciseLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,7 +41,7 @@ export default function ExerciseDiaryScreen() {
       const data = await exerciseService.getLogs(startDateISO, endDate);
       setLogs(data);
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải nhật ký tập luyện");
+      Alert.alert(t.common.error, t.exercise.loadError);
       console.error(error);
     } finally {
       setLoading(false);
@@ -54,20 +60,20 @@ export default function ExerciseDiaryScreen() {
 
   async function handleDelete(id: string) {
     Alert.alert(
-      "Xác nhận",
-      "Bạn có chắc muốn xóa nhật ký này?",
+      t.exercise.deleteConfirmTitle,
+      t.exercise.deleteConfirmMsg,
       [
-        { text: "Hủy", style: "cancel" },
+        { text: t.common.cancel, style: "cancel" },
         {
-          text: "Xóa",
+          text: t.common.delete,
           style: "destructive",
           onPress: async () => {
             try {
               await exerciseService.deleteLog(id);
               setLogs(prev => prev.filter(log => log.id !== id));
-              Alert.alert("Thành công", "Đã xóa nhật ký");
+              Alert.alert(t.common.success, t.exercise.deleteSuccess);
             } catch {
-              Alert.alert("Lỗi", "Không thể xóa nhật ký");
+              Alert.alert(t.common.error, t.exercise.deleteError);
             }
           },
         },
@@ -108,7 +114,7 @@ export default function ExerciseDiaryScreen() {
       <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={styles.loadingText}>Đang tải nhật ký...</Text>
+          <Text style={styles.loadingText}>{t.exercise.loadingLogs}</Text>
         </View>
       </SafeAreaView>
     );
@@ -121,7 +127,7 @@ export default function ExerciseDiaryScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>Nhật ký tập luyện</Text>
+        <Text style={styles.headerTitle}>{t.exercise.diaryTitle}</Text>
         <Pressable hitSlop={12} onPress={() => router.push("/add-exercise")}>
           <Ionicons color={colors.primary} name="add-circle-outline" size={28} />
         </Pressable>
@@ -143,17 +149,17 @@ export default function ExerciseDiaryScreen() {
         <View style={[styles.summaryCard, { backgroundColor: "rgba(255,107,107,0.15)" }]}>
           <Ionicons color="#FF6B6B" name="flame" size={24} />
           <Text style={styles.summaryValue}>{totalCalories}</Text>
-          <Text style={styles.summaryLabel}>Calo đốt</Text>
+          <Text style={styles.summaryLabel}>{t.exercise.caloriesBurned}</Text>
         </View>
         <View style={[styles.summaryCard, { backgroundColor: "rgba(92,214,122,0.15)" }]}>
           <Ionicons color={colors.success} name="time-outline" size={24} />
           <Text style={styles.summaryValue}>{totalMinutes}</Text>
-          <Text style={styles.summaryLabel}>Phút</Text>
+          <Text style={styles.summaryLabel}>{t.exercise.minutes}</Text>
         </View>
         <View style={[styles.summaryCard, { backgroundColor: "rgba(165,108,255,0.15)" }]}>
           <MaterialCommunityIcons color={colors.primary} name="dumbbell" size={24} />
           <Text style={styles.summaryValue}>{logs.length}</Text>
-          <Text style={styles.summaryLabel}>Bài tập</Text>
+          <Text style={styles.summaryLabel}>{t.exercise.workoutCount}</Text>
         </View>
       </View>
 
@@ -172,12 +178,12 @@ export default function ExerciseDiaryScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons color={colors.textMuted} name="dumbbell" size={64} />
-            <Text style={styles.emptyText}>Chưa có nhật ký tập luyện</Text>
+            <Text style={styles.emptyText}>{t.exercise.emptyDiary}</Text>
             <Pressable
               onPress={() => router.push("/add-exercise")}
               style={styles.emptyButton}
             >
-              <Text style={styles.emptyButtonText}>Ghi hoạt động</Text>
+              <Text style={styles.emptyButtonText}>{t.exercise.logActivity}</Text>
             </Pressable>
           </View>
         }
@@ -190,7 +196,7 @@ export default function ExerciseDiaryScreen() {
               <View style={styles.dateSectionHeader}>
                 <Text style={styles.dateSectionTitle}>{formatShortDate(date)}</Text>
                 <Text style={styles.dateSectionSubtitle}>
-                  {dayTotal} kcal • {dateLogs.length} bài tập
+                  {dayTotal} kcal • {t.exercise.workoutCountSuffix(dateLogs.length)}
                 </Text>
               </View>
               
@@ -205,11 +211,11 @@ export default function ExerciseDiaryScreen() {
                   </View>
                   
                   <View style={styles.logContent}>
-                    <Text style={styles.logTitle}>{log.exerciseNameVi}</Text>
+                    <Text style={styles.logTitle}>{language === "en" ? log.exerciseNameEn : log.exerciseNameVi}</Text>
                     <View style={styles.logDetails}>
                       <View style={styles.logDetailItem}>
                         <Ionicons color={colors.textMuted} name="time-outline" size={14} />
-                        <Text style={styles.logDetailText}>{log.durationMinutes} phút</Text>
+                        <Text style={styles.logDetailText}>{t.exercise.durationSuffix(log.durationMinutes)}</Text>
                       </View>
                       <View style={styles.logDetailItem}>
                         <Ionicons color={colors.textMuted} name="flame" size={14} />
@@ -218,7 +224,7 @@ export default function ExerciseDiaryScreen() {
                       <View style={styles.logDetailItem}>
                         <Ionicons color={colors.textMuted} name="speedometer-outline" size={14} />
                         <Text style={styles.logDetailText}>
-                          {log.intensity === 1 ? "Nhẹ" : log.intensity === 3 ? "Nặng" : "TB"}
+                          {log.intensity === 1 ? t.exercise.intensityLevels.light : log.intensity === 3 ? t.exercise.intensityLevels.heavy : t.exercise.intensityLevels.moderate}
                         </Text>
                       </View>
                     </View>
@@ -250,7 +256,7 @@ export default function ExerciseDiaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgBase },
   loadingContainer: {
     flex: 1,

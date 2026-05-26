@@ -1,4 +1,5 @@
 import React from "react";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +13,8 @@ import { InsightBox } from "@/components/stats/InsightBox";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 
 export default function ActivityStatsScreen() {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
   const { activeTabLabel, tabs, handleTabChange } = useActivityStats();
 
@@ -42,11 +45,11 @@ export default function ActivityStatsScreen() {
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thống kê hoạt động</Text>
         <TouchableOpacity style={styles.backBtn}>
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Ionicons name="add" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -76,10 +79,10 @@ export default function ActivityStatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: "transparent" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, paddingTop: 60 },
   backBtn: { padding: 8 },
-  headerTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
+  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "bold" },
   content: { padding: 16 },
 });

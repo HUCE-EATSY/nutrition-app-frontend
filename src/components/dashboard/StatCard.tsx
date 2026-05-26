@@ -1,7 +1,9 @@
+import React, { useMemo } from "react";
 import { StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
-import { colors, spacing, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type StatCardProps = {
   label: string;
@@ -11,6 +13,9 @@ type StatCardProps = {
 };
 
 export function StatCard({ label, value, helper, style }: StatCardProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <SurfaceCard style={[styles.card, style]}>
       <Text style={styles.label}>{label}</Text>
@@ -20,7 +25,7 @@ export function StatCard({ label, value, helper, style }: StatCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: {
     flex: 1,
     minHeight: 132,

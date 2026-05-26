@@ -1,8 +1,11 @@
+import React, { useMemo } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
-import { colors, spacing, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
+import { t } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type StreakStatsRowProps = {
   currentStreak: number;
@@ -10,12 +13,15 @@ type StreakStatsRowProps = {
 };
 
 export function StreakStatsRow({ currentStreak, shieldCount }: StreakStatsRowProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.statsRow}>
       <SurfaceCard style={styles.statCard}>
         <View style={styles.statHeader}>
           <MaterialCommunityIcons name="fire" size={20} color={colors.warning} />
-          <Text style={styles.statLabel}>Chuỗi hiện tại</Text>
+          <Text style={styles.statLabel}>{t.streaks.currentStreak}</Text>
         </View>
         <Text style={styles.statValue}>{currentStreak}</Text>
       </SurfaceCard>
@@ -23,7 +29,7 @@ export function StreakStatsRow({ currentStreak, shieldCount }: StreakStatsRowPro
       <SurfaceCard style={styles.statCard}>
         <View style={styles.statHeader}>
           <MaterialCommunityIcons name="shield" size={20} color={colors.carbs} />
-          <Text style={styles.statLabel}>Khiên Wao</Text>
+          <Text style={styles.statLabel}>{t.streaks.waoShield}</Text>
         </View>
         <Text style={styles.statValue}>{shieldCount}</Text>
       </SurfaceCard>
@@ -31,7 +37,7 @@ export function StreakStatsRow({ currentStreak, shieldCount }: StreakStatsRowPro
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     gap: spacing.md,

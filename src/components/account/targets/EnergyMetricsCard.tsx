@@ -1,5 +1,7 @@
 import React from 'react';
+import { colors } from "@/constants";
 import { View, Text, StyleSheet } from 'react-native';
+import { t } from '@/constants/i18n';
 
 interface EnergyMetricsCardProps {
   bmr: number;
@@ -8,22 +10,23 @@ interface EnergyMetricsCardProps {
 }
 
 export function EnergyMetricsCard({ bmr, tdee, addedCalories }: EnergyMetricsCardProps) {
+
   return (
     <View style={styles.card}>
       <View style={styles.row}>
-        <Text style={styles.label}>Tỷ lệ trao đổi chất cơ bản (BMR)</Text>
+        <Text style={styles.label}>{t.targets.bmrLabel}</Text>
         <Text style={styles.value}>{bmr}</Text>
       </View>
       <View style={styles.divider} />
       
       <View style={styles.row}>
-        <Text style={styles.label}>Tổng năng lượng tiêu thụ mỗi ngày (TDEE)</Text>
+        <Text style={styles.label}>{t.targets.tdeeLabel}</Text>
         <Text style={styles.value}>{tdee}</Text>
       </View>
       <View style={styles.divider} />
       
       <View style={styles.row}>
-        <Text style={styles.label}>Calo cộng thêm</Text>
+        <Text style={styles.label}>{t.targets.addedCalLabel}</Text>
         <Text style={styles.value}>{addedCalories}</Text>
       </View>
     </View>
@@ -32,7 +35,7 @@ export function EnergyMetricsCard({ bmr, tdee, addedCalories }: EnergyMetricsCar
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1F1A3A',
+    backgroundColor: colors.bgElevated,
     borderRadius: 16,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -45,18 +48,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   label: {
-    color: '#9E9E9E',
+    color: colors.textSecondary,
     fontSize: 14,
     flex: 1,
     paddingRight: 16,
   },
   value: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: 'bold',
   },
   divider: {
     height: 1,
-    backgroundColor: '#2D274E',
+    backgroundColor: colors.surfaceAlt,
   },
 });

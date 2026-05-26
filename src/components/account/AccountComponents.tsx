@@ -1,9 +1,12 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Linking, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { colors, spacing, radius, typography } from "@/constants";
+import { spacing, radius, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export function SectionHeader({ title }: { title: string }) {
+  const colors = useAppColors();
+  const styles = getStyles(colors);
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderText}>{title}</Text>
@@ -23,6 +26,8 @@ export function MacroItem({
   percentage: string;
   value: string;
 }) {
+  const colors = useAppColors();
+  const styles = getStyles(colors);
   return (
     <View style={styles.macroItem}>
       <View style={styles.macroItemLeft}>
@@ -48,6 +53,8 @@ export function StatIconButton({
   label: string;
   route: string;
 }) {
+  const colors = useAppColors();
+  const styles = getStyles(colors);
   return (
     <Pressable
       style={({ pressed }) => [styles.statIconContainer, pressed && { opacity: 0.7 }]}
@@ -64,19 +71,44 @@ export function StatIconButton({
 export function SocialButton({
   icon,
   label,
+  url,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
+  url?: string;
+  onPress?: () => void;
 }) {
+  const colors = useAppColors();
+  const styles = getStyles(colors);
+
+  const handlePress = async () => {
+    if (onPress) {
+      onPress();
+      return;
+    }
+    if (url) {
+      try {
+        await Linking.openURL(url);
+      } catch (error) {
+        console.error("Error opening URL:", error);
+        Alert.alert("Lỗi", "Không thể mở trang liên kết này");
+      }
+    }
+  };
+
   return (
-    <Pressable style={styles.socialButton}>
+    <Pressable 
+      onPress={handlePress}
+      style={({ pressed }) => [styles.socialButton, pressed && { opacity: 0.7 }]}
+    >
       <Ionicons color={colors.textPrimary} name={icon} size={28} />
       <Text style={styles.socialButtonLabel}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

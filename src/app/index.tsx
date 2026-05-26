@@ -5,20 +5,21 @@ import { t } from "@/constants/i18n";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { getDraftResumePath, getPublicResumePath } from "@/utils/onboarding";
 
 export default function IndexScreen() {
-  // Lấy trạng thái hydrated từ cả hai store để tránh race condition
   const onboardingHydrated = useOnboardingStore((state) => state.hydrated);
   const authHydrated = useAuthStore((state) => state.hydrated);
+  const settingsHydrated = useSettingsStore((state) => state.hydrated);
   
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const publicFlowStep = useOnboardingStore((state) => state.publicFlowStep);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
   const draft = useOnboardingStore((state) => state.draft);
 
-  // Đợi cho đến khi cả hai store được khôi phục dữ liệu đầy đủ
-  if (!onboardingHydrated || !authHydrated) {
+  // Đợi cho đến khi tất cả các store được khôi phục dữ liệu đầy đủ
+  if (!onboardingHydrated || !authHydrated || !settingsHydrated) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
         <ActivityIndicator color={colors.primary} size="large" />

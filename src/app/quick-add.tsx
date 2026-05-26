@@ -1,15 +1,22 @@
+import React, { useMemo } from "react";
 import { StyleSheet, Text, View, Pressable, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { useResponsiveLayout } from "@/constants/responsive";
+import { t } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function QuickAddModal() {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const { isCompactWidth } = useResponsiveLayout();
+  const theme = useSettingsStore((state) => state.theme);
   // Tính toán chiều cao Tab Bar để Faux Tab Bar che khít vị trí thực
   const tabBarHeight = (isCompactWidth ? 72 : 84) + Math.max(insets.bottom, 8);
 
@@ -22,20 +29,18 @@ export default function QuickAddModal() {
   };
 
   const handleNavigate = (path: string) => {
-    // Thay vì gọi back() rồi push() gây conflict animation làm app bị "khựng" (stutter),
-    // chúng ta dùng router.navigate để Expo tự xử lý luồng chuyển tab mượt mà.
     router.navigate(path);
   };
 
   const handleToast = (feature: string) => {
-    Alert.alert("Tính năng sắp ra mắt", `Chức năng "${feature}" đang được phát triển!`);
+    Alert.alert(t.quickAdd.comingSoon, t.quickAdd.featureUnderDev(feature));
   };
 
   // BlurView trên Android cực kỳ nặng và gây lag animation, ta dùng màu nền trong suốt làm fallback
   const Container = Platform.OS === 'ios' ? BlurView : View;
   const containerProps = Platform.OS === 'ios' 
-    ? { intensity: 30, tint: "dark", style: styles.container } as any
-    : { style: [styles.container, { backgroundColor: "rgba(18, 16, 25, 0.9)" }] } as any;
+    ? { intensity: 30, tint: theme === "light" ? "light" : "dark", style: styles.container } as any
+    : { style: [styles.container, { backgroundColor: theme === "light" ? "rgba(244, 245, 247, 0.9)" : "rgba(18, 16, 25, 0.9)" }] } as any;
 
   return (
     <Container {...containerProps}>
@@ -51,61 +56,61 @@ export default function QuickAddModal() {
             <View style={[styles.primaryIconBox, { backgroundColor: colors.warning }]}>
               <Ionicons name="search" size={24} color="#FFF" />
             </View>
-            <Text style={styles.primaryText}>Ghi bữa ăn</Text>
+            <Text style={styles.primaryText}>{t.quickAdd.logMeal}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast("Quét mã")}>
+          <Pressable style={styles.primaryItem} onPress={() => handleToast(t.quickAdd.scanCode)}>
             <View style={[styles.primaryIconBox, { backgroundColor: "#3D8BFF" }]}>
               <Ionicons name="barcode-outline" size={24} color="#FFF" />
             </View>
-            <Text style={styles.primaryText}>Quét mã</Text>
+            <Text style={styles.primaryText}>{t.quickAdd.scanCode}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast("Nhận diện")}>
+          <Pressable style={styles.primaryItem} onPress={() => handleToast(t.quickAdd.aiRecognize)}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.success }]}>
               <Ionicons name="sparkles-outline" size={24} color="#FFF" />
             </View>
-            <Text style={styles.primaryText}>Nhận diện</Text>
+            <Text style={styles.primaryText}>{t.quickAdd.aiRecognize}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast("Giọng nói")}>
+          <Pressable style={styles.primaryItem} onPress={() => handleToast(t.quickAdd.voiceRecord)}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.danger }]}>
               <Ionicons name="mic-outline" size={24} color="#FFF" />
             </View>
-            <Text style={styles.primaryText}>Giọng nói</Text>
+            <Text style={styles.primaryText}>{t.quickAdd.voiceRecord}</Text>
           </Pressable>
         </View>
 
         {/* Row 2-4: Secondary Features (2-Col Grid) */}
         <View style={styles.secondaryGrid}>
-          <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/(tabs)/home")}>
+          <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/log-water")}>
             <MaterialCommunityIcons name="cup-water" size={24} color={colors.textPrimary} />
-            <Text style={styles.secondaryText}>Uống nước</Text>
+            <Text style={styles.secondaryText}>{t.quickAdd.water}</Text>
           </Pressable>
           
           <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/(tabs)/meal-plan")}>
             <Ionicons name="nutrition-outline" size={24} color={colors.textPrimary} />
-            <Text style={styles.secondaryText}>Gợi ý công thức</Text>
+            <Text style={styles.secondaryText}>{t.quickAdd.recipeSuggestions}</Text>
           </Pressable>
           
           <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/add-exercise")}>
             <MaterialCommunityIcons name="fire" size={24} color={colors.textPrimary} />
-            <Text style={styles.secondaryText}>Ghi hoạt động</Text>
+            <Text style={styles.secondaryText}>{t.quickAdd.logActivity}</Text>
           </Pressable>
 
           <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/log-weight")}>
             <MaterialCommunityIcons name="scale-bathroom" size={24} color={colors.textPrimary} />
-            <Text style={styles.secondaryText}>Cân nặng</Text>
+            <Text style={styles.secondaryText}>{t.quickAdd.weight}</Text>
           </Pressable>
 
           <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/create-recipe")}>
             <MaterialCommunityIcons name="book-plus-outline" size={24} color={colors.textPrimary} />
-            <Text style={styles.secondaryText}>Tạo công thức</Text>
+            <Text style={styles.secondaryText}>{t.quickAdd.createRecipe}</Text>
           </Pressable>
 
           <Pressable style={styles.secondaryCard} onPress={() => handleNavigate("/create-food")}>
             <MaterialCommunityIcons name="bowl-mix-outline" size={24} color={colors.textPrimary} />
-            <Text style={styles.secondaryText}>Tạo thực phẩm</Text>
+            <Text style={styles.secondaryText}>{t.quickAdd.createFood}</Text>
           </Pressable>
         </View>
       </View>
@@ -114,11 +119,11 @@ export default function QuickAddModal() {
       <View style={[styles.fauxTabBar, { height: tabBarHeight, paddingBottom: Math.max(insets.bottom, 10), paddingTop: isCompactWidth ? 8 : 10 }]}>
         <Pressable style={styles.fauxTabItem} onPress={() => handleNavigate("/(tabs)/home")}>
           <Ionicons name="sparkles-outline" size={22} color={colors.textMuted} />
-          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>Trang chủ</Text>
+          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>{t.navigation.home}</Text>
         </Pressable>
         <Pressable style={styles.fauxTabItem} onPress={() => handleNavigate("/(tabs)/diary")}>
           <Ionicons name="calendar-outline" size={22} color={colors.textMuted} />
-          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>Nhật ký</Text>
+          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>{t.navigation.diary}</Text>
         </Pressable>
 
         {/* Center Close FAB */}
@@ -130,18 +135,18 @@ export default function QuickAddModal() {
 
         <Pressable style={styles.fauxTabItem} onPress={() => handleNavigate("/(tabs)/meal-plan")}>
           <Ionicons name="restaurant-outline" size={22} color={colors.textMuted} />
-          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>Thực đơn</Text>
+          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>{t.navigation.mealPlan}</Text>
         </Pressable>
         <Pressable style={styles.fauxTabItem} onPress={() => handleNavigate("/(tabs)/account")}>
           <Ionicons name="person-outline" size={22} color={colors.textMuted} />
-          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>Tài khoản</Text>
+          <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>{t.navigation.account}</Text>
         </Pressable>
       </View>
     </Container>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -202,7 +207,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#141223",
+    backgroundColor: colors.bgElevated,
     borderTopWidth: 1,
     borderTopColor: colors.borderSoft,
     flexDirection: "row",

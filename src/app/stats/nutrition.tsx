@@ -1,4 +1,5 @@
 import React from "react";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,6 +10,8 @@ import { PieChart } from "@/components/charts/PieChart";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 
 export default function NutritionStatsScreen() {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
   const { 
     activeTabLabel, tabs, handleTabChange,
@@ -34,8 +37,8 @@ export default function NutritionStatsScreen() {
 
 
   const macroData = [
-    { label: "Chất đạm", value: proteinG, color: "#EF4444" },
-    { label: "Đường bột", value: carbG, color: "#3B82F6" },
+    { label: "Chất đạm", value: proteinG, color: colors.danger },
+    { label: "Đường bột", value: carbG, color: colors.info },
     { label: "Chất béo", value: fatG, color: "#F59E0B" },
   ];
 
@@ -51,7 +54,7 @@ export default function NutritionStatsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thống kê dinh dưỡng</Text>
         <View style={{ width: 24 }} />
@@ -76,7 +79,7 @@ export default function NutritionStatsScreen() {
 
         {isLoading ? (
           <View style={[styles.card, { paddingVertical: 40, alignItems: 'center' }]}>
-            <ActivityIndicator size="large" color="#8B5CF6" />
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : activeTabLabel === "Ngày" ? (
           <>
@@ -130,33 +133,37 @@ export default function NutritionStatsScreen() {
   );
 }
 
-const NutrientRow = ({ label, current, target, isLast = false }: any) => (
-  <View style={[styles.nutrientRow, isLast && { borderBottomWidth: 0 }]}>
-    <Text style={styles.nutrientLabel}>{label}</Text>
-    <Text style={styles.nutrientCurrent}>{current}</Text>
-    <Text style={styles.nutrientTarget}>{target}</Text>
-  </View>
-);
+const NutrientRow = ({ label, current, target, isLast = false }: any) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+  return (
+    <View style={[styles.nutrientRow, isLast && { borderBottomWidth: 0 }]}>
+      <Text style={styles.nutrientLabel}>{label}</Text>
+      <Text style={styles.nutrientCurrent}>{current}</Text>
+      <Text style={styles.nutrientTarget}>{target}</Text>
+    </View>
+  );
+};
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: "transparent" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, paddingTop: 60 },
   backBtn: { padding: 8 },
-  headerTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
+  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "bold" },
   content: { padding: 16 },
-  card: { backgroundColor: "#1E1B2E", borderRadius: 16, padding: 16, marginBottom: 16 },
-  cardTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "600", marginBottom: 16 },
+  card: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
+  cardTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "600", marginBottom: 16 },
   row: { flexDirection: "row", justifyContent: "space-between", marginVertical: 8 },
-  rowLabel: { color: "#9CA3AF", fontSize: 16 },
+  rowLabel: { color: colors.textSecondary, fontSize: 16 },
   targetValue: { color: "#A78BFA", fontSize: 16, fontWeight: "bold" },
-  greyValue: { color: "#9CA3AF", fontSize: 16 },
-  divider: { height: 1, backgroundColor: "#374151", marginVertical: 8 },
+  greyValue: { color: colors.textSecondary, fontSize: 16 },
+  divider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 8 },
   chartContainer: { alignItems: "center", marginVertical: 16 },
   legendContainer: { marginTop: 16, gap: 8 },
-  legendText: { color: "#9CA3AF", fontSize: 14 },
-  sectionTitle: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold", marginBottom: 12 },
-  nutrientRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#374151" },
-  nutrientLabel: { flex: 2, color: "#FFFFFF" },
-  nutrientCurrent: { flex: 1, color: "#9CA3AF", textAlign: "center" },
+  legendText: { color: colors.textSecondary, fontSize: 14 },
+  sectionTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold", marginBottom: 12 },
+  nutrientRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  nutrientLabel: { flex: 2, color: colors.textPrimary },
+  nutrientCurrent: { flex: 1, color: colors.textSecondary, textAlign: "center" },
   nutrientTarget: { flex: 1, color: "#A78BFA", textAlign: "right" },
 });

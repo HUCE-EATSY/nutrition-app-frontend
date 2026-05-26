@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useAppColors } from '@/hooks/useAppColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TargetListItem } from '../../../components/account/targets/TargetListItem';
 
 import { ProgressRingChart } from '../../../components/charts/ProgressRingChart';
 import { EnergyMetricsCard } from '../../../components/account/targets/EnergyMetricsCard';
+import { t } from '@/constants/i18n';
 
 export default function TargetCustomizationScreen() {
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   // Mock data for display
   const targetCalories = 2229;
@@ -21,9 +25,9 @@ export default function TargetCustomizationScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tuỳ chỉnh mục tiêu</Text>
+        <Text style={styles.headerTitle}>{t.targets.title}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -33,47 +37,47 @@ export default function TargetCustomizationScreen() {
           <View style={styles.caloCircle}>
             <Ionicons name="flame" size={24} color="#FF6B6B" />
             <Text style={styles.caloValue}>{targetCalories}</Text>
-            <Text style={styles.caloLabel}>CALO MỤC TIÊU</Text>
+            <Text style={styles.caloLabel}>{t.targets.calorieGoal}</Text>
           </View>
-          <ProgressRingChart percentage={20} color="#FF6B6B" label="Chất đạm" />
-          <ProgressRingChart percentage={50} color="#4D96FF" label="Đường bột" />
-          <ProgressRingChart percentage={30} color="#FFD95A" label="Chất béo" />
+          <ProgressRingChart percentage={20} color="#FF6B6B" label={t.targets.protein} />
+          <ProgressRingChart percentage={50} color="#4D96FF" label={t.targets.carbs} />
+          <ProgressRingChart percentage={30} color="#FFD95A" label={t.targets.fat} />
         </View>
 
         <EnergyMetricsCard bmr={bmr} tdee={tdee} addedCalories={addedCalories} />
 
         
         {/* Section 2: Nutrition Target Customization */}
-        <Text style={styles.sectionTitle}>Tuỳ chỉnh mục tiêu dinh dưỡng</Text>
+        <Text style={styles.sectionTitle}>{t.targets.nutritionCustomize}</Text>
         <View style={styles.card}>
           <TargetListItem
             icon="flame-outline"
             iconColor="#FF6B6B"
-            title="Calo mục tiêu"
+            title={t.targets.calorieTarget}
             onPress={() => router.push('/account/targets/calories')}
           />
           <TargetListItem
             icon="pie-chart-outline"
             iconColor="#4ECDC4"
-            title="Tỷ lệ dinh dưỡng đa lượng"
+            title={t.targets.macroRatio}
             onPress={() => router.push('/account/targets/macros')}
             showDivider={false}
           />
         </View>
 
         {/* Section 3: Other Targets */}
-        <Text style={styles.sectionTitle}>Mục tiêu khác</Text>
+        <Text style={styles.sectionTitle}>{t.targets.otherTargets}</Text>
         <View style={styles.card}>
           <TargetListItem
             icon="water-outline"
             iconColor="#4D96FF"
-            title="Lượng nước"
+            title={t.targets.waterTarget}
             onPress={() => router.push('/account/targets/water')}
           />
           <TargetListItem
             icon="footsteps-outline"
             iconColor="#FFB067"
-            title="Bước chân mục tiêu"
+            title={t.targets.stepTarget}
             onPress={() => router.push('/account/targets/steps')}
             showDivider={false}
           />
@@ -83,10 +87,10 @@ export default function TargetCustomizationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#120E24',
+    backgroundColor: colors.bgBase,
   },
   header: {
     flexDirection: 'row',
@@ -100,7 +104,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -112,14 +116,14 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   sectionTitle: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 12,
     marginTop: 24,
   },
   card: {
-    backgroundColor: '#1F1A3A',
+    backgroundColor: colors.bgElevated,
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -135,13 +139,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   caloValue: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 4,
   },
   caloLabel: {
-    color: '#9E9E9E',
+    color: colors.textSecondary,
     fontSize: 11,
     textAlign: 'center',
   },

@@ -1,8 +1,10 @@
+import React from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 
 import { t } from "@/constants/i18n";
-import { colors, spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography } from "@/constants";
 import { useDiaryStore } from "@/store/diaryStore";
 
 interface MacroItemProps {
@@ -17,6 +19,8 @@ interface MacroItemProps {
 function ProgressItem({ label, current, target, color, icon, type }: MacroItemProps) {
   const percentage = Math.min((current / target) * 100, 100);
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   return (
     <Pressable style={styles.item} onPress={() => router.push(`/guide/${type}`)}>
@@ -54,6 +58,8 @@ export function MacroProgressRow({
   targetFat,
 }: MacroProgressRowProps = {}) {
   const { summary } = useDiaryStore();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   const proteinCurrent = protein ?? summary?.consumedProteinGram ?? 0;
   const proteinTarget = targetProtein ?? summary?.targetProteinGram ?? 120;
@@ -94,7 +100,7 @@ export function MacroProgressRow({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: "row",
     gap: spacing.md,
@@ -119,7 +125,7 @@ const styles = StyleSheet.create({
   },
   track: {
     height: 6,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
     borderRadius: 3,
     overflow: "visible",
     justifyContent: "center",

@@ -11,22 +11,12 @@ import { useEffect } from "react";
 import * as SystemUI from "expo-system-ui";
 import { View, ActivityIndicator, Text } from "react-native";
 
-import { colors } from "@/constants";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
-import { PaperProvider, MD3DarkTheme } from "react-native-paper";
+import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const paperTheme = {
-  ...MD3DarkTheme,
-  colors: {
-    ...MD3DarkTheme.colors,
-    primary: colors.primary,
-    secondary: colors.primaryDark,
-    background: colors.bgBase,
-    surface: colors.surface,
-  },
-};
+import { useSettingsStore } from "@/store/settingsStore";
+import { useAppColors } from "@/hooks/useAppColors";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +33,24 @@ const queryClient = new QueryClient({
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
+  const themeMode = useSettingsStore((state) => state.theme);
+  const settingsHydrated = useSettingsStore((state) => state.hydrated);
+  useSettingsStore((state) => state.language); // Force layout and child screen tree to re-render on language change
+  const colors = useAppColors();
+  const { bgBase } = colors;
+
+  const basePaperTheme = themeMode === "light" ? MD3LightTheme : MD3DarkTheme;
+  const paperTheme = {
+    ...basePaperTheme,
+    colors: {
+      ...basePaperTheme.colors,
+      primary: colors.primary,
+      secondary: colors.primaryDark,
+      background: colors.bgBase,
+      surface: colors.surface,
+    },
+  };
+
   const [loaded, error] = useFonts({
     GoogleSans_400Regular,
     GoogleSans_600SemiBold,
@@ -63,14 +71,14 @@ export default function RootLayout() {
   }, [loaded, error]);
 
   useEffect(() => {
-    if (colors && colors.bgBase) {
-      SystemUI.setBackgroundColorAsync(colors.bgBase).catch(() => undefined);
+    if (bgBase) {
+      SystemUI.setBackgroundColorAsync(bgBase).catch(() => undefined);
     }
-  }, []);
+  }, [bgBase]);
 
   // Auth protection logic
   useEffect(() => {
-    if (!loaded || !hydrated || !authHydrated) return;
+    if (!loaded || !hydrated || !authHydrated || !settingsHydrated) return;
 
     const [firstSegment, secondSegment] = segments as string[];
     const inPublicGroup = firstSegment === "(public)";
@@ -84,7 +92,7 @@ export default function RootLayout() {
       // go back to the index to let it decide where to go (home or onboarding)
       router.replace("/");
     }
-  }, [isAuthenticated, segments, loaded, hydrated, authHydrated, router]);
+  }, [isAuthenticated, segments, loaded, hydrated, authHydrated, settingsHydrated, router]);
 
   if (!loaded && !error) {
     return (
@@ -95,7 +103,7 @@ export default function RootLayout() {
     );
   }
 
-  if (!hydrated || !authHydrated) {
+  if (!hydrated || !authHydrated || !settingsHydrated) {
     return (
       <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
@@ -107,7 +115,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={paperTheme}>
-        <StatusBar style="light" />
+        <StatusBar style={themeMode === "light" ? "dark" : "light"} />
         <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(public)" />
@@ -117,6 +125,7 @@ export default function RootLayout() {
           <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
           <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
           <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
+          <Stack.Screen name="log-water" options={{ presentation: "modal" }} />
           <Stack.Screen name="create-food" options={{ presentation: "modal" }} />
           <Stack.Screen name="create-recipe" options={{ presentation: "modal" }} />
           <Stack.Screen name="webview" options={{ presentation: "modal" }} />

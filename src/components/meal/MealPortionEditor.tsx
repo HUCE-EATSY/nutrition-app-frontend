@@ -1,6 +1,7 @@
 import { View, Text, Pressable, TextInput, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
+import { t } from "@/constants/i18n";
 
 interface Nutrition {
   calories: number;
@@ -49,7 +50,7 @@ export function MealPortionEditor({
 
       {/* Input gram */}
       <View style={styles.rowBetween}>
-        <Text style={styles.label}>Số gram</Text>
+        <Text style={styles.label}>{t.mealEntry.gramsLabel}</Text>
         <View style={styles.inputWrap}>
           <Pressable
             onPress={() => setGrams(String(Math.max(1, (parseFloat(grams) || 0) - 10)))}
@@ -75,7 +76,7 @@ export function MealPortionEditor({
       {/* Chọn khung giờ */}
       {selectedHour !== undefined && (
         <View style={styles.rowBetween}>
-          <Text style={styles.label}>Khung giờ</Text>
+          <Text style={styles.label}>{t.mealEntry.timeSlot}</Text>
           {setSelectedHour ? (
             <View style={styles.inputWrap}>
               <Pressable
@@ -112,10 +113,10 @@ export function MealPortionEditor({
       {nutrition && (
         <View style={styles.nutritionGrid}>
           {[
-            { label: "Calo", val: `${nutrition.calories} kcal`, color: colors.primary },
-            { label: "Protein", val: `${nutrition.protein}g`, color: colors.protein },
-            { label: "Carbs", val: `${nutrition.carb}g`, color: colors.carbs },
-            { label: "Fat", val: `${nutrition.fat}g`, color: colors.fat },
+            { label: t.diary.calories, val: `${nutrition.calories} kcal`, color: colors.primary },
+            { label: t.macros.protein, val: `${nutrition.protein}g`, color: colors.protein },
+            { label: t.macros.carb, val: `${nutrition.carb}g`, color: colors.carbs },
+            { label: t.macros.fat, val: `${nutrition.fat}g`, color: colors.fat },
           ].map((n) => (
             <View key={n.label} style={styles.nutritionCell}>
               <Text style={[styles.nutritionVal, { color: n.color }]}>{n.val}</Text>
@@ -128,7 +129,7 @@ export function MealPortionEditor({
       {/* Nút lưu & hủy */}
       <View style={styles.buttonsRow}>
         <Pressable onPress={onCancel} style={[styles.btn, styles.btnCancel]}>
-          <Text style={styles.btnCancelText}>Hủy</Text>
+          <Text style={styles.btnCancelText}>{t.common.cancel}</Text>
         </Pressable>
         <Pressable
           disabled={isSaving || gramNum <= 0}
@@ -138,7 +139,7 @@ export function MealPortionEditor({
           {isSaving ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={styles.btnSaveText}>Ghi bữa ăn</Text>
+            <Text style={styles.btnSaveText}>{t.mealEntry.title}</Text>
           )}
         </Pressable>
       </View>

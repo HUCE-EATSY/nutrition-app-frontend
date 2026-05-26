@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/constants";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface FilterTabsProps {
@@ -32,7 +33,7 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ tabs, activeTab, onChang
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "#1E1B2E", // Surface/Card color
+    backgroundColor: colors.bgElevated, // Surface/Card color
     borderRadius: 20,
     padding: 4,
     marginVertical: 16,
@@ -44,15 +45,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   activeTab: {
-    backgroundColor: "#8B5CF6", // Accent color (Purple)
+    backgroundColor: colors.primary, // Accent color (Purple)
   },
   tabText: {
-    color: "#9CA3AF", // Secondary text
+    color: colors.textSecondary, // Secondary text
     fontSize: 14,
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontWeight: "bold",
   },
 });

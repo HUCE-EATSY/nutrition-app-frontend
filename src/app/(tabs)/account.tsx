@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Portal, Dialog, Button } from "react-native-paper";
+import { Alert, Image, Pressable, StyleSheet, Text, View, Linking } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -13,9 +12,10 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
 import { userService } from "@/services/userService";
+import { useAppColors } from "@/hooks/useAppColors";
+import { useSettingsStore } from "@/store/settingsStore";
 
 import { getAgeFromBirthDate } from "@/utils/date";
 import { DEFAULT_CURRENT_WEIGHT_KG, DEFAULT_HEIGHT_CM, DEFAULT_TARGET_WEIGHT_KG } from "@/constants/onboarding";
@@ -26,8 +26,22 @@ export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
   const { data: serverUserInfo } = useGetUserInfo();
-  const resetOnboarding = useOnboardingStore((state) => state.reset);
-  const { logout, deleteAccount } = useGoogleAuth();
+
+  const colors = useAppColors();
+  const unit = useSettingsStore((state) => state.unit);
+  // Subscribe to settings to trigger UI re-renders on theme/lang/unit change:
+  const themeMode = useSettingsStore((state) => state.theme);
+  const language = useSettingsStore((state) => state.language);
+
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
+  const formatWeightVal = (kg: number) => {
+    if (unit === "lbs") {
+      const lbs = kg * 2.20462;
+      return `${Math.round(lbs * 10) / 10} lbs`;
+    }
+    return `${kg} kg`;
+  };
 
   // Avatar state: ưu tiên avatarUrl từ server
   const [avatarUri, setAvatarUri] = useState<string | null>(
@@ -45,48 +59,47 @@ export default function AccountScreen() {
   const profile = serverUserInfo?.profile;
   const activeGoal = serverUserInfo?.activeGoal;
 
-  const age = profile?.dateOfBirth 
-    ? getAgeFromBirthDate(profile.dateOfBirth) 
+  const age = profile?.dateOfBirth
+    ? getAgeFromBirthDate(profile.dateOfBirth)
     : (draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24);
 
   const nickname = profile?.displayName ?? draft.nickname ?? userInfo?.email?.split("@")[0] ?? "USER";
-  
-  const joinedDate = serverUserInfo?.createdAt 
-    ? new Date(serverUserInfo.createdAt).toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+
+  const joinedDate = serverUserInfo?.createdAt
+    ? new Date(serverUserInfo.createdAt).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : "12 Thg 05, 2026";
 
   const plan = activeGoal
     ? {
-        targetCalories: Number(activeGoal.targetCalories),
-        targetProteinG: Number(activeGoal.targetProteinG),
-        targetCarbsG: Number(activeGoal.targetCarbsG),
-        targetFatG: Number(activeGoal.targetFatG),
-      }
+      targetCalories: Number(activeGoal.targetCalories),
+      targetProteinG: Number(activeGoal.targetProteinG),
+      targetCarbsG: Number(activeGoal.targetCarbsG),
+      targetFatG: Number(activeGoal.targetFatG),
+    }
     : serverPlan || {
-        targetCalories: 2000,
-        targetProteinG: 100,
-        targetCarbsG: 250,
-        targetFatG: 67,
-      };
+      targetCalories: 2000,
+      targetProteinG: 100,
+      targetCarbsG: 250,
+      targetFatG: 67,
+    };
 
   const proteinPct = Math.round((plan.targetProteinG * 400) / plan.targetCalories) || 20;
   const carbsPct = Math.round((plan.targetCarbsG * 400) / plan.targetCalories) || 50;
   const fatPct = 100 - proteinPct - carbsPct;
-
-  const [settingsVisible, setSettingsVisible] = React.useState(false);
-  const [confirmVisible, setConfirmVisible] = React.useState(false);
-  const [confirmType, setConfirmType] = React.useState<"logout" | "delete" | null>(null);
 
   /** Upload avatar: chọn ảnh rồi gửi lên /api/User/avatar */
   const handleUploadAvatar = async () => {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert("Không có quyền", "Vui lòng cấp quyền truy cập ảnh.");
+        Alert.alert(
+          t.account.journey.permissionDenied,
+          t.account.journey.grantPhotoAccess
+        );
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -107,49 +120,12 @@ export default function AccountScreen() {
       queryClient.invalidateQueries({ queryKey: ["user"] });
     } catch (err) {
       console.error("Lỗi upload avatar:", err);
-      Alert.alert("Lỗi", "Không thể tải ảnh lên. Vui lòng thử lại.");
+      Alert.alert(
+        t.common.error,
+        t.account.journey.uploadAvatarError
+      );
     } finally {
       setIsUploadingAvatar(false);
-    }
-  };
-
-  const showSettings = () => setSettingsVisible(true);
-  const hideSettings = () => setSettingsVisible(false);
-
-  const showConfirm = (type: "logout" | "delete") => {
-    setConfirmType(type);
-    setSettingsVisible(false);
-    setConfirmVisible(true);
-  };
-
-  const hideConfirm = () => {
-    setConfirmVisible(false);
-    setConfirmType(null);
-  };
-
-  const handleLogout = async () => {
-    try {
-      hideConfirm();
-      await logout();
-      resetOnboarding();
-      useOnboardingStore.getState().setPublicFlowStep("social-login");
-      router.replace("/(public)/social-login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      Alert.alert("Lỗi", "Không thể đăng xuất. Vui lòng thử lại.");
-    }
-  };
-
-  const handleDeleteData = async () => {
-    try {
-      hideConfirm();
-      await deleteAccount();
-      resetOnboarding();
-      useOnboardingStore.getState().setPublicFlowStep("social-login");
-      router.replace("/(public)/social-login");
-    } catch (error) {
-      console.error("Delete data failed:", error);
-      Alert.alert("Lỗi", "Không thể xóa dữ liệu. Vui lòng thử lại.");
     }
   };
 
@@ -158,66 +134,14 @@ export default function AccountScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t.account.profileTitle}</Text>
-        <Pressable 
-          onPress={showSettings} 
+        <Pressable
+          onPress={() => router.push("/account/settings")}
           style={styles.settingsButton}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         >
           <Ionicons color={colors.textSecondary} name="settings-outline" size={24} />
         </Pressable>
       </View>
-
-      {/* Settings Menu Dialog */}
-      <Portal>
-        <Dialog onDismiss={hideSettings} visible={settingsVisible} style={styles.dialog}>
-          <Dialog.Title style={styles.dialogTitle}>{t.account.title}</Dialog.Title>
-          <Dialog.Content>
-            <View style={styles.menuContainer}>
-              <Pressable 
-                onPress={() => showConfirm("logout")} 
-                style={styles.menuItem}
-              >
-                <Ionicons color={colors.textSecondary} name="log-out-outline" size={24} />
-                <Text style={styles.menuItemText}>{t.account.logout}</Text>
-              </Pressable>
-              
-              <View style={styles.divider} />
-
-              <Pressable 
-                onPress={() => showConfirm("delete")} 
-                style={styles.menuItem}
-              >
-                <Ionicons color="#FF5A5F" name="trash-outline" size={24} />
-                <Text style={[styles.menuItemText, { color: "#FF5A5F" }]}>{t.account.deleteAccount}</Text>
-              </Pressable>
-            </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={hideSettings} textColor={colors.textSecondary}>{t.common.close}</Button>
-          </Dialog.Actions>
-        </Dialog>
-
-        {/* Confirmation Dialog */}
-        <Dialog onDismiss={hideConfirm} visible={confirmVisible} style={styles.dialog}>
-          <Dialog.Title style={styles.dialogTitle}>
-            {confirmType === "logout" ? t.account.logoutConfirmTitle : t.account.deleteConfirmTitle}
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text style={styles.dialogContent}>
-              {confirmType === "logout" ? t.account.logoutConfirmMessage : t.account.deleteConfirmMessage}
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={hideConfirm} textColor={colors.textSecondary}>{t.common.cancel}</Button>
-            <Button 
-              onPress={confirmType === "logout" ? handleLogout : handleDeleteData} 
-              textColor="#FF5A5F"
-            >
-              {confirmType === "logout" ? t.account.logout : t.account.deleteAccount}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
 
       {/* Profile Section */}
       <View style={styles.profileSection}>
@@ -250,7 +174,7 @@ export default function AccountScreen() {
 
       {/* Premium Banner */}
       <LinearGradient
-        colors={["#FFFFFF", "#FFF5D1", "#FFD28D"]}
+        colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
         end={{ x: 1, y: 0.5 }}
         start={{ x: 0, y: 0.5 }}
         style={styles.premiumBanner}
@@ -278,7 +202,7 @@ export default function AccountScreen() {
         </View>
         <View style={styles.statChip}>
           <Ionicons color={colors.textSecondary} name="barbell-outline" size={18} />
-          <Text style={styles.statChipText}>{profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG} kg</Text>
+          <Text style={styles.statChipText}>{formatWeightVal(profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG)}</Text>
         </View>
       </View>
 
@@ -294,9 +218,9 @@ export default function AccountScreen() {
       {/* Your Journey Section */}
       <SectionHeader title={t.account.yourJourney} />
       {(() => {
-        const startWeight = profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
-        const currentWeightVal = profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
-        const targetWeightVal = profile?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
+        const startWeight = activeGoal?.weightKg ?? profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const currentWeightVal = profile?.weightKg ?? activeGoal?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+        const targetWeightVal = activeGoal?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
 
         let progressPct = 0;
         const totalChangeNeeded = Math.abs(startWeight - targetWeightVal);
@@ -319,32 +243,32 @@ export default function AccountScreen() {
         let journeyTitle: string = t.account.maintainingWeight;
         if (startWeight > targetWeightVal) {
           if (currentWeightVal <= targetWeightVal) {
-            journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu giảm cân!";
+            journeyTitle = t.account.journey.congratsLose;
           } else {
-            const lost = startWeight - currentWeightVal;
-            journeyTitle = lost >= 0 
-              ? `Bạn đã giảm được ${lost.toFixed(1)} kg` 
-              : `Bạn bị tăng ${Math.abs(lost).toFixed(1)} kg so với ban đầu`;
+            const lost = (startWeight - currentWeightVal) * (unit === "lbs" ? 2.20462 : 1);
+            journeyTitle = lost >= 0
+              ? t.account.journey.lostWeight(lost.toFixed(1), unit)
+              : t.account.journey.gainedWeightFromStart(Math.abs(lost).toFixed(1), unit);
           }
         } else if (startWeight < targetWeightVal) {
           if (currentWeightVal >= targetWeightVal) {
-            journeyTitle = "Chúc mừng! Bạn đã đạt mục tiêu tăng cân!";
+            journeyTitle = t.account.journey.congratsGain;
           } else {
-            const gained = currentWeightVal - startWeight;
-            journeyTitle = gained >= 0 
-              ? `Bạn đã tăng được ${gained.toFixed(1)} kg` 
-              : `Bạn bị giảm ${Math.abs(gained).toFixed(1)} kg so với ban đầu`;
+            const gained = (currentWeightVal - startWeight) * (unit === "lbs" ? 2.20462 : 1);
+            journeyTitle = gained >= 0
+              ? t.account.journey.gainedWeight(gained.toFixed(1), unit)
+              : t.account.journey.lostWeightFromStart(Math.abs(gained).toFixed(1), unit);
           }
         }
 
         const journeySubtitle = startWeight === targetWeightVal
-          ? `Mục tiêu giữ dáng ở mốc ${targetWeightVal} kg. Hiện tại: ${currentWeightVal} kg`
-          : `Bắt đầu: ${startWeight} kg • Hiện tại: ${currentWeightVal} kg • Mục tiêu: ${targetWeightVal} kg`;
+          ? t.account.journey.maintenanceTarget(formatWeightVal(targetWeightVal), formatWeightVal(currentWeightVal))
+          : t.account.journey.journeyProgress(formatWeightVal(startWeight), formatWeightVal(currentWeightVal), formatWeightVal(targetWeightVal));
 
         return (
           <View style={styles.journeyCard}>
             <LinearGradient
-              colors={["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
+              colors={themeMode === "light" ? ["rgba(165,108,255,0.06)", "rgba(165,108,255,0.01)"] : ["rgba(165,108,255,0.1)", "rgba(165,108,255,0.02)"]}
               style={styles.journeyCardGradient}
             >
               <View style={styles.journeyIconBg}>
@@ -359,8 +283,8 @@ export default function AccountScreen() {
                   <View style={[styles.progressKnob, { left: progressStr as any }]} />
                 </View>
                 <View style={styles.progressLabels}>
-                  <Text style={styles.progressLabel}>{startWeight} kg</Text>
-                  <Text style={styles.progressLabel}>{targetWeightVal} kg</Text>
+                  <Text style={styles.progressLabel}>{formatWeightVal(startWeight)}</Text>
+                  <Text style={styles.progressLabel}>{formatWeightVal(targetWeightVal)}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -374,10 +298,10 @@ export default function AccountScreen() {
       <View style={styles.macroCard}>
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
-            <ProgressRingChart 
-              percentage={75} 
-              color={colors.warning} 
-              size={120} 
+            <ProgressRingChart
+              percentage={75}
+              color={colors.warning}
+              size={120}
               strokeWidth={8}
               showPercentageText={false}
             />
@@ -386,30 +310,30 @@ export default function AccountScreen() {
               <Text style={styles.calorieValue}>{Math.round(plan.targetCalories).toLocaleString()}</Text>
             </View>
           </View>
-  
+
           <View style={styles.macroList}>
-            <MacroItem 
-              color={colors.protein} 
-              label={t.home.protein} 
-              percentage={`${proteinPct}%`} 
-              value={`${Math.round(plan.targetProteinG)}g`} 
+            <MacroItem
+              color={colors.protein}
+              label={t.home.protein}
+              percentage={`${proteinPct}%`}
+              value={`${Math.round(plan.targetProteinG)}g`}
             />
-            <MacroItem 
-              color={colors.carbs} 
-              label={t.home.carbs} 
-              percentage={`${carbsPct}%`} 
-              value={`${Math.round(plan.targetCarbsG)}g`} 
+            <MacroItem
+              color={colors.carbs}
+              label={t.home.carbs}
+              percentage={`${carbsPct}%`}
+              value={`${Math.round(plan.targetCarbsG)}g`}
             />
-            <MacroItem 
-              color={colors.fat} 
-              label={t.home.fat} 
-              percentage={`${fatPct}%`} 
-              value={`${Math.round(plan.targetFatG)}g`} 
+            <MacroItem
+              color={colors.fat}
+              label={t.home.fat}
+              percentage={`${fatPct}%`}
+              value={`${Math.round(plan.targetFatG)}g`}
             />
           </View>
         </View>
 
-        <Pressable 
+        <Pressable
           style={styles.customizeGoalButton}
           onPress={() => router.push('/account/targets')}
         >
@@ -430,7 +354,7 @@ export default function AccountScreen() {
       <SectionHeader title={t.account.community.title} />
       <View style={styles.communityCard}>
         <LinearGradient
-          colors={["#4A1F76", "#2D1B4D"]}
+          colors={themeMode === "light" ? ["#EFE5FD", "#DFCBFA"] : ["#4A1F76", "#2D1B4D"]}
           style={styles.communityGradient}
         >
           <View style={styles.communityInfo}>
@@ -444,7 +368,17 @@ export default function AccountScreen() {
 
           <Text style={styles.communityJoinTitle}>{t.account.community.joinNow}</Text>
 
-          <Pressable style={styles.communityButton}>
+          <Pressable 
+            onPress={async () => {
+              try {
+                await Linking.openURL("https://www.facebook.com/share/g/1Efu6WHc6a/");
+              } catch (error) {
+                console.error("Error opening community URL:", error);
+                Alert.alert("Lỗi", "Không thể mở trang liên kết này");
+              }
+            }}
+            style={styles.communityButton}
+          >
             <Text style={styles.communityButtonText}>{t.account.community.joinCta}</Text>
           </Pressable>
         </LinearGradient>
@@ -454,15 +388,27 @@ export default function AccountScreen() {
       <View style={styles.socialSection}>
         <Text style={styles.socialTitle}>{t.account.social.search}</Text>
         <View style={styles.socialRow}>
-          <SocialButton icon="logo-tiktok" label={t.account.social.tiktok} />
-          <SocialButton icon="logo-facebook" label={t.account.social.facebook} />
-          <SocialButton icon="logo-instagram" label={t.account.social.instagram} />
+          <SocialButton 
+            icon="logo-tiktok" 
+            label={t.account.social.tiktok} 
+            url="https://www.facebook.com/share/g/1Efu6WHc6a/"
+          />
+          <SocialButton 
+            icon="logo-facebook" 
+            label={t.account.social.facebook} 
+            url="https://www.facebook.com/share/g/1Efu6WHc6a/"
+          />
+          <SocialButton 
+            icon="logo-instagram" 
+            label={t.account.social.instagram} 
+            url="https://www.facebook.com/share/g/1Efu6WHc6a/"
+          />
         </View>
       </View>
 
       {/* Support Center */}
       <Pressable
-        onPress={() => router.push("/webview")}
+        onPress={() => router.push("/account/support")}
         style={styles.supportButton}
       >
         <View style={styles.supportLeft}>
@@ -483,10 +429,7 @@ export default function AccountScreen() {
   );
 }
 
-
-
-
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.xxl,
     paddingHorizontal: spacing.lg,
@@ -532,7 +475,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: radius.pill,
-    backgroundColor: "#3A3852",
+    backgroundColor: colors.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -650,7 +593,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 10,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     borderRadius: radius.pill,
     position: "relative",
     marginBottom: spacing.sm,
@@ -798,8 +741,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: colors.bgElevated,
     paddingVertical: spacing.md,
-    marginBottom: spacing.xxl,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.xl,
   },
   supportLeft: {
     flexDirection: "row",
@@ -810,15 +756,16 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: colors.textPrimary,
   },
+
   footer: {
     alignItems: "center",
-    gap: spacing.sm,
-    paddingBottom: spacing.xxl,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
   },
   footerLogo: {
-    ...typography.h1,
-    fontSize: 32,
-    color: colors.textPrimary,
+    ...typography.h3,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
   },
   versionText: {
     ...typography.caption,
@@ -828,44 +775,14 @@ const styles = StyleSheet.create({
   copyrightText: {
     ...typography.caption,
     color: colors.textMuted,
+    marginTop: 4,
   },
   disclaimerText: {
     ...typography.caption,
-    fontSize: 10,
     color: colors.textMuted,
+    fontSize: 10,
     textAlign: "center",
+    marginTop: spacing.md,
     lineHeight: 14,
-    marginTop: spacing.sm,
-  },
-  dialog: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-  },
-  dialogTitle: {
-    color: colors.textPrimary,
-    ...typography.h3,
-  },
-  dialogContent: {
-    color: colors.textSecondary,
-    ...typography.body,
-  },
-  menuContainer: {
-    marginTop: spacing.sm,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-  },
-  menuItemText: {
-    ...typography.bodyStrong,
-    color: colors.textPrimary,
-    fontSize: 16,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.surfaceAlt,
-    marginVertical: spacing.xs,
   },
 });

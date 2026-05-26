@@ -1,8 +1,11 @@
+import React, { useMemo } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
+import { t } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type StreakChallengeSectionProps = {
   progress: number; // 0..1
@@ -10,14 +13,16 @@ type StreakChallengeSectionProps = {
 };
 
 export function StreakChallengeSection({ progress, onPressSeeMore }: StreakChallengeSectionProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const pct = `${Math.max(0, Math.min(1, progress)) * 100}%` as const;
 
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Thử thách ăn sạch</Text>
+        <Text style={styles.sectionTitle}>{t.streaks.cleanEatingChallenge}</Text>
         <Pressable onPress={onPressSeeMore} style={({ pressed }) => [styles.seeMoreWrap, pressed && styles.pressed]}>
-          <Text style={styles.seeMore}>Xem thêm &gt;</Text>
+          <Text style={styles.seeMore}>{t.streaks.seeMore}</Text>
         </Pressable>
       </View>
 
@@ -27,8 +32,8 @@ export function StreakChallengeSection({ progress, onPressSeeMore }: StreakChall
         </View>
 
         <View style={styles.milestones}>
-          <Milestone label="3" />
-          <Milestone label="7" />
+          <Milestone label="3" styles={styles} />
+          <Milestone label="7" styles={styles} />
           <View style={styles.milestone}>
             <MaterialCommunityIcons name="trophy" size={18} color={colors.textMuted} />
           </View>
@@ -38,7 +43,7 @@ export function StreakChallengeSection({ progress, onPressSeeMore }: StreakChall
   );
 }
 
-function Milestone({ label }: { label: string }) {
+function Milestone({ label, styles }: { label: string; styles: any }) {
   return (
     <View style={styles.milestone}>
       <Text style={styles.milestoneDay}>{label}</Text>
@@ -46,7 +51,7 @@ function Milestone({ label }: { label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   pressed: {
     opacity: 0.92,
   },

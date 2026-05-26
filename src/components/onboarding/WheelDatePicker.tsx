@@ -54,7 +54,9 @@ export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }
     onChange({ day: Math.min(day, nextMaxDay), month, year: y });
   }, [day, month, onChange]);
 
-  const formatMonthLabel = useCallback((m: number) => `${t.onboarding.wheelDate.month} ${m}`, []);
+  const monthWord = t.onboarding.wheelDate.month;
+  const formatMonthLabel = useCallback((m: number) => `${monthWord} ${m}`, [monthWord]);
+
 
   return (
     <View style={styles.container}>
