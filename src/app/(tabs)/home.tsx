@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View, Image } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { t } from "@/constants/i18n";
-import { colors, theme, spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography } from "@/constants";
 import { HomeHeader, DateScroller } from "@/components/dashboard/HomeHeader";
 import { CalorieOverview } from "@/components/dashboard/CalorieOverview";
 import { MacroProgressRow } from "@/components/dashboard/MacroProgressRow";
@@ -14,9 +15,15 @@ import { SmallStatRow } from "@/components/dashboard/SmallStatRow";
 import { WaterIntakeCard } from "@/components/dashboard/WaterIntakeCard";
 import { WeightChartCard } from "@/components/dashboard/WeightChartCard";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useStepsStore } from "@/store/statsStore";
+import { getTodayDateISO } from "@/utils/date";
 
 export default function HomeScreen() {
+  const t = useTranslation();
   const { summary, rawLogs, exercises, fetchDiary, selectedDate } = useDiaryStore();
+  const { todaySteps, isConnected, stepRecords } = useStepsStore();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   useEffect(() => {
     fetchDiary(selectedDate);
@@ -24,7 +31,14 @@ export default function HomeScreen() {
 
   const goal = Math.round(summary?.targetCalories ?? 2000);
   const consumed = Math.round(summary?.consumedCalories ?? 0);
-  const burned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
+  
+  // Calculate exercise calories and step calories for the selected date
+  const exerciseBurned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
+  const todayStr = getTodayDateISO();
+  const stepsForSelectedDate = selectedDate === todayStr ? todaySteps : ((stepRecords || {})[selectedDate] || 0);
+  const stepBurned = isConnected ? Math.round(stepsForSelectedDate * 0.04) : 0;
+
+  const burned = exerciseBurned + stepBurned;
   const remaining = Math.round(Math.max(goal - consumed + burned, 0));
   const percentage = Math.round(Math.min((consumed / goal) * 100, 100));
 
@@ -114,16 +128,16 @@ export default function HomeScreen() {
                       </Text>
                       
                       <View style={styles.hourMacrosRow}>
-                        <Ionicons color={theme.colors.primary} name="flame" size={11} />
+                        <Ionicons color={colors.primary} name="flame" size={11} />
                         <Text style={styles.hourMacroText}>{Math.round(slotTotals.calories)} cal</Text>
                         
-                        <Ionicons color={theme.colors.protein} name="flash" size={11} />
+                        <Ionicons color={colors.protein} name="flash" size={11} />
                         <Text style={styles.hourMacroText}>{slotTotals.protein}g</Text>
                         
-                        <Ionicons color={theme.colors.carbs} name="leaf" size={11} />
+                        <Ionicons color={colors.carbs} name="leaf" size={11} />
                         <Text style={styles.hourMacroText}>{slotTotals.carbs}g</Text>
                         
-                        <Ionicons color={theme.colors.fat} name="water" size={11} />
+                        <Ionicons color={colors.fat} name="water" size={11} />
                         <Text style={styles.hourMacroText}>{slotTotals.fat}g</Text>
                       </View>
                       
@@ -140,7 +154,7 @@ export default function HomeScreen() {
                               <Image source={{ uri: entry.imageUrl }} style={styles.foodCardImg} />
                             ) : (
                               <View style={styles.foodCardImgPlaceholder}>
-                                <Ionicons color={theme.colors.textMuted} name="restaurant-outline" size={22} />
+                                <Ionicons color={colors.textMuted} name="restaurant-outline" size={22} />
                               </View>
                             )}
                             
@@ -149,21 +163,21 @@ export default function HomeScreen() {
                                 {entry.title}
                               </Text>
                               <Text style={styles.foodCardSub}>
-                                {servings} Khẩu phần • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
+                                {servings} {t.common.servings} • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
                               </Text>
                               <View style={styles.foodCardMacros}>
-                                <Ionicons color={theme.colors.protein} name="flash" size={11} />
-                                <Text style={[styles.foodCardMacroVal, { color: theme.colors.protein }]}>
+                                <Ionicons color={colors.protein} name="flash" size={11} />
+                                <Text style={[styles.foodCardMacroVal, { color: colors.protein }]}>
                                   {entry.proteinGram}g
                                 </Text>
                                 
-                                <Ionicons color={theme.colors.carbs} name="leaf" size={11} />
-                                <Text style={[styles.foodCardMacroVal, { color: theme.colors.carbs }]}>
+                                <Ionicons color={colors.carbs} name="leaf" size={11} />
+                                <Text style={[styles.foodCardMacroVal, { color: colors.carbs }]}>
                                   {entry.carbGram}g
                                 </Text>
                                 
-                                <Ionicons color={theme.colors.fat} name="water" size={11} />
-                                <Text style={[styles.foodCardMacroVal, { color: theme.colors.fat }]}>
+                                <Ionicons color={colors.fat} name="water" size={11} />
+                                <Text style={[styles.foodCardMacroVal, { color: colors.fat }]}>
                                   {entry.fatGram}g
                                 </Text>
                               </View>
@@ -191,7 +205,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     gap: spacing.lg,
     paddingVertical: spacing.lg,
@@ -211,7 +225,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
   },
   dotActive: {
     backgroundColor: colors.primary,
@@ -258,7 +272,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255,255,255,0.02)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -272,7 +286,7 @@ const styles = StyleSheet.create({
   hourLineDivider: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.borderSoft,
   },
   hourContentList: {
     marginTop: spacing.sm,

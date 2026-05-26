@@ -1,7 +1,7 @@
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { AuthProvider } from "@/types/contracts";
 import { colors, radius, typography } from "@/constants";
 
@@ -21,6 +21,7 @@ function SocialIcon({ provider }: { provider: AuthProvider }) {
 }
 
 export function SocialAuthButton({ provider, label, loading = false, onPress }: SocialAuthButtonProps) {
+  const t = useTranslation();
   return (
     <Pressable disabled={loading} onPress={onPress} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
       <View style={styles.iconWrap}>

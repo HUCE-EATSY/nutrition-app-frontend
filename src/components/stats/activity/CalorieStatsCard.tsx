@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/constants";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,7 +13,7 @@ export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus 
   return (
     <View style={styles.card}>
       <View style={styles.cardHeaderRow}>
-        <Ionicons name="flame" size={20} color="#EF4444" />
+        <Ionicons name="flame" size={20} color={colors.danger} />
         <Text style={styles.cardTitle}> Thống kê calo tập luyện</Text>
       </View>
       
@@ -30,7 +31,7 @@ export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus 
       <View style={styles.dailyStatus}>
         {daysStatus.map((status, idx) => (
           <View key={idx} style={styles.statusDotWrapper}>
-            <View style={[styles.statusDot, status.hasData && { backgroundColor: "#EF4444" }]} />
+            <View style={[styles.statusDot, status.hasData && { backgroundColor: colors.danger }]} />
             <Text style={styles.statusDay}>{status.day}</Text>
           </View>
         ))}
@@ -40,15 +41,15 @@ export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus 
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: "#1E1B2E", borderRadius: 16, padding: 16, marginBottom: 16 },
+  card: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  cardTitle: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
+  cardTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold" },
   gridMetrics: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
   metricBox: { flex: 1, alignItems: "center" },
-  metricValue: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold", marginBottom: 4 },
-  metricLabel: { color: "#9CA3AF", fontSize: 12 },
+  metricValue: { color: colors.textPrimary, fontSize: 18, fontWeight: "bold", marginBottom: 4 },
+  metricLabel: { color: colors.textSecondary, fontSize: 12 },
   dailyStatus: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
   statusDotWrapper: { alignItems: "center", gap: 4 },
-  statusDot: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#374151" },
-  statusDay: { color: "#9CA3AF", fontSize: 12 },
+  statusDot: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.borderSoft },
+  statusDay: { color: colors.textSecondary, fontSize: 12 },
 });

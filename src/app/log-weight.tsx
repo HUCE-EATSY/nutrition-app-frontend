@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView, ActivityIndicator, TextInput } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
@@ -7,20 +7,29 @@ import { useQueryClient } from "@tanstack/react-query";
 
 
 
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { saveWeightLog } from "@/services/weightLogService";
 import { getTodayDateISO } from "@/utils/date";
 import { useWeightStore } from "@/store/statsStore";
 import { useWeightStats } from "@/hooks/stats/useWeightStats";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useTranslation } from "@/constants/i18n";
 
 export default function LogWeightScreen() {
+  const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { currentWeight, resolvedTarget } = useWeightStats();
+  const unit = useSettingsStore((state) => state.unit);
 
-  // Khởi tạo cân nặng bằng cân nặng gần nhất hoặc 60kg làm mặc định
-  const [weight, setWeight] = useState(currentWeight || 60);
+  const defaultWeight = unit === "lbs" ? 130 : 60;
+
+  // Khởi tạo cân nặng bằng cân nặng gần nhất hoặc mặc định dựa trên đơn vị
+  const [weight, setWeight] = useState(currentWeight || defaultWeight);
   const [isSaving, setIsSaving] = useState(false);
 
   // Cho phép tự điền ngày để test (mặc định là ngày hôm nay dạng YYYY-MM-DD)
@@ -34,7 +43,7 @@ export default function LogWeightScreen() {
   }, [currentWeight]);
 
   const handleUpload = () => {
-    Alert.alert("Chưa hỗ trợ", "Tính năng thêm ảnh chụp sẽ được ra mắt trong phiên bản tới.");
+    Alert.alert(t.stats.notSupported, t.stats.photoUploadHint);
   };
 
   const handleSave = async () => {
@@ -43,13 +52,14 @@ export default function LogWeightScreen() {
     // Kiểm tra định dạng ngày nhập YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(logDateStr)) {
-      Alert.alert("Lỗi định dạng", "Vui lòng nhập ngày đúng định dạng YYYY-MM-DD.\nVí dụ: 2026-05-20");
+      Alert.alert(t.stats.formatError, t.stats.invalidDateMsg);
       return;
     }
 
     setIsSaving(true);
     try {
-      await saveWeightLog(weight, logDateStr);
+      const weightToSend = unit === "lbs" ? parseFloat((weight / 2.20462).toFixed(2)) : weight;
+      await saveWeightLog(weightToSend, logDateStr);
 
       // Invalidate react-query cache for user profile (Account & Physical Profile)
       queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -60,7 +70,7 @@ export default function LogWeightScreen() {
 
       router.back();
     } catch (error: any) {
-      Alert.alert("Lỗi", error.message || "Không thể lưu cân nặng. Vui lòng thử lại.");
+      Alert.alert(t.common.error, error.message || t.stats.logWeightError);
     } finally {
       setIsSaving(false);
     }
@@ -78,7 +88,7 @@ export default function LogWeightScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerSpacer} />
-          <Text style={styles.headerTitle}>Ghi lại cân nặng</Text>
+          <Text style={styles.headerTitle}>{t.stats.logWeightTitle}</Text>
           <Pressable style={styles.closeBtn} onPress={() => router.back()} hitSlop={15}>
             <Ionicons name="close" size={28} color={colors.textPrimary} />
           </Pressable>
@@ -90,16 +100,16 @@ export default function LogWeightScreen() {
             <MaterialCommunityIcons name="camera-plus-outline" size={48} color={colors.textMuted} />
           </Pressable>
           <Pressable onPress={handleUpload}>
-            <Text style={styles.uploadText}>+ Thêm ảnh chụp</Text>
+            <Text style={styles.uploadText}>{t.stats.addPhoto}</Text>
           </Pressable>
         </View>
 
         {/* Main Input Section (Weight Stepper) */}
         <View style={styles.inputSection}>
           <View style={styles.inputHeader}>
-            <Text style={styles.inputLabel}>Cân nặng hiện tại</Text>
+            <Text style={styles.inputLabel}>{t.physicalProfile.currentWeight}</Text>
             <Text style={styles.inputGoal}>
-              Mục tiêu: {resolvedTarget ? `${resolvedTarget} Kg` : "Chưa đặt"}
+              {t.stats.goal}: {resolvedTarget ? `${resolvedTarget} ${unit === "lbs" ? "Lbs" : "Kg"}` : t.stats.notSet}
             </Text>
           </View>
 
@@ -114,7 +124,7 @@ export default function LogWeightScreen() {
             </Pressable>
 
             {/* Giá trị */}
-            <Text style={styles.weightValue}>{weight} Kg</Text>
+            <Text style={styles.weightValue}>{weight} {unit === "lbs" ? "Lbs" : "Kg"}</Text>
 
             {/* Nút Cộng */}
             <Pressable
@@ -130,7 +140,7 @@ export default function LogWeightScreen() {
         {/* Form Fields (Date Picker) */}
         <View style={styles.formSection}>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Ngày cân</Text>
+            <Text style={styles.dateLabel}>{t.stats.logDate}</Text>
             <View style={styles.dateRight}>
               <TextInput
                 style={styles.dateInput}
@@ -159,7 +169,7 @@ export default function LogWeightScreen() {
           {isSaving ? (
             <ActivityIndicator color={colors.textPrimary} size="small" />
           ) : (
-            <Text style={styles.saveBtnText}>Lưu cân nặng</Text>
+            <Text style={styles.saveBtnText}>{t.stats.saveWeight}</Text>
           )}
         </Pressable>
       </View>
@@ -167,7 +177,7 @@ export default function LogWeightScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bgBase,

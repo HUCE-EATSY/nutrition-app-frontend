@@ -8,7 +8,7 @@ import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPi
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { BmiCard } from "@/components/onboarding/BmiCard";
 import { colors, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
@@ -22,6 +22,7 @@ const currentWeightSchema = z.object({
 });
 
 export default function CurrentWeightScreen() {
+  const t = useTranslation();
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   
   const { control, isValid, meta, onContinue, onBack } = useOnboardingForm(
@@ -76,7 +77,7 @@ export default function CurrentWeightScreen() {
         {/* References and continue */}
         <View style={styles.bottomSection}>
           <Pressable onPress={showBmiReferencesAlert} style={styles.refButton}>
-            <Text style={styles.refText}>Nguồn tham khảo</Text>
+            <Text style={styles.refText}>{t.nutrition.referenceSource}</Text>
           </Pressable>
 
           <GradientButton

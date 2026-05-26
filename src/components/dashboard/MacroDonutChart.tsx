@@ -1,9 +1,11 @@
+import React, { useMemo } from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
-import { colors, spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type MacroDonutChartProps = {
   calories: number;
@@ -52,7 +54,11 @@ export function MacroDonutChart({
   carbGram,
   fatGram,
 }: MacroDonutChartProps) {
+  const t = useTranslation();
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  
   const radius = 46;
   const circumference = 2 * Math.PI * radius;
   const proteinLength = (proteinPct / 100) * circumference;
@@ -63,7 +69,7 @@ export function MacroDonutChart({
       <View style={styles.chartWrap}>
         <Svg height="128" width="128" viewBox="0 0 128 128">
           <G rotation="-90" origin="64, 64">
-            <Circle cx="64" cy="64" fill="none" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
+            <Circle cx="64" cy="64" fill="none" r={radius} stroke={colors.primary === "#A56CFF" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"} strokeWidth="14" />
             <Arc circumference={circumference} offset={0} percentage={proteinPct} radius={radius} stroke={colors.protein} />
             <Arc
               circumference={circumference}
@@ -102,7 +108,7 @@ export function MacroDonutChart({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrap: {
     alignItems: "center",
     gap: spacing.lg,

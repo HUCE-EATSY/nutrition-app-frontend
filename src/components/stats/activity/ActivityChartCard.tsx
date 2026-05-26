@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/constants";
 import { View, StyleSheet } from "react-native";
 import { BarChart } from "@/components/charts/BarChart";
 
@@ -14,7 +15,7 @@ export const ActivityChartCard = ({ data, averageValue = 200 }: ActivityChartCar
         <BarChart 
           data={data} 
           averageValue={averageValue}
-          barColor="#EF4444" 
+          barColor={colors.danger} 
           showYAxis={true} 
         />
       </View>
@@ -23,6 +24,6 @@ export const ActivityChartCard = ({ data, averageValue = 200 }: ActivityChartCar
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: "#1E1B2E", borderRadius: 16, padding: 16, marginBottom: 16 },
+  card: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
   chartContainer: { alignItems: "center", marginVertical: 8 },
 });

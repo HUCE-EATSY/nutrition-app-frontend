@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { activityOptions } from "@/constants/onboarding";
 
 const activityLevelSchema = z.object({
@@ -9,6 +9,7 @@ const activityLevelSchema = z.object({
 });
 
 export default function ActivityLevelScreen() {
+  const t = useTranslation();
   return (
     <OnboardingOptionSelection
       stepName="ActivityLevel"

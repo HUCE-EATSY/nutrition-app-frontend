@@ -9,13 +9,12 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { trackEvent } from "@/utils/analytics";
+import { useTranslation } from "@/constants/i18n";
 
 const BRAND = "Nutrition";
-const TITLE = "Ứng dụng dinh dưỡng";
-const DESCRIPTION = "Ứng dụng cá nhân hoá món ăn, thói quen và lối sống dành cho người Việt.";
-const CTA = "Bắt đầu ngay";
 
 export default function WelcomeScreen() {
+  const t = useTranslation();
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const { width, isNarrowWidth, isShortHeight } = useResponsiveLayout();
   const isCompactLayout = isNarrowWidth || isShortHeight;
@@ -40,11 +39,11 @@ export default function WelcomeScreen() {
           </View>
 
           <View style={styles.copyWrap}>
-            <Text style={[styles.title, isNarrowWidth && styles.titleCompact]}>{TITLE}</Text>
-            <Text style={[styles.description, isNarrowWidth && styles.descriptionCompact]}>{DESCRIPTION}</Text>
+            <Text style={[styles.title, isNarrowWidth && styles.titleCompact]}>{t.auth.welcome.title}</Text>
+            <Text style={[styles.description, isNarrowWidth && styles.descriptionCompact]}>{t.auth.welcome.description}</Text>
           </View>
 
-          <GradientButton label={CTA} onPress={handleStart} style={styles.button} />
+          <GradientButton label={t.auth.welcome.cta} onPress={handleStart} style={styles.button} />
         </View>
       </View>
     </SafeScreen>
@@ -127,7 +126,7 @@ const styles = StyleSheet.create({
   },
   description: {
     ...typography.body,
-    color: "rgba(255,255,255,0.72)",
+    color: colors.textSecondary,
     textAlign: "center",
     maxWidth: 360,
     lineHeight: 24,

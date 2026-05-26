@@ -1,27 +1,40 @@
+import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius, layout } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography, radius, layout } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
 import { useWeightStats } from "@/hooks/stats/useWeightStats";
 import { LineChart } from "../charts/LineChart";
 import { useResponsiveLayout } from "@/constants/responsive";
+import { useSettingsStore } from "@/store/settingsStore";
 
-function formatLogDate(isoString?: string) {
-  if (!isoString) return "Chưa có dữ liệu";
+function formatLogDate(isoString?: string, language?: string) {
+  if (!isoString) return language === "vi" ? "Chưa có dữ liệu" : "No data";
   const parts = isoString.split("-");
   if (parts.length < 3) return isoString;
   const year = parts[0];
   const month = parts[1];
   const day = parts[2];
+  if (language === "en") {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const mIdx = parseInt(month, 10) - 1;
+    return `${months[mIdx] || month} ${day}, ${year}`;
+  }
   return `${day} Th ${month}, ${year}`;
 }
 
 export function WeightChartCard() {
+  const t = useTranslation();
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const { width: windowWidth, horizontalPadding } = useResponsiveLayout();
+  const language = useSettingsStore((state) => state.language);
+  const unit = useSettingsStore((state) => state.unit);
   
   const {
     currentWeight,
@@ -33,7 +46,9 @@ export function WeightChartCard() {
   const contentWidth = Math.min(windowWidth, layout.maxCardWidth);
   const chartWidth = contentWidth - (horizontalPadding * 2) - (spacing.md * 2);
   const lastPoint = actualChartData[actualChartData.length - 1];
-  const dateStr = lastPoint ? formatLogDate(lastPoint.fullDate) : "Chưa ghi nhận";
+  const dateStr = lastPoint 
+    ? formatLogDate(lastPoint.fullDate, language) 
+    : (language === "vi" ? "Chưa ghi nhận" : "Not recorded");
   const hasData = actualChartData.length > 0;
 
   return (
@@ -48,7 +63,7 @@ export function WeightChartCard() {
       <View style={styles.main}>
         <View>
           <Text style={styles.weightValue}>
-            {currentWeight > 0 ? `${currentWeight} ${t.home.kgSuffix}` : "N/A"}
+            {currentWeight > 0 ? `${currentWeight} ${unit}` : "N/A"}
           </Text>
           <Text style={styles.date}>{dateStr}</Text>
         </View>
@@ -59,24 +74,25 @@ export function WeightChartCard() {
 
       <View style={styles.chartArea}>
          {isLoading ? (
-           <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
          ) : !hasData ? (
-           <Text style={styles.noDataText}>Chưa có dữ liệu cân nặng</Text>
+            <Text style={styles.noDataText}>{t.stats.noDataWeight}</Text>
          ) : (
-           <LineChart
-             actualData={actualChartData}
-             targetData={targetChartData}
-             width={chartWidth}
-             height={100}
-             yUnit="kg"
-           />
+            <LineChart
+              actualData={actualChartData}
+              targetData={targetChartData}
+              width={chartWidth}
+              height={100}
+              yUnit={unit}
+              targetColor={colors.textSecondary}
+            />
          )}
       </View>
     </SurfaceCard>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     padding: spacing.md,
     gap: spacing.md,
@@ -118,7 +134,7 @@ const styles = StyleSheet.create({
   updateText: {
     ...typography.caption,
     fontWeight: "700",
-    color: colors.textPrimary,
+    color: colors.primary === "#A56CFF" ? colors.textPrimary : "#FFFFFF",
   },
   chartArea: {
     height: 100,

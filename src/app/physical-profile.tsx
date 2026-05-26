@@ -13,56 +13,51 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors, gradients, radius, spacing, typography } from "@/constants";
+import { gradients, radius, spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
+import { t, useTranslation } from "@/constants/i18n";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useOnboardingStore } from "@/store/onboardingStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { getAgeFromBirthDate } from "@/utils/date";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
   DEFAULT_TARGET_WEIGHT_KG,
-  activityOptions,
-  goalOptions,
 } from "@/constants/onboarding";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const GENDER_LABEL: Record<number, string> = { 1: "Nam", 2: "Nữ" };
-
-const ACTIVITY_LABEL: Record<number, string> = {
-  1: "Ít vận động",
-  2: "Vận động nhẹ",
-  3: "Vận động vừa",
-  4: "Rất năng động",
-  5: "Cực kỳ năng động",
-};
-
-const GOAL_LABEL: Record<number, string> = {
-  1: "Giảm cân",
-  2: "Tăng cân",
-  3: "Duy trì cân nặng",
-};
-
 function calcEstimatedDate(goalWeightKg: number, currentWeightKg: number, weeklyRateKg = 0.2): string {
   const diff = Math.abs(goalWeightKg - currentWeightKg);
-  if (diff === 0 || weeklyRateKg <= 0) return "Đang duy trì";
+  const lang = useSettingsStore.getState?.()?.language || "vi";
+  if (diff === 0 || weeklyRateKg <= 0) return t.physicalProfile.estimatedMaintaining;
   const weeks = Math.ceil(diff / weeklyRateKg);
   const d = new Date();
   d.setDate(d.getDate() + weeks * 7);
-  return d.toLocaleDateString("vi-VN", { day: "numeric", month: "long", year: "numeric" });
+  return d.toLocaleDateString(lang === "vi" ? "vi-VN" : "en-US", { day: "numeric", month: "long", year: "numeric" });
 }
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function PhysicalProfileScreen() {
+  const t = useTranslation();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   // Bypass API call for UI development when auth is disabled
   const { data: userGoalInfo } = useGetUserInfo();
   const { draft } = useOnboardingStore();
+  const unit = useSettingsStore((state) => state.unit);
   const [resetModalVisible, setResetModalVisible] = useState(false);
 
   const profileInfo = userGoalInfo?.profile;
   const activeGoal = userGoalInfo?.activeGoal;
+
+  const isLbs = unit === "lbs";
+  const convertWeight = (val: number) => {
+    return isLbs ? parseFloat((val * 2.20462).toFixed(1)) : val;
+  };
 
   // ── Derived values ──
   const nickname =
@@ -73,9 +68,16 @@ export default function PhysicalProfileScreen() {
     ? getAgeFromBirthDate(draft.birthDateISO)
     : "—";
 
+  const GENDER_LABEL: Record<string | number, string> = {
+    1: t.physicalProfile.genders.male,
+    2: t.physicalProfile.genders.female,
+    male: t.physicalProfile.genders.male,
+    female: t.physicalProfile.genders.female,
+  };
+
   const genderLabel =
-    GENDER_LABEL[profileInfo?.gender ?? 0] ??
-    (draft.gender === "male" ? "Nam" : draft.gender === "female" ? "Nữ" : "—");
+    GENDER_LABEL[profileInfo?.gender ?? ""] ??
+    GENDER_LABEL[draft.gender ?? ""] ?? "—";
   const heightCm = profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM;
   const weightKg = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
   const goalWeightKg = activeGoal?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
@@ -84,15 +86,41 @@ export default function PhysicalProfileScreen() {
   const goalType = activeGoal?.goalType ?? null;
   const weeklyGoalKg = draft.weeklyGoalKg ?? 0.2;
 
-  const goalLabel = goalType ? GOAL_LABEL[goalType] : (draft.goalType ? goalOptions.find(o => o.value === draft.goalType)?.title : "—");
-  const activityLabel = activityLevel ? ACTIVITY_LABEL[activityLevel] : (draft.activityLevel ? activityOptions.find(o => o.value === draft.activityLevel)?.title : "—");
+  const displayedWeight = convertWeight(weightKg);
+  const displayedGoalWeight = convertWeight(goalWeightKg);
+  const displayedWeeklyGoal = convertWeight(weeklyGoalKg);
+
+  const GOAL_LABEL: Record<string | number, string> = {
+    1: t.onboarding.goalOptions.lose_weight.title,
+    2: t.onboarding.goalOptions.gain_weight.title,
+    3: t.onboarding.goalOptions.maintain_weight.title,
+    lose_weight: t.onboarding.goalOptions.lose_weight.title,
+    gain_weight: t.onboarding.goalOptions.gain_weight.title,
+    maintain_weight: t.onboarding.goalOptions.maintain_weight.title,
+  };
+
+  const ACTIVITY_LABEL: Record<string | number, string> = {
+    1: t.onboarding.activityOptions.sedentary.title,
+    2: t.onboarding.activityOptions.light.title,
+    3: t.onboarding.activityOptions.moderate.title,
+    4: t.onboarding.activityOptions.active.title,
+    5: t.onboarding.activityOptions.very_active.title,
+    sedentary: t.onboarding.activityOptions.sedentary.title,
+    light: t.onboarding.activityOptions.light.title,
+    moderate: t.onboarding.activityOptions.moderate.title,
+    active: t.onboarding.activityOptions.active.title,
+    very_active: t.onboarding.activityOptions.very_active.title,
+  };
+
+  const goalLabel = GOAL_LABEL[goalType ?? ""] ?? GOAL_LABEL[draft.goalType ?? ""] ?? "—";
+  const activityLabel = ACTIVITY_LABEL[activityLevel ?? ""] ?? ACTIVITY_LABEL[draft.activityLevel ?? ""] ?? "—";
 
   const weeklyGoalLabel =
     goalType === 1 || draft.goalType === "lose_weight"
-      ? `Giảm ${weeklyGoalKg} kg/tuần`
+      ? t.physicalProfile.weeklyGoalLabel.lose(String(displayedWeeklyGoal), unit)
       : goalType === 2 || draft.goalType === "gain_weight"
-      ? `Tăng ${weeklyGoalKg} kg/tuần`
-      : "Duy trì cân nặng";
+      ? t.physicalProfile.weeklyGoalLabel.gain(String(displayedWeeklyGoal), unit)
+      : t.physicalProfile.weeklyGoalLabel.maintain;
 
   const estimatedDate = calcEstimatedDate(goalWeightKg as number, weightKg as number, weeklyGoalKg);
 
@@ -107,7 +135,7 @@ export default function PhysicalProfileScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </Pressable>
-        <Text style={styles.navTitle}>Hồ sơ thể chất</Text>
+        <Text style={styles.navTitle}>{t.physicalProfile.title}</Text>
         <View style={styles.navBtn} />
       </View>
 
@@ -121,11 +149,11 @@ export default function PhysicalProfileScreen() {
         {/* ── Card 1: Basic Info ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Thông tin cơ bản</Text>
+            <Text style={styles.cardTitle}>{t.physicalProfile.basicInfo}</Text>
             <Pressable
               hitSlop={12}
               style={({ pressed }) => pressed && { opacity: 0.6 }}
-              onPress={() => Alert.alert("Chỉnh sửa", "Tính năng đang phát triển")}
+              onPress={() => Alert.alert(t.common.edit, t.common.featureUnderDev)}
             >
               <Ionicons name="pencil-outline" size={18} color={colors.primary} />
             </Pressable>
@@ -136,18 +164,18 @@ export default function PhysicalProfileScreen() {
 
           {/* 3-column grid */}
           <View style={styles.infoGrid}>
-            <InfoCell label="GIỚI TÍNH" value={genderLabel} />
+            <InfoCell label={t.physicalProfile.gender} value={genderLabel} />
             <View style={styles.gridDivider} />
-            <InfoCell label="TUỔI" value={String(age)} />
+            <InfoCell label={t.physicalProfile.age} value={String(age)} />
             <View style={styles.gridDivider} />
-            <InfoCell label="CHIỀU CAO" value={`${heightCm} cm`} />
+            <InfoCell label={t.physicalProfile.height} value={`${heightCm} cm`} />
           </View>
         </View>
 
         {/* ── Card 2: Weight Goal ── */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Mục tiêu cân nặng</Text>
+            <Text style={styles.cardTitle}>{t.physicalProfile.weightGoal}</Text>
             <Pressable hitSlop={12}>
               <Ionicons
                 name="information-circle-outline"
@@ -172,24 +200,24 @@ export default function PhysicalProfileScreen() {
 
           {/* Goal rows */}
           <GoalRow
-            label="Mục tiêu hàng tuần"
+            label={t.physicalProfile.weeklyGoal}
             value={weeklyGoalLabel}
             clickable
-            onPress={() => Alert.alert("Mục tiêu hàng tuần", "Tính năng đang phát triển")}
+            onPress={() => Alert.alert(t.physicalProfile.weeklyGoal, t.common.featureUnderDev)}
           />
           <GoalRow
-            label="Cường độ vận động"
+            label={t.physicalProfile.activityLevel}
             value={activityLabel ?? "—"}
             clickable
-            onPress={() => Alert.alert("Cường độ vận động", "Tính năng đang phát triển")}
+            onPress={() => Alert.alert(t.physicalProfile.activityLevel, t.common.featureUnderDev)}
             truncate
           />
           <GoalRow
-            label="Calo mục tiêu"
-            value={targetCalories ? `${Math.round(Number(targetCalories))} calo` : "— calo"}
+            label={t.physicalProfile.calorieGoal}
+            value={targetCalories ? `${Math.round(Number(targetCalories))} kcal` : "— kcal"}
           />
           <GoalRow
-            label="Dự kiến hoàn thành"
+            label={t.physicalProfile.estimatedCompletion}
             value={estimatedDate}
             isLast
           />
@@ -197,11 +225,11 @@ export default function PhysicalProfileScreen() {
 
         {/* ── Weight summary ── */}
         <View style={styles.weightRow}>
-          <WeightChip label="CÂN NẶNG HIỆN TẠI" value={`${weightKg} kg`} color={colors.textPrimary} />
+          <WeightChip label={t.physicalProfile.currentWeight} value={`${displayedWeight} ${unit}`} color={colors.textPrimary} />
           <View style={styles.weightArrow}>
             <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
           </View>
-          <WeightChip label="MỤC TIÊU" value={`${goalWeightKg} kg`} color={colors.primary} />
+          <WeightChip label={t.physicalProfile.goalWeight} value={`${displayedGoalWeight} ${unit}`} color={colors.primary} />
         </View>
       </ScrollView>
 
@@ -218,7 +246,7 @@ export default function PhysicalProfileScreen() {
             style={styles.ctaGradient}
           >
             <Ionicons name="refresh" size={18} color="#fff" />
-            <Text style={styles.ctaText}>Thiết lập mục tiêu mới</Text>
+            <Text style={styles.ctaText}>{t.physicalProfile.setNewGoal}</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -236,19 +264,19 @@ export default function PhysicalProfileScreen() {
 
             <Ionicons name="refresh-circle" size={48} color={colors.primary} style={{ alignSelf: "center", marginBottom: spacing.md }} />
 
-            <Text style={styles.modalTitle}>Bắt đầu mục tiêu mới</Text>
+            <Text style={styles.modalTitle}>{t.physicalProfile.newGoalModal.title}</Text>
             <Text style={styles.modalBody}>
-              Wao sẽ làm mới hành trình dựa trên cân nặng hiện tại và mục tiêu của bạn.
+              {t.physicalProfile.newGoalModal.body}
             </Text>
 
             <View style={styles.modalBullets}>
               <Text style={styles.modalBullet}>
                 <Text style={styles.bulletNum}>1. </Text>
-                Tính lại TDEE, BMR và lượng calo mục tiêu.
+                {t.physicalProfile.newGoalModal.bullet1}
               </Text>
               <Text style={styles.modalBullet}>
                 <Text style={styles.bulletNum}>2. </Text>
-                Cập nhật lại hành trình để phản ánh đúng tiến độ theo mục tiêu mới.
+                {t.physicalProfile.newGoalModal.bullet2}
               </Text>
             </View>
 
@@ -257,12 +285,40 @@ export default function PhysicalProfileScreen() {
                 style={({ pressed }) => [styles.modalBtnOutline, pressed && { opacity: 0.7 }]}
                 onPress={() => setResetModalVisible(false)}
               >
-                <Text style={styles.modalBtnOutlineText}>Từ chối</Text>
+                <Text style={styles.modalBtnOutlineText}>{t.physicalProfile.newGoalModal.cancel}</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [styles.modalBtnPrimary, pressed && { opacity: 0.85 }]}
                 onPress={() => {
                   setResetModalVisible(false);
+                  if (profileInfo) {
+                    const genderVal = (profileInfo.gender === 1 || String(profileInfo.gender).toLowerCase() === "male") ? "male" : "female";
+                    
+                    const activityLevelMapInverse: Record<number | string, any> = {
+                      1: "sedentary",
+                      2: "light",
+                      3: "moderate",
+                      4: "active",
+                      5: "very_active",
+                    };
+                    
+                    const goalTypeMapInverse: Record<number | string, any> = {
+                      1: "lose_weight",
+                      2: "gain_weight",
+                      3: "maintain_weight",
+                    };
+
+                    useOnboardingStore.getState().updateDraft({
+                      nickname: profileInfo.displayName ?? null,
+                      gender: genderVal,
+                      birthDateISO: profileInfo.dateOfBirth ? String(profileInfo.dateOfBirth) : null,
+                      heightCm: profileInfo.heightCm ? Number(profileInfo.heightCm) : null,
+                      currentWeightKg: profileInfo.weightKg ? Number(profileInfo.weightKg) : null,
+                      goalType: activeGoal?.goalType ? goalTypeMapInverse[activeGoal.goalType] : null,
+                      targetWeightKg: activeGoal?.goalWeightKg ? Number(activeGoal.goalWeightKg) : null,
+                      activityLevel: activeGoal?.activityLevel ? activityLevelMapInverse[activeGoal.activityLevel] : null,
+                    });
+                  }
                   router.push("/(onboarding)/goal-type");
                 }}
               >
@@ -272,7 +328,7 @@ export default function PhysicalProfileScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.modalBtnGradient}
                 >
-                  <Text style={styles.modalBtnPrimaryText}>Thiết lập mới</Text>
+                  <Text style={styles.modalBtnPrimaryText}>{t.physicalProfile.newGoalModal.submit}</Text>
                 </LinearGradient>
               </Pressable>
             </View>
@@ -286,6 +342,8 @@ export default function PhysicalProfileScreen() {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function InfoCell({ label, value }: { label: string; value: string }) {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   return (
     <View style={styles.infoCell}>
       <Text style={styles.infoCellLabel}>{label}</Text>
@@ -309,6 +367,8 @@ function GoalRow({
   isLast?: boolean;
   truncate?: boolean;
 }) {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const Inner = (
     <View style={[styles.goalRow, !isLast && styles.goalRowBorder]}>
       <Text style={styles.goalRowLabel}>{label}</Text>
@@ -341,6 +401,8 @@ function GoalRow({
 }
 
 function WeightChip({ label, value, color }: { label: string; value: string; color: string }) {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   return (
     <View style={styles.weightChip}>
       <Text style={styles.weightChipLabel}>{label}</Text>
@@ -351,7 +413,7 @@ function WeightChip({ label, value, color }: { label: string; value: string; col
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.bgBase,

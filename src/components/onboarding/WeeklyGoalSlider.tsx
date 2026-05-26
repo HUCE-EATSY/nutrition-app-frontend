@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View, PanResponder } from "react-native";
 
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { colors, radius, spacing, typography } from "@/constants";
 
 type WeeklyGoalSliderProps = {
@@ -19,6 +19,7 @@ export function WeeklyGoalSlider({
   value,
   onChange,
 }: WeeklyGoalSliderProps) {
+  const t = useTranslation();
   const [trackWidth, setTrackWidth] = useState(0);
 
   // 1. TỐI ƯU: Chỉ tính toán lại mảng steps khi min, max, step thay đổi

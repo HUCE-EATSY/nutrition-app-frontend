@@ -8,7 +8,7 @@ import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPi
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { BmiCard } from "@/components/onboarding/BmiCard";
 import { colors, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
@@ -23,8 +23,8 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
   return z.object({
     targetWeightKg: z
       .number()
-      .min(35, "Cân nặng tối thiểu là 35kg")
-      .max(160, "Cân nặng tối đa là 160kg")
+      .min(35, t.validators.minWeight)
+      .max(160, t.validators.maxWeight)
       .refine(
         (val) => {
           if (!goalType) return false;
@@ -46,6 +46,7 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
 };
 
 export default function TargetWeightScreen() {
+  const t = useTranslation();
   const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   const goalType = useOnboardingStore((state) => state.draft.goalType);
@@ -110,7 +111,7 @@ export default function TargetWeightScreen() {
         {/* References and continue */}
         <View style={styles.bottomSection}>
           <Pressable onPress={showBmiReferencesAlert} style={styles.refButton}>
-            <Text style={styles.refText}>Nguồn tham khảo</Text>
+            <Text style={styles.refText}>{t.nutrition.referenceSource}</Text>
           </Pressable>
 
           <GradientButton

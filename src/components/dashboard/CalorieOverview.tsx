@@ -1,9 +1,11 @@
+import React from "react";
 import { StyleSheet, Text, View, Pressable } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography, radius } from "@/constants";
 
 interface CalorieOverviewProps {
   remaining: number;
@@ -14,10 +16,16 @@ interface CalorieOverviewProps {
 }
 
 export function CalorieOverview({ remaining, goal, consumed, burned, percentage }: CalorieOverviewProps) {
+  const t = useTranslation();
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
   const circleRadius = 70;
   const circumference = 2 * Math.PI * circleRadius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const bgCircleStroke = colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
 
   return (
     <View style={styles.container}>
@@ -39,7 +47,7 @@ export function CalorieOverview({ remaining, goal, consumed, burned, percentage 
               cx="90"
               cy="90"
               r={circleRadius}
-              stroke="rgba(255,255,255,0.05)"
+              stroke={bgCircleStroke}
               strokeWidth="10"
               fill="none"
             />
@@ -92,7 +100,7 @@ export function CalorieOverview({ remaining, goal, consumed, burned, percentage 
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     paddingVertical: spacing.md,
   },
@@ -107,7 +115,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   reportBadge: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill,

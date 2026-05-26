@@ -19,6 +19,7 @@ import {
 export function getOnboardingSteps(goalType?: GoalType | null) {
   let resolvedGoal = goalType;
   if (resolvedGoal === undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { useOnboardingStore } = require("@/store/onboardingStore");
     resolvedGoal = useOnboardingStore.getState().draft.goalType;
   }
@@ -212,22 +213,13 @@ export function getBmiStatusColors(status: BMIStatus) {
 }
 
 export function getTargetBmiDesc(status: BMIStatus): string {
-  switch (status) {
-    case "underweight":
-      return "Mục tiêu dưới vùng cân bằng. Bạn nên ưu tiên tăng cơ và bổ sung dinh dưỡng hợp lý.";
-    case "normal":
-      return "Mục tiêu nằm trong vùng cân bằng, cực kỳ lý tưởng để duy trì vóc dáng và sức khỏe lâu dài.";
-    case "overweight":
-      return "Mục tiêu vẫn ở vùng thừa cân. Bạn có thể cân nhắc đặt mục tiêu thấp hơn để cơ thể khỏe mạnh hơn.";
-    case "obese":
-      return "Mục tiêu ở vùng cao. Bạn nên chọn mốc cân nặng thấp hơn để giảm tải cho xương khớp và tim mạch.";
-  }
+  return t.nutrition.targetBmiDescriptions[status];
 }
 
 export function showBmiReferencesAlert() {
   Alert.alert(
-    "Nguồn tham khảo",
-    "Chỉ số BMI được tính toán dựa trên tiêu chuẩn của Tổ chức Y tế Thế giới (WHO) dành cho người Châu Á:\n\n• Dưới 18.5: Thiếu cân\n• 18.5 - 22.9: Bình thường (Cân bằng)\n• 23.0 - 24.9: Thừa cân\n• Từ 25.0 trở lên: Béo phì",
-    [{ text: "Đóng", style: "cancel" }]
+    t.nutrition.bmiSource,
+    t.nutrition.bmiSourceDetail,
+    [{ text: t.common.close, style: "cancel" }]
   );
 }

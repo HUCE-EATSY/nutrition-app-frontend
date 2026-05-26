@@ -18,22 +18,27 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { foodService } from "@/services/foodService";
 import { Toast } from "@/components/common/Toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "@/constants/i18n";
 
 export default function CreateFoodScreen() {
+  const t = useTranslation();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const queryClient = useQueryClient();
   const categories = [
-    { id: 1, name: "Cơm & Xôi" },
-    { id: 2, name: "Phở & Bún" },
-    { id: 3, name: "Bánh mì & Bánh" },
-    { id: 4, name: "Đồ uống" },
-    { id: 5, name: "Thực phẩm đóng gói" },
-    { id: 6, name: "Rau củ quả" },
-    { id: 7, name: "Thịt & Hải sản" },
-    { id: 10, name: "Khác" }
+    { id: 1, name: t.categories.riceAndStickyRice },
+    { id: 2, name: t.categories.noodleSoup },
+    { id: 3, name: t.categories.breadAndPastries },
+    { id: 4, name: t.categories.drinks },
+    { id: 5, name: t.categories.packagedFood },
+    { id: 6, name: t.categories.vegetablesAndFruits },
+    { id: 7, name: t.categories.meatAndSeafood },
+    { id: 10, name: t.categories.other }
   ];
 
   const [name, setName] = useState("");
@@ -64,7 +69,7 @@ export default function CreateFoodScreen() {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert("Quyền truy cập", "Ứng dụng cần quyền truy cập thư viện ảnh để tải ảnh món ăn.");
+        Alert.alert(t.createFood.permissionTitle, t.createFood.permissionMsg);
         return;
       }
 
@@ -80,17 +85,17 @@ export default function CreateFoodScreen() {
       }
     } catch (error) {
       console.error("Lỗi chọn ảnh:", error);
-      showToastMsg("Không thể chọn ảnh", "error");
+      showToastMsg(t.createFood.pickImageError, "error");
     }
   };
 
   const handleSave = async () => {
     if (!name.trim()) {
-      showToastMsg("Vui lòng nhập tên thực phẩm", "error");
+      showToastMsg(t.createFood.nameRequired, "error");
       return;
     }
     if (!calories.trim()) {
-      showToastMsg("Vui lòng nhập lượng Calories", "error");
+      showToastMsg(t.createFood.caloriesRequired, "error");
       return;
     }
 
@@ -139,7 +144,7 @@ export default function CreateFoodScreen() {
       // Invalidate cache to refetch updated food items list immediately
       queryClient.invalidateQueries({ queryKey: ["food"] });
 
-      showToastMsg("Tạo thực phẩm thành công!", "success");
+      showToastMsg(t.createFood.createSuccess, "success");
 
       setTimeout(() => {
         router.back();
@@ -148,7 +153,7 @@ export default function CreateFoodScreen() {
       console.error("Lỗi khi tạo thực phẩm:", JSON.stringify(error?.response?.data || error.message));
       const responseData = error?.response?.data;
       const validationErrors = responseData?.errors ? JSON.stringify(responseData.errors) : "";
-      const errMsg = responseData?.message || error?.message || "Không thể lưu thực phẩm. Vui lòng thử lại.";
+      const errMsg = responseData?.message || error?.message || t.createFood.createError;
       showToastMsg(errMsg + " " + validationErrors, "error");
     } finally {
       setIsSaving(false);
@@ -166,13 +171,13 @@ export default function CreateFoodScreen() {
           <Pressable hitSlop={12} onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons color={colors.textPrimary} name="chevron-back" size={24} />
           </Pressable>
-          <Text style={styles.headerTitle}>Tạo mới thực phẩm</Text>
+          <Text style={styles.headerTitle}>{t.createFood.title}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {/* Section: Hình ảnh */}
-          <Text style={styles.sectionTitle}>Hình ảnh</Text>
+          <Text style={styles.sectionTitle}>{t.createFood.image}</Text>
           <View style={styles.imageSection}>
             <View style={styles.imageFrame}>
               {imageUri ? (
@@ -185,19 +190,19 @@ export default function CreateFoodScreen() {
             </View>
             <Pressable onPress={handlePickImage} style={styles.uploadBtn}>
               <Ionicons name="add" size={18} color="#a78bfa" />
-              <Text style={styles.uploadBtnText}>Tải lên ảnh mới</Text>
+              <Text style={styles.uploadBtnText}>{t.createFood.uploadBtn}</Text>
             </Pressable>
           </View>
 
           {/* Section: Thông tin dinh dưỡng */}
-          <Text style={styles.sectionTitle}>Thông tin dinh dưỡng</Text>
+          <Text style={styles.sectionTitle}>{t.createFood.nutritionInfo}</Text>
           <View style={styles.formContainer}>
             {/* Tên thực phẩm */}
             <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Tên thực phẩm *</Text>
+              <Text style={styles.inputLabel}>{t.createFood.foodName}</Text>
               <TextInput
                 onChangeText={setName}
-                placeholder="Nhập tên thực phẩm"
+                placeholder={t.createFood.enterFoodNamePlaceholder}
                 placeholderTextColor={colors.textMuted}
                 style={[styles.textInput, { textAlign: "right" }]}
                 value={name}
@@ -206,10 +211,10 @@ export default function CreateFoodScreen() {
 
             {/* Danh mục */}
             <Pressable onPress={() => setIsCategoryModalVisible(true)} style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Danh mục *</Text>
+              <Text style={styles.inputLabel}>{t.createFood.category}</Text>
               <View style={styles.selectRow}>
                 <Text style={styles.selectValue}>
-                  {categories.find((c) => c.id === selectedCategoryId)?.name || "Khác"}
+                  {categories.find((c) => c.id === selectedCategoryId)?.name || t.categories.other}
                 </Text>
                 <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </View>
@@ -217,9 +222,9 @@ export default function CreateFoodScreen() {
 
             {/* Đơn vị tính */}
             <Pressable style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Đơn vị tính</Text>
+              <Text style={styles.inputLabel}>{t.createFood.unit}</Text>
               <View style={styles.selectRow}>
-                <Text style={styles.selectValue}>Gram</Text>
+                <Text style={styles.selectValue}>{t.createFood.gramUnit}</Text>
                 <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </View>
             </Pressable>
@@ -227,12 +232,12 @@ export default function CreateFoodScreen() {
             {/* Info Green Banner */}
             <View style={styles.infoBanner}>
               <Ionicons name="information-circle-outline" size={18} color="#10b981" />
-              <Text style={styles.infoBannerText}>Khối lượng được tính trên 100 gram</Text>
+              <Text style={styles.infoBannerText}>{t.createFood.weightNotice}</Text>
             </View>
 
             {/* Calories */}
             <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Calories *</Text>
+              <Text style={styles.inputLabel}>{t.createFood.calories}</Text>
               <View style={styles.numericInputContainer}>
                 <TextInput
                   keyboardType="numeric"
@@ -248,7 +253,7 @@ export default function CreateFoodScreen() {
 
             {/* Protein */}
             <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Protein</Text>
+              <Text style={styles.inputLabel}>{t.createFood.protein}</Text>
               <View style={styles.numericInputContainer}>
                 <TextInput
                   keyboardType="numeric"
@@ -264,7 +269,7 @@ export default function CreateFoodScreen() {
 
             {/* Fat */}
             <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Fat</Text>
+              <Text style={styles.inputLabel}>{t.createFood.fat}</Text>
               <View style={styles.numericInputContainer}>
                 <TextInput
                   keyboardType="numeric"
@@ -280,7 +285,7 @@ export default function CreateFoodScreen() {
 
             {/* Carbs */}
             <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Carbs</Text>
+              <Text style={styles.inputLabel}>{t.createFood.carbs}</Text>
               <View style={styles.numericInputContainer}>
                 <TextInput
                   keyboardType="numeric"
@@ -304,9 +309,9 @@ export default function CreateFoodScreen() {
             style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
           >
             {isSaving ? (
-              <ActivityIndicator color="#ffffff" size="small" />
+              <ActivityIndicator color={colors.textPrimary} size="small" />
             ) : (
-              <Text style={styles.saveBtnText}>Lưu thực phẩm</Text>
+              <Text style={styles.saveBtnText}>{t.createFood.saveBtn}</Text>
             )}
           </Pressable>
         </View>
@@ -322,7 +327,7 @@ export default function CreateFoodScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chọn danh mục</Text>
+              <Text style={styles.modalTitle}>{t.createFood.selectCategory}</Text>
               <Pressable hitSlop={8} onPress={() => setIsCategoryModalVisible(false)}>
                 <Ionicons name="close" size={24} color={colors.textPrimary} />
               </Pressable>
@@ -361,10 +366,10 @@ export default function CreateFoodScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#110b26", // Deep dark purple background to match standard dark theme
+    backgroundColor: colors.bgBase, // Deep dark purple background to match standard dark theme
   },
   header: {
     flexDirection: "row",
@@ -373,7 +378,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
   },
   backBtn: {
     width: 40,
@@ -404,22 +409,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.xl,
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     paddingVertical: spacing.lg,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
   },
   imageFrame: {
     width: 130,
     height: 130,
     borderRadius: radius.lg,
-    backgroundColor: "#20183e",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#30284e",
+    borderColor: colors.borderSoft,
     marginBottom: spacing.md,
   },
   previewImage: {
@@ -444,10 +449,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   formContainer: {
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
     paddingHorizontal: spacing.lg,
   },
   inputRow: {
@@ -456,7 +461,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: spacing.md + 2,
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
   },
   inputLabel: {
     color: colors.textPrimary,
@@ -519,30 +524,30 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#110b26",
+    backgroundColor: colors.bgBase,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#221a3a",
+    borderTopColor: colors.borderSoft,
   },
   saveBtn: {
-    backgroundColor: "#8b5cf6", // Premium purple button
+    backgroundColor: colors.primary, // Premium purple button
     borderRadius: radius.pill,
     height: 48,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#8b5cf6",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 4,
   },
   saveBtnDisabled: {
-    backgroundColor: "#5e4a8f",
+    backgroundColor: colors.primaryStrong,
     opacity: 0.7,
   },
   saveBtnText: {
-    color: "#ffffff",
+    color: colors.textPrimary,
     fontSize: 15,
     fontWeight: "bold",
   },
@@ -554,12 +559,12 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   modalContent: {
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     borderRadius: radius.lg,
     width: "100%",
     maxHeight: "80%",
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
     overflow: "hidden",
   },
   modalHeader: {
@@ -569,7 +574,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
   },
   modalTitle: {
     color: colors.textPrimary,
@@ -586,7 +591,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
   },
   modalItemText: {
     color: colors.textSecondary,

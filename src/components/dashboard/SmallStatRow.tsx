@@ -1,35 +1,38 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, AppState } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { t } from "@/constants/i18n";
-import { colors, spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useStepsStore } from "@/store/statsStore";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export function SmallStatRow() {
+  const t = useTranslation();
   const router = useRouter();
+  const language = useSettingsStore((state) => state.language);
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const { exercises } = useDiaryStore();
   const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
 
   const {
+    hydrated,
     isConnected,
     todaySteps,
     stepGoal,
     checkConnection,
-    connectAndSync,
-    fetchTodaySteps,
   } = useStepsStore();
 
   useEffect(() => {
+    if (!hydrated) return;
+
     // Kiểm tra kết nối khi mở ứng dụng
-    checkConnection().then((connected) => {
-      if (connected) {
-        fetchTodaySteps();
-      }
-    });
+    checkConnection();
 
     // Tự động làm mới khi quay lại ứng dụng
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -44,7 +47,7 @@ export function SmallStatRow() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [hydrated, checkConnection]);
 
   const handlePressSteps = () => {
     router.push("/stats/steps");
@@ -67,12 +70,11 @@ export function SmallStatRow() {
                 <Ionicons name="footsteps" size={14} color={colors.primary} />
               )}
             </View>
-            
             {isConnected ? (
               <View style={styles.stepsContent}>
                 <Text style={styles.stepsValue}>
-                  {todaySteps.toLocaleString("vi-VN")}{" "}
-                  <Text style={styles.stepsValueUnit}>bước</Text>
+                  {todaySteps.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}{" "}
+                  <Text style={styles.stepsValueUnit}>{t.stats.stepsUnit}</Text>
                 </Text>
                 
                 <View style={styles.progressBarBg}>
@@ -80,13 +82,13 @@ export function SmallStatRow() {
                 </View>
                 
                 <Text style={styles.stepsGoalText}>
-                  Mục tiêu: {stepGoal.toLocaleString("vi-VN")}
+                  {t.stats.goal}: {stepGoal.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}
                 </Text>
               </View>
             ) : (
               <View style={styles.content}>
                 <View style={styles.iconWrapper}>
-                  <MaterialCommunityIcons name="google-fit" size={20} color={colors.primary} />
+                  <Ionicons name="footsteps" size={20} color={colors.primary} />
                 </View>
                 <Text style={styles.hint}>{t.home.connectHealth}</Text>
               </View>
@@ -119,7 +121,7 @@ export function SmallStatRow() {
             <View style={styles.content}>
               {exercises.length > 0 ? (
                 <>
-                  <Text style={styles.emptyText}>{exercises.length} bài tập</Text>
+                  <Text style={styles.emptyText}>{t.exercise.workoutCountSuffix(exercises.length)}</Text>
                   <View style={styles.burningRow}>
                     <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
                     <Text style={styles.statValue}>{burned} kcal</Text>
@@ -141,7 +143,7 @@ export function SmallStatRow() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: "row",
     gap: spacing.md,
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
   progressBarBg: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)",
     width: "100%",
     marginVertical: 4,
     overflow: "hidden",

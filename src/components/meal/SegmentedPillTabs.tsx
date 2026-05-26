@@ -1,6 +1,8 @@
+import React, { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type SegmentedPillTabsProps = {
   items: { key: string; label: string }[];
@@ -9,6 +11,9 @@ type SegmentedPillTabsProps = {
 };
 
 export function SegmentedPillTabs({ items, activeKey, onChange }: SegmentedPillTabsProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.wrap}>
       {items.map((item) => {
@@ -23,7 +28,7 @@ export function SegmentedPillTabs({ items, activeKey, onChange }: SegmentedPillT
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrap: {
     flexDirection: "row",
     backgroundColor: colors.surface,

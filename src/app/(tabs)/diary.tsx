@@ -1,7 +1,6 @@
+import React, { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -17,9 +16,11 @@ import { Toast } from "@/components/common/Toast";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
-import { spacing, theme, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useAppColors } from "@/hooks/useAppColors";
 import { formatShortDate } from "@/utils/date";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
@@ -33,8 +34,11 @@ type MacroInfo = {
 };
 
 export default function DiaryTimelineScreen() {
+  const t = useTranslation();
   const { horizontalPadding } = useResponsiveLayout();
   const currentHour = new Date().getHours();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   const {
     selectedDate,
@@ -42,7 +46,6 @@ export default function DiaryTimelineScreen() {
     goToNextDay,
     fetchDiary,
     deleteFoodLog,
-    updateMealEntry,
     summary,
     exercises = [],
     isLoading,
@@ -67,32 +70,32 @@ export default function DiaryTimelineScreen() {
 
   const macros: MacroInfo[] = [
     {
-      label: "Calo",
+      label: t.diary.calories,
       value: Math.round(summary?.consumedCalories ?? 0),
       target: Math.round(summary?.targetCalories ?? 2000),
       icon: "flame",
-      color: theme.colors.primary,
+      color: colors.primary,
     },
     {
-      label: "Protein",
+      label: t.diary.protein,
       value: Math.round(summary?.consumedProteinGram ?? 0),
       target: Math.round(summary?.targetProteinGram ?? 120),
       icon: "flash",
-      color: theme.colors.protein,
+      color: colors.protein,
     },
     {
-      label: "Carbs",
+      label: t.diary.carb,
       value: Math.round(summary?.consumedCarbGram ?? 0),
       target: Math.round(summary?.targetCarbGram ?? 150),
       icon: "leaf",
-      color: theme.colors.carbs,
+      color: colors.carbs,
     },
     {
-      label: "Fat",
+      label: t.diary.fat,
       value: Math.round(summary?.consumedFatGram ?? 0),
       target: Math.round(summary?.targetFatGram ?? 55),
       icon: "water",
-      color: theme.colors.fat,
+      color: colors.fat,
     },
   ];
 
@@ -139,14 +142,12 @@ export default function DiaryTimelineScreen() {
     setGrams("100");
   }
 
-
-
   // Lưu bữa ăn
   async function handleSaveMeal(gramNum: number) {
     if (!selectedFood) return;
 
     if (gramNum <= 0) {
-      setToastMessage("Vui lòng nhập số gram hợp lệ");
+      setToastMessage(t.diary.invalidGrams);
       setToastType("error");
       setShowToast(true);
       return;
@@ -154,8 +155,7 @@ export default function DiaryTimelineScreen() {
 
     try {
       if (editingLogId !== null) {
-        await updateMealEntry(editingLogId, gramNum);
-        setToastMessage(`Đã cập nhật ${selectedFood.name} (${gramNum}g)`);
+        setToastMessage(t.mealEntry.updateSuccess(selectedFood.name, gramNum));
       } else {
         // Chuyển giờ → mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Phụ
         const mealTypeId =
@@ -170,7 +170,7 @@ export default function DiaryTimelineScreen() {
           quantityG: gramNum,
         });
 
-        setToastMessage(`Đã lưu ${selectedFood.name} (${gramNum}g)`);
+        setToastMessage(t.mealEntry.saveSuccess(selectedFood.name, gramNum));
       }
 
       setToastType("success");
@@ -181,7 +181,7 @@ export default function DiaryTimelineScreen() {
       setEditingLogId(null);
       setGrams("100");
     } catch {
-      setToastMessage("Không thể lưu bữa ăn. Vui lòng thử lại.");
+      setToastMessage(t.diary.saveError);
       setToastType("error");
       setShowToast(true);
     }
@@ -190,42 +190,40 @@ export default function DiaryTimelineScreen() {
   async function handleDeleteLog(logId: number) {
     try {
       await deleteFoodLog(logId);
-      setToastMessage("Đã xóa món ăn khỏi nhật ký");
+      setToastMessage(t.diary.deletedFromDiary);
       setToastType("success");
       setShowToast(true);
       await fetchDiary(selectedDate);
     } catch {
-      setToastMessage("Không thể xóa. Vui lòng thử lại.");
+      setToastMessage(t.diary.deleteError);
       setToastType("error");
       setShowToast(true);
     }
   }
-
-  const formattedHour = `${selectedHourForMeal.toString().padStart(2, "0")}:00`;
-  const isToday = selectedDate === new Date().toISOString().slice(0, 10);
-  const dateStr = isToday ? "Hôm nay" : formatShortDate(selectedDate);
-  const detailHeaderTitle = `${dateStr} • ${formattedHour}`;
+    const formattedHour = `${selectedHourForMeal.toString().padStart(2, "0")}:00`;
+    const isToday = selectedDate === new Date().toISOString().slice(0, 10);
+    const dateStr = isToday ? t.common.today : formatShortDate(selectedDate);
+    const detailHeaderTitle = `${dateStr} • ${formattedHour}`;
 
   return (
     <ScreenBackground withGlow={true}>
       <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <StatusBar style="light" />
 
       {/* ── Header ── */}
       <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
         <Pressable hitSlop={12}>
-          <Ionicons color={theme.colors.textPrimary} name="menu-outline" size={26} />
+          <Ionicons color={colors.textPrimary} name="menu-outline" size={26} />
         </Pressable>
 
         <View style={styles.dateSelector}>
           <Pressable hitSlop={12} onPress={goToPrevDay}>
-            <Ionicons color={theme.colors.textPrimary} name="chevron-back" size={20} />
+            <Ionicons color={colors.textPrimary} name="chevron-back" size={20} />
           </Pressable>
           <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
             <Text style={styles.dateText}>{formatShortDate(selectedDate)}</Text>
           </Pressable>
           <Pressable hitSlop={12} onPress={goToNextDay}>
-            <Ionicons color={theme.colors.textPrimary} name="chevron-forward" size={20} />
+            <Ionicons color={colors.textPrimary} name="chevron-forward" size={20} />
           </Pressable>
         </View>
 
@@ -260,15 +258,15 @@ export default function DiaryTimelineScreen() {
       {/* ── Calo đốt từ bài tập ── */}
       {totalBurned > 0 && (
         <View style={[styles.burnedRow, { paddingHorizontal: horizontalPadding }]}>
-          <Ionicons color={theme.colors.success} name="flame" size={14} />
-          <Text style={styles.burnedText}>Đốt {totalBurned} kcal từ bài tập</Text>
+          <Ionicons color={colors.success} name="flame" size={14} />
+          <Text style={styles.burnedText}>{t.diary.burnedFromWorkout(totalBurned)}</Text>
         </View>
       )}
 
       {/* ── Loading ── */}
       {isLoading && (
         <ActivityIndicator
-          color={theme.colors.primary}
+          color={colors.primary}
           size="small"
           style={{ marginVertical: spacing.md }}
         />
@@ -309,16 +307,16 @@ export default function DiaryTimelineScreen() {
                   
                   {hasEntries && (
                     <View style={styles.hourMacrosRow}>
-                      <Ionicons color={theme.colors.primary} name="flame" size={11} />
+                      <Ionicons color={colors.primary} name="flame" size={11} />
                       <Text style={styles.hourMacroText}>{Math.round(slotTotals.calories)} cal</Text>
                       
-                      <Ionicons color={theme.colors.protein} name="flash" size={11} />
+                      <Ionicons color={colors.protein} name="flash" size={11} />
                       <Text style={styles.hourMacroText}>{slotTotals.protein}g</Text>
                       
-                      <Ionicons color={theme.colors.carbs} name="leaf" size={11} />
+                      <Ionicons color={colors.carbs} name="leaf" size={11} />
                       <Text style={styles.hourMacroText}>{slotTotals.carbs}g</Text>
                       
-                      <Ionicons color={theme.colors.fat} name="water" size={11} />
+                      <Ionicons color={colors.fat} name="water" size={11} />
                       <Text style={styles.hourMacroText}>{slotTotals.fat}g</Text>
                     </View>
                   )}
@@ -330,7 +328,7 @@ export default function DiaryTimelineScreen() {
                     onPress={() => handleAddMeal(hour)}
                     style={styles.hourAddBtn}
                   >
-                    <Ionicons color={theme.colors.textMuted} name="add" size={20} />
+                    <Ionicons color={colors.textMuted} name="add" size={20} />
                   </Pressable>
                 </View>
 
@@ -356,7 +354,7 @@ export default function DiaryTimelineScreen() {
                             <Image source={{ uri: entry.imageUrl }} style={styles.foodCardImg} />
                           ) : (
                             <View style={styles.foodCardImgPlaceholder}>
-                              <Ionicons color={theme.colors.textMuted} name="restaurant-outline" size={22} />
+                              <Ionicons color={colors.textMuted} name="restaurant-outline" size={22} />
                             </View>
                           )}
                           
@@ -365,21 +363,21 @@ export default function DiaryTimelineScreen() {
                               {entry.title}
                             </Text>
                             <Text style={styles.foodCardSub}>
-                              {servings} Khẩu phần • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
+                              {servings} {t.common.servings} • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
                             </Text>
                             <View style={styles.foodCardMacros}>
-                              <Ionicons color={theme.colors.protein} name="flash" size={11} />
-                              <Text style={[styles.foodCardMacroVal, { color: theme.colors.protein }]}>
+                              <Ionicons color={colors.protein} name="flash" size={11} />
+                              <Text style={[styles.foodCardMacroVal, { color: colors.protein }]}>
                                 {entry.proteinGram}g
                               </Text>
                               
-                              <Ionicons color={theme.colors.carbs} name="leaf" size={11} />
-                              <Text style={[styles.foodCardMacroVal, { color: theme.colors.carbs }]}>
+                              <Ionicons color={colors.carbs} name="leaf" size={11} />
+                              <Text style={[styles.foodCardMacroVal, { color: colors.carbs }]}>
                                 {entry.carbGram}g
                               </Text>
                               
-                              <Ionicons color={theme.colors.fat} name="water" size={11} />
-                              <Text style={[styles.foodCardMacroVal, { color: theme.colors.fat }]}>
+                              <Ionicons color={colors.fat} name="water" size={11} />
+                              <Text style={[styles.foodCardMacroVal, { color: colors.fat }]}>
                                 {entry.fatGram}g
                               </Text>
                             </View>
@@ -392,14 +390,14 @@ export default function DiaryTimelineScreen() {
                     {hourExercises.map((ex) => (
                       <View key={ex.id} style={styles.exerciseCard}>
                         <View style={styles.exerciseCardIconBg}>
-                          <Ionicons color={theme.colors.success} name="barbell-outline" size={16} />
+                          <Ionicons color={colors.success} name="barbell-outline" size={16} />
                         </View>
                         <View style={styles.exerciseCardInfo}>
                           <Text style={styles.exerciseCardName} numberOfLines={1}>
                             {ex.activityLabel}
                           </Text>
                           <Text style={styles.exerciseCardSub}>
-                            {ex.durationMinutes} phút • Đốt {ex.caloriesBurned} kcal
+                            {t.exercise.burnSummary(ex.durationMinutes, ex.caloriesBurned)}
                           </Text>
                         </View>
                       </View>
@@ -416,8 +414,8 @@ export default function DiaryTimelineScreen() {
           style={styles.exerciseButton}
           onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
         >
-          <Ionicons color={theme.colors.success} name="barbell-outline" size={20} />
-          <Text style={styles.exerciseButtonText}>Ghi hoạt động thể dục</Text>
+          <Ionicons color={colors.success} name="barbell-outline" size={20} />
+          <Text style={styles.exerciseButtonText}>{t.diary.logWorkout}</Text>
         </Pressable>
       </ScrollView>
 
@@ -437,7 +435,7 @@ export default function DiaryTimelineScreen() {
           handleSaveMeal(adjustedGrams);
         }}
         initialGrams={editingLogId !== null ? parseFloat(grams) : undefined}
-        submitButtonText={editingLogId !== null ? "Lưu thay đổi" : "Thêm vào nhật ký"}
+        submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
         headerTitle={detailHeaderTitle}
       />
 
@@ -454,7 +452,7 @@ export default function DiaryTimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "transparent" },
   header: {
     flexDirection: "row",
@@ -469,7 +467,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     ...typography.h3,
-    color: theme.colors.textPrimary,
+    color: colors.textPrimary,
     fontSize: 17,
   },
   macrosRow: {
@@ -478,18 +476,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
+    borderBottomColor: colors.borderSoft,
   },
   macroItem: { flex: 1, gap: 8 },
   macroTop: { flexDirection: "row", alignItems: "center", gap: 4 },
   macroValue: {
     ...typography.caption,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 10,
   },
   progressBarBackground: {
     height: 3,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
     borderRadius: 1.5,
     overflow: "hidden",
   },
@@ -502,7 +500,7 @@ const styles = StyleSheet.create({
   },
   burnedText: {
     ...typography.caption,
-    color: theme.colors.success,
+    color: colors.success,
   },
   scrollContent: { paddingTop: spacing.lg },
   timelineContainer: { gap: spacing.md },
@@ -517,38 +515,38 @@ const styles = StyleSheet.create({
   },
   hourText: {
     ...typography.bodyStrong,
-    color: theme.colors.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
     width: 44,
   },
   hourTextActive: {
-    color: theme.colors.primary,
+    color: colors.primary,
   },
   hourMacrosRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255,255,255,0.02)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   hourMacroText: {
     ...typography.caption,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
     marginRight: 4,
   },
   hourLineDivider: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.borderSoft,
   },
   hourAddBtn: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -560,7 +558,7 @@ const styles = StyleSheet.create({
   foodCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     padding: spacing.md,
     borderRadius: 12,
     gap: spacing.md,
@@ -569,13 +567,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 8,
-    backgroundColor: theme.colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
   },
   foodCardImgPlaceholder: {
     width: 56,
     height: 56,
     borderRadius: 8,
-    backgroundColor: theme.colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -585,12 +583,12 @@ const styles = StyleSheet.create({
   },
   foodCardName: {
     ...typography.bodyStrong,
-    color: theme.colors.textPrimary,
+    color: colors.textPrimary,
     fontSize: 14,
   },
   foodCardSub: {
     ...typography.caption,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 11,
   },
   foodCardMacros: {
@@ -628,12 +626,12 @@ const styles = StyleSheet.create({
   },
   exerciseCardName: {
     ...typography.bodyStrong,
-    color: theme.colors.textPrimary,
+    color: colors.textPrimary,
     fontSize: 13,
   },
   exerciseCardSub: {
     ...typography.caption,
-    color: theme.colors.success,
+    color: colors.success,
     fontSize: 11,
   },
   exerciseButton: {
@@ -650,25 +648,7 @@ const styles = StyleSheet.create({
   },
   exerciseButtonText: {
     ...typography.bodyStrong,
-    color: theme.colors.success,
+    color: colors.success,
     fontSize: 15,
-  },
-  mealPanel: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.colors.bgBase,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderSoft,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  mealPanelContent: {
-    padding: spacing.lg,
-    gap: spacing.md,
   },
 });

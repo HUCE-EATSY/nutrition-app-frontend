@@ -4,7 +4,7 @@ import { useCallback } from "react";
 
 import { SocialAuthButton } from "@/components/buttons/SocialAuthButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { colors, radius, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
@@ -12,6 +12,7 @@ import { trackEvent } from "@/utils/analytics";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 export default function SocialLoginScreen() {
+  const t = useTranslation();
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const { isNarrowWidth, isShortHeight } = useResponsiveLayout();
   const { signIn, loading, error } = useGoogleAuth();

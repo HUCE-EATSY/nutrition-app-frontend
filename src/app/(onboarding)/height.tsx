@@ -3,7 +3,7 @@ import * as z from "zod";
 
 import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPicker";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
-import { t } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { DEFAULT_HEIGHT_CM } from "@/constants/onboarding";
 
@@ -12,6 +12,7 @@ const heightSchema = z.object({
 });
 
 export default function HeightScreen() {
+  const t = useTranslation();
   const { control, isValid, meta, onContinue, onBack } = useOnboardingForm(
     "Height",
     "heightCm",

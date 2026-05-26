@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/constants";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,11 +13,11 @@ export const DateNavigator = ({ label, onPrev, onNext }: DateNavigatorProps) => 
   return (
     <View style={styles.dateNavigator}>
       <TouchableOpacity onPress={onPrev} style={styles.navButton}>
-        <Ionicons name="chevron-back" size={20} color="#9CA3AF" />
+        <Ionicons name="chevron-back" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
       <Text style={styles.dateRangeText}>{label}</Text>
       <TouchableOpacity onPress={onNext} style={styles.navButton}>
-        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
       </TouchableOpacity>
     </View>
   );
@@ -30,6 +31,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 16,
   },
-  dateRangeText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
+  dateRangeText: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" },
   navButton: { padding: 4 },
 });

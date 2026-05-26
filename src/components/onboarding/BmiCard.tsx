@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing, typography } from "@/constants";
-import { getBmiStatusLabel, t } from "@/constants/i18n";
+import { getBmiStatusLabel, useTranslation } from "@/constants/i18n";
 import { calculateBmi, getBmiStatus, getBmiStatusColors, getTargetBmiDesc } from "@/utils/onboarding";
 
 interface BmiCardProps {
@@ -11,6 +11,7 @@ interface BmiCardProps {
 }
 
 export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
+  const t = useTranslation();
   if (error) {
     return (
       <View style={[styles.bmiCard, styles.errorCard]}>
@@ -29,7 +30,7 @@ export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
       ? t.nutrition.bmiDescriptions[bmiStatus]
       : getTargetBmiDesc(bmiStatus);
 
-  const titleText = type === "current" ? "BMI của bạn: " : "BMI mục tiêu: ";
+  const titleText = type === "current" ? t.nutrition.yourBmi : t.nutrition.targetBmi;
 
   return (
     <View style={styles.bmiCard}>

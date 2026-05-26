@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,12 +13,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Toast } from "@/components/common/Toast";
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useFoodList, useFoodDetails, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { calcNutrition } from "@/utils/nutrition";
 import { MealPortionEditor } from "@/components/meal/MealPortionEditor";
+import { useTranslation } from "@/constants/i18n";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +33,9 @@ function getMealTypeFromHour(hour: number): number {
 }
 
 export default function AddEntryScreen() {
+  const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
   const targetDate = date ?? getTodayDateISO();
 
@@ -88,7 +93,7 @@ export default function AddEntryScreen() {
   // ── Lưu bữa ăn ───────────────────────────────────────────────────────────
   async function handleSave() {
     if (!selected || gramNum <= 0) {
-      setToastMessage("Vui lòng chọn món ăn và nhập số gram hợp lệ");
+      setToastMessage(t.mealEntry.validationError);
       setToastType("error");
       setShowToast(true);
       return;
@@ -103,7 +108,7 @@ export default function AddEntryScreen() {
       });
 
       setToastMessage(
-        `Đã lưu ${selected.name} (${gramNum}g)`
+        t.mealEntry.saveSuccess(selected.name, gramNum)
       );
       setToastType("success");
       setShowToast(true);
@@ -112,7 +117,7 @@ export default function AddEntryScreen() {
         router.replace("/(tabs)/meal-plan");
       }, 2000);
     } catch {
-      setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
+      setToastMessage(t.mealEntry.saveError);
       setToastType("error");
       setShowToast(true);
     } finally {
@@ -128,7 +133,7 @@ export default function AddEntryScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>Ghi bữa ăn</Text>
+        <Text style={styles.headerTitle}>{t.mealEntry.title}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -138,7 +143,7 @@ export default function AddEntryScreen() {
         <TextInput
           autoFocus
           onChangeText={setSearchQuery}
-          placeholder="Tìm món ăn... (ít nhất 2 ký tự)"
+          placeholder={t.mealEntry.searchPlaceholder}
           placeholderTextColor={colors.textMuted}
           style={styles.searchInput}
           value={searchQuery}
@@ -166,7 +171,7 @@ export default function AddEntryScreen() {
             style={styles.list}
             ListEmptyComponent={
               searchQuery.length >= 2 && !isSearching ? (
-                <Text style={styles.emptyText}>Không tìm thấy món ăn nào</Text>
+                <Text style={styles.emptyText}>{t.mealEntry.noResults}</Text>
               ) : null
             }
             renderItem={({ item }) => (
@@ -221,7 +226,7 @@ export default function AddEntryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgBase },
   header: {
     flexDirection: "row",

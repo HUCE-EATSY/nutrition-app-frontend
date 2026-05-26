@@ -12,7 +12,7 @@ export interface GuideContent {
   };
 }
 
-export const GUIDES: Record<GuideType, GuideContent> = {
+export const GUIDES_VI: Record<GuideType, GuideContent> = {
   goal: {
     title: "Calo Mục Tiêu - Hướng dẫn năng lượng cho cơ thể mỗi ngày",
     intro: [
@@ -98,6 +98,96 @@ export const GUIDES: Record<GuideType, GuideContent> = {
       tag: "kiến thức",
       title: "Bí quyết cân đối chất béo mỗi ngày",
       imageColor: "#32CD32", // Xanh lá
+    }
+  }
+};
+
+export const GUIDES_EN: Record<GuideType, GuideContent> = {
+  goal: {
+    title: "Target Calories - Daily energy guide for your body",
+    intro: [
+      "Target Calories is the amount of **calories you should consume daily to reach your personal goal** - lose, maintain, or gain weight. Wao calculates this based on height, weight, age, gender, activity level, and the target you choose.",
+      "This calorie level helps you eat enough - not too much, not too little - to stay healthy and proceed in the right direction."
+    ],
+    bulletPoints: [
+      "Calories from daily activities are already included, no need to add them manually after each workout.",
+      "This number is calculated from TDEE - Total Daily Energy Expenditure. **Reducing by about 500 calories from TDEE** is a common safe way to lose weight."
+    ],
+    footerNote: "👉 Wao will accompany you every day to keep your calories at a level suitable for your goals."
+  },
+  consumed: {
+    title: "Consumed Calories - The energy you have absorbed during the day",
+    intro: [
+      "This is the total calories you have consumed from food and drinks today. Every time you log a food item, this indicator will update automatically.",
+      "Wao estimates calorie needs based on:\n- **BMR** - Basal Metabolic Rate (energy needed to sustain life).\n- **PAL** - Physical Activity Level.",
+      "If you choose a weight loss goal, Wao will automatically adjust the target calories by decreasing 300-500 kcal to create a reasonable energy deficit."
+    ],
+    footerNote: "👉 Log food daily to track your exact calorie intake with Wao"
+  },
+  exercise: {
+    title: "Exercise - Track calories burned through physical activities",
+    intro: [
+      "Exercise is the calories you burn through physical activities like walking, running, gym...",
+      "You can log manually or sync from your wearable device.",
+      "**Does exercise change the calorie circle?**\nNo. The calorie circle only reflects food calories consumed relative to your eating target. Calories burned from exercise are displayed separately for your tracking, but are not added back to your food target.",
+      "**Do I need to eat more if I work out a lot?**"
+    ],
+    bulletPoints: [
+      "If your exercise matches the activity level you selected initially -> no need to eat more, the app has already calculated it.",
+      "If you work out more than usual -> you can eat a bit more to maintain performance.",
+      "If you work out less -> you should adjust your portions to balance calories."
+    ],
+    footerNote: "👉 Wao helps you track both consumed and burned calories - to actively adapt to your lifestyle."
+  },
+  protein: {
+    title: "Protein - Key nutrient for your daily health",
+    intro: [
+      "Protein helps build muscle, repair tissues, boost immunity, and keep you full longer - especially useful when you want to lose weight or build muscle.",
+      "Good protein sources include: eggs, fish, lean meat, Greek yogurt, tofu, black beans, oats...",
+      "**How much should you eat daily?**"
+    ],
+    bulletPoints: [
+      "Sedentary person: 0.8-1g/kg",
+      "Active/weight loss person: 1.2-2g/kg"
+    ],
+    articleCard: {
+      tag: "knowledge",
+      title: "Protein guide: Eat right, enough, and effectively every day",
+      imageColor: "#FF8C00", // Orange
+    }
+  },
+  carb: {
+    title: "Carbohydrates (Carb) - The primary energy source for your body",
+    intro: [
+      "Carbs provide energy for your brain and muscles. If you get hungry quickly, feel fatigued, or experience mood drops, you might not be eating enough carbs.",
+      "Choose slow-digesting carbs:\nOats, sweet potatoes, whole fruits... help maintain energy longer and avoid sudden blood sugar spikes.",
+      "**How much should you eat daily?**"
+    ],
+    bulletPoints: [
+      "Balanced diet: 45-65% of total calories",
+      "Low-carb: <130g/day (depending on goal)"
+    ],
+    articleCard: {
+      tag: "knowledge",
+      title: "Carbohydrate handbook for sustaining health",
+      imageColor: "#1E90FF", // Dodged blue
+    }
+  },
+  fat: {
+    title: "Fats (Fat) - Not an enemy if understood correctly",
+    intro: [
+      "Fats help absorb vitamins, stabilize hormones, and keep you full longer - particularly important for females or long-term dieters.",
+      "Prioritize \"good\" fats like:\nOlive oil, avocados, fatty fish, nuts - rich in omega-3, supporting heart health and metabolism.",
+      "**How much should you eat daily?**"
+    ],
+    bulletPoints: [
+      "Fats should make up about 20-35% of total calories.",
+      "If you are losing weight, you can keep it around 20-25% to control energy."
+    ],
+    articleCard: {
+      tag: "knowledge",
+      title: "Secrets of balancing fat intake daily",
+      imageColor: "#32CD32", // Lime green
     }
   }
 };

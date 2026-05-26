@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,10 +12,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function ExerciseStatsScreen() {
+  const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+  const language = useSettingsStore((state) => state.language);
   const [logs, setLogs] = useState<ExerciseLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
@@ -39,14 +46,14 @@ export default function ExerciseStatsScreen() {
         const data = await exerciseService.getLogs(startDateISO, endDate);
         setLogs(data);
       } catch (error) {
-        Alert.alert("Lỗi", "Không thể tải thống kê");
+        Alert.alert(t.common.error, t.exercise.loadStatsError);
         console.error(error);
       } finally {
         setLoading(false);
       }
     }
     loadStats();
-  }, [period]);
+  }, [period, t]);
 
   // Tính toán thống kê
   const totalCalories = logs.reduce((sum, log) => sum + log.caloriesBurned, 0);
@@ -56,7 +63,7 @@ export default function ExerciseStatsScreen() {
 
   // Thống kê theo loại bài tập
   const exerciseStats = logs.reduce((acc, log) => {
-    const name = log.exerciseNameVi;
+    const name = language === "en" ? log.exerciseNameEn : log.exerciseNameVi;
     if (!acc[name]) {
       acc[name] = {
         name,
@@ -87,7 +94,9 @@ export default function ExerciseStatsScreen() {
     return acc;
   }, {} as Record<number, { count: number; calories: number }>);
 
-  const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const dayNames = language === "en"
+    ? ["S", "M", "T", "W", "T", "F", "S"]
+    : ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
   const maxDayCalories = Math.max(...Object.values(dayStats).map(d => d.calories), 1);
 
   if (loading) {
@@ -95,7 +104,7 @@ export default function ExerciseStatsScreen() {
       <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={styles.loadingText}>Đang tải thống kê...</Text>
+          <Text style={styles.loadingText}>{t.exercise.loadingStats}</Text>
         </View>
       </SafeAreaView>
     );
@@ -108,7 +117,7 @@ export default function ExerciseStatsScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>Thống kê tập luyện</Text>
+        <Text style={styles.headerTitle}>{t.exercise.statsTitle}</Text>
         <Pressable hitSlop={12} onPress={() => router.push("/exercise-diary")}>
           <Ionicons color={colors.primary} name="list-outline" size={24} />
         </Pressable>
@@ -122,7 +131,7 @@ export default function ExerciseStatsScreen() {
             style={[styles.periodBtn, period === "week" && styles.periodBtnActive]}
           >
             <Text style={[styles.periodText, period === "week" && styles.periodTextActive]}>
-              7 ngày
+              {t.exercise.sevenDays}
             </Text>
           </Pressable>
           <Pressable
@@ -130,7 +139,7 @@ export default function ExerciseStatsScreen() {
             style={[styles.periodBtn, period === "month" && styles.periodBtnActive]}
           >
             <Text style={[styles.periodText, period === "month" && styles.periodTextActive]}>
-              30 ngày
+              {t.exercise.thirtyDays}
             </Text>
           </Pressable>
           <Pressable
@@ -138,7 +147,7 @@ export default function ExerciseStatsScreen() {
             style={[styles.periodBtn, period === "year" && styles.periodBtnActive]}
           >
             <Text style={[styles.periodText, period === "year" && styles.periodTextActive]}>
-              1 năm
+              {t.exercise.oneYear}
             </Text>
           </Pressable>
         </View>
@@ -150,7 +159,7 @@ export default function ExerciseStatsScreen() {
               <Ionicons color="#FF6B6B" name="flame" size={28} />
             </View>
             <Text style={styles.summaryValue}>{totalCalories.toLocaleString()}</Text>
-            <Text style={styles.summaryLabel}>Tổng calo đốt</Text>
+            <Text style={styles.summaryLabel}>{t.exercise.totalBurned}</Text>
           </View>
 
           <View style={styles.summaryCard}>
@@ -158,7 +167,7 @@ export default function ExerciseStatsScreen() {
               <Ionicons color={colors.success} name="time-outline" size={28} />
             </View>
             <Text style={styles.summaryValue}>{totalMinutes}</Text>
-            <Text style={styles.summaryLabel}>Tổng phút</Text>
+            <Text style={styles.summaryLabel}>{t.exercise.totalMinutes}</Text>
           </View>
 
           <View style={styles.summaryCard}>
@@ -166,7 +175,7 @@ export default function ExerciseStatsScreen() {
               <MaterialCommunityIcons color={colors.primary} name="dumbbell" size={28} />
             </View>
             <Text style={styles.summaryValue}>{totalWorkouts}</Text>
-            <Text style={styles.summaryLabel}>Số buổi tập</Text>
+            <Text style={styles.summaryLabel}>{t.exercise.workoutSessions}</Text>
           </View>
 
           <View style={styles.summaryCard}>
@@ -174,13 +183,13 @@ export default function ExerciseStatsScreen() {
               <Ionicons color={colors.info} name="stats-chart" size={28} />
             </View>
             <Text style={styles.summaryValue}>{avgCaloriesPerWorkout}</Text>
-            <Text style={styles.summaryLabel}>TB calo/buổi</Text>
+            <Text style={styles.summaryLabel}>{t.exercise.avgKcalWorkout}</Text>
           </View>
         </View>
 
         {/* Weekly Activity Chart */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hoạt động theo ngày</Text>
+          <Text style={styles.sectionTitle}>{t.exercise.dailyActivity}</Text>
           <View style={styles.chartCard}>
             <View style={styles.barChart}>
               {dayNames.map((day, index) => {
@@ -213,10 +222,10 @@ export default function ExerciseStatsScreen() {
 
         {/* Top Exercises */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Bài tập phổ biến</Text>
+          <Text style={styles.sectionTitle}>{t.exercise.popularExercises}</Text>
           {topExercises.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Chưa có dữ liệu</Text>
+              <Text style={styles.emptyText}>{t.exercise.noDataAvailable}</Text>
             </View>
           ) : (
             topExercises.map((exercise, index) => (
@@ -229,11 +238,11 @@ export default function ExerciseStatsScreen() {
                   <View style={styles.exerciseStats}>
                     <View style={styles.exerciseStatItem}>
                       <Ionicons color={colors.textMuted} name="repeat-outline" size={14} />
-                      <Text style={styles.exerciseStatText}>{exercise.count} lần</Text>
+                      <Text style={styles.exerciseStatText}>{t.exercise.timesSuffix(exercise.count)}</Text>
                     </View>
                     <View style={styles.exerciseStatItem}>
                       <Ionicons color={colors.textMuted} name="time-outline" size={14} />
-                      <Text style={styles.exerciseStatText}>{exercise.totalMinutes} phút</Text>
+                      <Text style={styles.exerciseStatText}>{t.exercise.durationSuffix(exercise.totalMinutes)}</Text>
                     </View>
                   </View>
                 </View>
@@ -253,7 +262,7 @@ export default function ExerciseStatsScreen() {
             onPress={() => router.push("/add-exercise")}
           >
             <Ionicons color="#fff" name="add-circle-outline" size={20} />
-            <Text style={styles.actionButtonText}>Ghi hoạt động</Text>
+            <Text style={styles.actionButtonText}>{t.exercise.logActivity}</Text>
           </Pressable>
           
           <Pressable
@@ -261,7 +270,7 @@ export default function ExerciseStatsScreen() {
             onPress={() => router.push("/exercise-diary")}
           >
             <Ionicons color="#fff" name="list-outline" size={20} />
-            <Text style={styles.actionButtonText}>Xem nhật ký</Text>
+            <Text style={styles.actionButtonText}>{t.exercise.viewDiary}</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -269,7 +278,7 @@ export default function ExerciseStatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgBase },
   loadingContainer: {
     flex: 1,

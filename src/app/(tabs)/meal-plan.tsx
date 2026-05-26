@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,25 +16,27 @@ import { GradientButton } from "@/components/buttons/GradientButton";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { SegmentedPillTabs } from "@/components/meal/SegmentedPillTabs";
-import { t } from "@/constants/i18n";
-import { colors, spacing, typography, radius } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography, radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 
-const tabs = [
-  { key: "explore", label: t.mealPlan.tabs.explore },
-  { key: "saved", label: t.mealPlan.tabs.saved },
-  { key: "history", label: t.mealPlan.tabs.history },
-];
-
-// FoodItem imported from useFoodApi
 export default function MealPlanScreen() {
+  const t = useTranslation();
   const [activeTab, setActiveTab] = useState("explore");
   const { isNarrowWidth } = useResponsiveLayout();
+  const colors = useAppColors();
+  const tabs = [
+    { key: "explore", label: t.mealPlan.tabs.explore },
+    { key: "saved", label: t.mealPlan.tabs.saved },
+    { key: "history", label: t.mealPlan.tabs.history },
+  ];
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   // Foods state
   const { data: foods = [], isLoading } = useFoodList();
-  
+
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -46,18 +49,18 @@ export default function MealPlanScreen() {
 
   // Số món hiển thị mặc định
   const DEFAULT_DISPLAY_COUNT = 4;
-  
+
   // Danh sách món để hiển thị (giới hạn hoặc full)
-  const displayedFoods = showAllFoods 
-    ? filteredFoods 
+  const displayedFoods = showAllFoods
+    ? filteredFoods
     : filteredFoods.slice(0, DEFAULT_DISPLAY_COUNT);
-  
+
   const hasMoreFoods = filteredFoods.length > DEFAULT_DISPLAY_COUNT;
 
   // Filter foods khi search hoặc category thay đổi
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    
+
     debounceRef.current = setTimeout(() => {
       let result = foods;
 
@@ -108,7 +111,7 @@ export default function MealPlanScreen() {
           <Ionicons color={colors.textMuted} name="search-outline" size={18} />
           <TextInput
             onChangeText={setSearchQuery}
-            placeholder="Tìm món ăn..."
+            placeholder={t.mealEntry.searchPlaceholder}
             placeholderTextColor={colors.textMuted}
             style={styles.searchInput}
             value={searchQuery}
@@ -132,7 +135,7 @@ export default function MealPlanScreen() {
                 !selectedCategory && styles.categoryTextActive,
               ]}
             >
-              Tất cả
+              {t.mealEntry.all}
             </Text>
           </Pressable>
           {categories.map((cat) => (
@@ -173,8 +176,8 @@ export default function MealPlanScreen() {
                 <Ionicons color={colors.textMuted} name="restaurant-outline" size={48} />
                 <Text style={styles.emptyListText}>
                   {searchQuery || selectedCategory
-                    ? "Không tìm thấy món ăn nào"
-                    : "Chưa có món ăn nào"}
+                    ? t.mealEntry.noResults
+                    : t.mealEntry.noFoods}
                 </Text>
               </View>
             ) : (
@@ -229,7 +232,7 @@ export default function MealPlanScreen() {
                         </View>
 
                         <Text style={styles.servingSize}>
-                          Khẩu phần: {item.servingSize}g
+                          {t.common.servings}: {item.servingSize}g
                         </Text>
                       </View>
 
@@ -249,8 +252,8 @@ export default function MealPlanScreen() {
                   >
                     <Text style={styles.viewMoreText}>
                       {showAllFoods
-                        ? "Thu gọn"
-                        : `Xem thêm ${filteredFoods.length - DEFAULT_DISPLAY_COUNT} món`}
+                        ? t.mealEntry.viewLess
+                        : t.mealEntry.viewMore(filteredFoods.length - DEFAULT_DISPLAY_COUNT)}
                     </Text>
                     <Ionicons
                       color={colors.primary}
@@ -279,14 +282,14 @@ export default function MealPlanScreen() {
 
         {renderTabContent()}
 
-        <GradientButton label={t.mealPlan.createCta} onPress={() => undefined} />
-        <GradientButton disabled label={t.mealPlan.savedCta} onPress={() => undefined} />
+        <GradientButton label={t.mealPlan.createCta} onPress={() => Alert.alert(t.common.confirm, t.common.featureUnderDev)} />
+        <GradientButton disabled label={t.mealPlan.savedCta} onPress={() => Alert.alert(t.common.confirm, t.common.featureUnderDev)} />
       </View>
     </SafeScreen>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     gap: spacing.lg,
     paddingVertical: spacing.lg,

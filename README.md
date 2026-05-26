@@ -8,10 +8,10 @@
 
 - **Conversational Onboarding**: Luồng khảo sát người dùng dưới dạng hội thoại sinh động với mascot, giúp thu thập các chỉ số cơ thể (chiều cao, cân nặng, độ tuổi, mức độ vận động) một cách tự nhiên.
 - **Cá nhân hóa lộ trình**: Tự động tính toán BMI, BMR, TDEE và đề xuất Macro (Protein, Carbs, Fat) phù hợp với mục tiêu của người dùng (giảm cân, giữ cân, tăng cân).
-- **Nhật ký dinh dưỡng (Diary) & Luyện tập**: Theo dõi lượng calo nạp vào và calo tiêu thụ, hỗ trợ ghi lại bữa ăn và lịch trình tập luyện.
+- **Nhật ký dinh dưỡng (Diary) & Luyện tập**: Theo dõi lượng calo nạp vào và calo tiêu thụ, hỗ trợ ghi lại bữa ăn và lịch trình tập luyện theo trục thời gian (Timeline).
 - **Gợi ý thực đơn & Công thức**: Kế hoạch ăn uống (Meal Plan) đa dạng và gợi ý công thức nấu ăn chuẩn Việt.
 - **Tích hợp Google Sign-In**: Đăng nhập nhanh chóng và bảo mật thông qua tài khoản Google.
-- **Premium Design System**: Giao diện tối sang trọng (Dark Theme làm chủ đạo), các hiệu ứng gradient tím mượt mà, bo góc mềm mại và các tương tác rung phản hồi (Haptic) tinh tế.
+- **Premium Design System**: Giao diện tối sang trọng (Dark Theme làm chủ đạo và hỗ trợ Light Theme tự động), các hiệu ứng gradient tím mượt mà, bo góc mềm mại và các tương tác rung phản hồi (Haptic) tinh tế.
 
 ---
 
@@ -21,12 +21,12 @@ Dự án được xây dựng dựa trên Expo Managed Workflow với cấu trú
 
 - **Core**: [Expo 54](https://expo.dev/) (SDK 54), [React Native 0.81.5](https://reactnative.dev/)
 - **Navigation**: [Expo Router v6](https://docs.expo.dev/router/introduction/) (File-based routing)
-- **State Management**: [Zustand](https://github.com/pmndrs/zustand) (Quản lý client state và lưu trữ cục bộ)
-- **Data Fetching**: [TanStack React Query v5](https://tanstack.com/query/latest) (Đồng bộ hóa dữ liệu từ backend và cache)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand) (Quản lý các store lưu trữ trạng thái người dùng, cài đặt, lượng nước uống, v.v. và đồng bộ cục bộ)
+- **Data Fetching**: [TanStack React Query v5](https://tanstack.com/query/latest) (Đồng bộ hóa dữ liệu từ backend và cache cho các truy vấn tĩnh/động)
 - **Form Handling**: [React Hook Form](https://react-hook-form.com/) kết hợp [Zod](https://zod.dev/) để validate dữ liệu chặt chẽ
 - **UI Components**: [React Native Paper](https://reactnativepaper.com/) (Hỗ trợ components chuẩn Material Design), [React Native Calendars](https://github.com/wix/react-native-calendars)
 - **Animations & Visuals**: [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/), [Expo Haptics](https://docs.expo.dev/versions/latest/sdk/haptics/), [Expo Linear Gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/)
-- **Networking**: [Axios](https://axios-http.com/) với cấu hình API Client tự động đính kèm Token
+- **Networking**: [Axios](https://axios-http.com/) với cấu hình API Client tự động đính kèm Token bảo mật
 
 ---
 
@@ -36,34 +36,50 @@ Toàn bộ mã nguồn của ứng dụng được tổ chức khoa học bên t
 
 ```text
 frontend/
-├── assets/                 # Các tài nguyên tĩnh (Hình ảnh, Mascot, Fonts)
-├── patches/                # Thư mục lưu trữ các bản vá lỗi thư viện (patch-package)
+├── assets/                 # Các tài nguyên tĩnh (Hình ảnh, Mascot, Favicon)
+├── scripts/                # Scripts tiện ích dự án
 ├── src/                    # Thư mục gốc chứa mã nguồn dự án
 │   ├── app/                # Cấu trúc định tuyến (Expo Router Routes)
 │   │   ├── (onboarding)/   # Các màn hình khảo sát chỉ số cơ thể đầu vào
 │   │   ├── (public)/       # Các màn hình chào mừng (Welcome) và Đăng nhập (Login)
-│   │   ├── (tabs)/         # Giao diện chính sau đăng nhập (Home, Diary, Meal Plan, Account)
-│   │   └── _layout.tsx     # Root Layout - cấu hình Providers (React Query, Paper, Auth...)
+│   │   ├── (tabs)/         # Giao diện chính (Home, Diary, Meal Plan, Account)
+│   │   ├── account/        # Các trang quản lý tài khoản (Cài đặt, quyền riêng tư, mục tiêu)
+│   │   ├── guide/          # Trang xem cẩm nang, lời khuyên sức khỏe động [type].tsx
+│   │   ├── stats/          # Các trang báo cáo thống kê chỉ số (Calo, Bước chân, Cân nặng)
+│   │   ├── _layout.tsx     # Root Layout - cấu hình Providers (React Query, Paper, Auth...)
+│   │   └── index.tsx       # Entry point điều hướng màn hình ban đầu
 │   ├── components/         # Các thành phần giao diện tái sử dụng
-│   │   ├── ui/             # Nguyên tử UI (Buttons, Cards, Modals, Inputs...)
+│   │   ├── account/        # Components cho giao diện thông tin tài khoản & mục tiêu
+│   │   ├── buttons/        # Các nút bấm có hiệu ứng gradient hoặc auth
+│   │   ├── charts/         # Các biểu đồ tròn, cột, đường biểu diễn chỉ số
+│   │   ├── common/         # Component dùng chung (Toast, SurfaceCard)
+│   │   ├── dashboard/      # Vòng tròn Calo, biểu đồ tiến trình dinh dưỡng nhanh ở Home
+│   │   ├── layout/         # SafeScreen, ScreenBackground hỗ trợ responsive
+│   │   ├── meal/           # Modals chọn món ăn, chỉnh sửa khẩu phần
 │   │   ├── onboarding/     # Components riêng cho luồng khảo sát (mascot bong bóng thoại...)
-│   │   ├── dashboard/      # Vòng tròn Calo, biểu đồ tiến trình dinh dưỡng
-│   │   └── layout/         # SafeScreen, ScreenBackground hỗ trợ responsive
-│   ├── constants/          # Hằng số, cấu hình tĩnh và mocks
-│   │   ├── theme.ts        # Design Tokens (Bảng màu tối, kích thước chữ, spacing)
-│   │   ├── api.ts          # Định nghĩa endpoints API
-│   │   ├── guides.ts       # Dữ liệu bài viết, lời khuyên sức khỏe
-│   │   └── i18n/           # Đa ngôn ngữ (Tiếng Việt)
-│   ├── domain/             # Các mô hình dữ liệu và công thức tính toán logic nghiệp vụ
+│   │   ├── stats/          # Components hỗ trợ các trang thống kê chi tiết
+│   │   └── streaks/        # Các thành phần theo dõi chuỗi ngày kỷ luật (Streak)
+│   ├── constants/          # Hằng số, cấu hình tĩnh
+│   │   ├── index.ts        # Design Tokens chính (Bảng màu sáng/tối, spacing, typography)
+│   │   ├── api.ts          # Định nghĩa endpoints API kết nối Backend
+│   │   ├── guides.ts       # Dữ liệu bài viết tĩnh cho cẩm nang dinh dưỡng
+│   │   ├── i18n/           # Các file bản dịch đa ngôn ngữ (Tiếng Việt, Tiếng Anh)
+│   │   └── mocks/          # Mock data cho môi trường phát triển offline
 │   ├── hooks/              # Custom React Hooks
-│   │   ├── store/          # Zustand stores (onboardingStore, authStore...)
-│   │   ├── queries/        # Các custom query hook từ TanStack Query tương tác với service
+│   │   ├── queries/        # Custom query/mutation hooks từ React Query (Food, User)
+│   │   ├── stats/          # Custom hooks xử lý tổng hợp số liệu thống kê (Calo, Steps...)
+│   │   ├── useAppColors.ts # Hook lấy màu linh hoạt theo theme hiện tại
 │   │   └── useGoogleAuth.ts# Xử lý đăng nhập thông qua Google Cloud Console
 │   ├── services/           # Lớp kết nối API Backend
 │   │   ├── apiClient.ts    # Cấu hình Axios instance (Base URL, Interceptors...)
-│   │   ├── userService.ts  # Quản lý tài khoản và cập nhật thông tin cá nhân
-│   │   ├── foodService.ts  # Tìm kiếm món ăn, tạo món ăn mới và công thức
-│   │   └── logService.ts   # Lưu nhật ký dinh dưỡng và bài tập hàng ngày
+│   │   ├── userService.ts  # Dịch vụ quản lý tài khoản & thông tin hồ sơ
+│   │   ├── foodService.ts  # Tra cứu món ăn và quản lý công thức ăn uống
+│   │   ├── logService.ts   # Lưu trữ nhật ký ăn uống
+│   │   ├── pedometerService.ts # Đồng bộ bước chân
+│   │   ├── weightLogService.ts # Ghi nhận cân nặng cơ thể
+│   │   └── nutritionLogService.ts # Truy xuất tổng hợp số liệu dinh dưỡng
+│   ├── store/              # Zustand stores quản lý client-state (auth, diary, settings, water...)
+│   ├── types/              # Định nghĩa TypeScript contracts & DTOs
 │   └── utils/              # Các hàm tiện ích dùng chung (Date helpers, Calo helpers)
 ├── .env.example            # Bản mẫu cấu hình biến môi trường
 ├── app.json                # Cấu hình Expo App (Plugins, Bundle ID, Splash Screen)
@@ -122,9 +138,9 @@ npm run typecheck  # Kiểm tra lỗi biên dịch TypeScript
 ## 🎨 Quy chuẩn thiết kế (Design Standards)
 
 Dự án tuân thủ nghiêm ngặt hệ thống **Design Tokens** định sẵn:
-- **Base Theme**: Màu chủ đạo là `#111020` (Nền tối Premium) và sắc tím `#A56CFF` (Primary Purple).
-- **Typography**: Sử dụng font chữ hiện đại **Plus Jakarta Sans** mang lại cảm giác trẻ trung, thanh lịch.
-- **Card Design**: Độ bo góc chuẩn `20px` hoặc `24px` kết hợp đổ bóng nhẹ và viền tinh tế để tăng chiều sâu giao diện.
+- **Base Theme**: Màu chủ đạo là `#111020` (Nền tối Premium) và sắc tím `#A56CFF` (Primary Purple). Có cơ chế tự động đồng bộ sang nền sáng khi người dùng tùy chọn.
+- **Typography**: Sử dụng font chữ hiện đại **Google Sans** mang lại cảm giác thân thiện, chuyên nghiệp và có tính đọc tốt.
+- **Card Design**: Độ bo góc chuẩn tái sử dụng qua Token `radius` kết hợp đổ bóng nhẹ và viền tinh tế để tăng chiều sâu giao diện.
 
 ---
 

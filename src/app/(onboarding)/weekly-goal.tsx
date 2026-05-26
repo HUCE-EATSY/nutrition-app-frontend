@@ -8,7 +8,7 @@ import {
   getWeeklyGoalBounds,
   sanitizeWeeklyGoal,
 } from "@/utils/onboarding";
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { GoalType } from "@/types/contracts";
@@ -24,6 +24,7 @@ const createWeeklyGoalSchema = (goalType: GoalType | null) => {
 };
 
 export default function WeeklyGoalScreen() {
+  const t = useTranslation();
   const goalType = useOnboardingStore((state) => state.draft.goalType);
   const bounds = getWeeklyGoalBounds(goalType);
   const weeklyGoalSchema = useMemo(() => createWeeklyGoalSchema(goalType), [goalType]);

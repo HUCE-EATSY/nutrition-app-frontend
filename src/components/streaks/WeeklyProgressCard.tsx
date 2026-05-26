@@ -1,7 +1,10 @@
+import React, { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type WeeklyProgressCardProps = {
   daysOfWeek: string[]; // length = 7
@@ -9,9 +12,13 @@ type WeeklyProgressCardProps = {
 };
 
 export function WeeklyProgressCard({ daysOfWeek, weeklyProgress }: WeeklyProgressCardProps) {
+  const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Mục tiêu tuần</Text>
+      <Text style={styles.sectionTitle}>{t.streaks.weeklyGoal}</Text>
       <SurfaceCard style={styles.weeklyCard}>
         {weeklyProgress.map((isCompleted, idx) => (
           <View key={`${daysOfWeek[idx] ?? idx}`} style={[styles.dayCircle, isCompleted && styles.dayCircleActive]}>
@@ -23,7 +30,7 @@ export function WeeklyProgressCard({ daysOfWeek, weeklyProgress }: WeeklyProgres
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   section: {
     gap: spacing.md,
   },

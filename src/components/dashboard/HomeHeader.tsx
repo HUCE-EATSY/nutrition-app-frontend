@@ -1,16 +1,34 @@
+import React from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { colors, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
-
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export function HomeHeader() {
+  const t = useTranslation();
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+  const language = useSettingsStore((state) => state.language);
   
-  const today = new Date();
-  const formattedDate = `Hôm nay, ${today.getDate()} tháng ${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+  const getFormattedDate = () => {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    if (language === "en") {
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      return `Today, ${months[today.getMonth()]} ${day}`;
+    }
+    return `Hôm nay, ${day} tháng ${month.toString().padStart(2, '0')}`;
+  };
+  const formattedDate = getFormattedDate();
 
   return (
     <View style={styles.container}>
@@ -31,19 +49,24 @@ export function HomeHeader() {
   );
 }
 
-const DAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const DAYS_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const DAYS_EN = ["M", "T", "W", "T", "F", "S", "S"];
 
 export function DateScroller() {
   const today = new Date();
-  const currentDayName = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][today.getDay()];
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+  const language = useSettingsStore((state) => state.language);
+  const daysList = language === "en" ? DAYS_EN : DAYS_VI;
+  const currentDayIndex = today.getDay() === 0 ? 6 : today.getDay() - 1;
 
   return (
     <View style={styles.scrollerWrap}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {DAYS.map((day, index) => {
-          const isActive = day === currentDayName;
+        {daysList.map((day, index) => {
+          const isActive = index === currentDayIndex;
           return (
-            <TouchableOpacity key={day} style={[styles.dayCircle, isActive && styles.dayActive]}>
+            <TouchableOpacity key={`${day}-${index}`} style={[styles.dayCircle, isActive && styles.dayActive]}>
               <Text style={[styles.dayText, isActive && styles.dayTextActive]}>{day}</Text>
               {isActive && <View style={styles.activeDot} />}
             </TouchableOpacity>
@@ -54,7 +77,7 @@ export function DateScroller() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     gap: 4,
   },
@@ -107,7 +130,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dayActive: {
-    backgroundColor: "rgba(165,108,255,0.2)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(165,108,255,0.2)" : "rgba(142,87,245,0.15)",
     borderWidth: 1,
     borderColor: colors.primary,
   },

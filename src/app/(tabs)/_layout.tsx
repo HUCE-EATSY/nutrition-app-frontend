@@ -1,10 +1,12 @@
+import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { t } from "@/constants/i18n";
-import { colors, radius } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 
 function TabIcon({ color, name }: { color: string; name: keyof typeof Ionicons.glyphMap }) {
@@ -12,8 +14,11 @@ function TabIcon({ color, name }: { color: string; name: keyof typeof Ionicons.g
 }
 
 export default function TabLayout() {
+  const t = useTranslation();
   const insets = useSafeAreaInsets();
   const { isCompactWidth } = useResponsiveLayout();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const tabBarHeight = (isCompactWidth ? 72 : 84) + Math.max(insets.bottom, 8);
 
   return (
@@ -28,10 +33,13 @@ export default function TabLayout() {
             height: tabBarHeight,
             paddingBottom: Math.max(insets.bottom, 10),
             paddingTop: isCompactWidth ? 8 : 10,
+            backgroundColor: colors.bgElevated,
+            borderTopColor: colors.borderSoft,
           },
         ],
         tabBarLabelStyle: [styles.tabLabel, isCompactWidth && styles.tabLabelCompact],
         tabBarHideOnKeyboard: true,
+        sceneStyle: { backgroundColor: colors.bgBase },
       }}
     >
       <Tabs.Screen
@@ -54,8 +62,8 @@ export default function TabLayout() {
           title: "",
           tabBarButton: () => (
             <View style={[styles.quickAddWrap, isCompactWidth && styles.quickAddWrapCompact]}>
-              <Pressable onPress={() => router.push("/quick-add")} style={[styles.quickAddButton, isCompactWidth && styles.quickAddButtonCompact]}>
-                <Ionicons color={colors.textPrimary} name="add" size={28} />
+              <Pressable onPress={() => router.push("/quick-add")} style={[styles.quickAddButton, isCompactWidth && styles.quickAddButtonCompact, { borderColor: colors.bgBase, backgroundColor: colors.primary }]}>
+                <Ionicons color="#FFFFFF" name="add" size={28} />
               </Pressable>
             </View>
           ),
@@ -79,10 +87,9 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   tabBar: {
-    backgroundColor: "#141223",
-    borderTopColor: colors.borderSoft,
+    borderTopWidth: 1,
   },
   tabLabel: {
     fontSize: 11,
@@ -103,11 +110,9 @@ const styles = StyleSheet.create({
     width: 62,
     height: 62,
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 6,
-    borderColor: colors.bgBase,
   },
   quickAddButtonCompact: {
     width: 56,

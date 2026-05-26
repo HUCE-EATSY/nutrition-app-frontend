@@ -5,7 +5,7 @@ import * as z from "zod";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
-import { t } from "@/constants/i18n";
+import { t, useTranslation } from "@/constants/i18n";
 import { colors, radius, spacing, typography } from "@/constants";
 
 const nicknameSchema = z.object({
@@ -17,6 +17,7 @@ const nicknameSchema = z.object({
 });
 
 export default function NicknameScreen() {
+  const t = useTranslation();
   const { control, error, isValid, meta, onContinue } = useOnboardingForm(
     "Nickname",
     "nickname",

@@ -30,6 +30,7 @@ export async function getWeightTimeline(from: string, to: string): Promise<Weigh
  */
 export async function getUserGoal(): Promise<UserGoalApiResponse | null> {
   if (USE_MOCK) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { mockGetUserInfoResponse } = require("../constants/mocks/userMocks");
     return mockGetUserInfoResponse.activeGoal;
   }

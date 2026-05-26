@@ -1,4 +1,4 @@
-import { apiClient, publicApiClient } from "./apiClient";
+import { apiClient } from "./apiClient";
 import { API_URLS } from "../constants/api";
 
 export type ExerciseCategory = {
@@ -104,7 +104,7 @@ export const exerciseService = {
     if (USE_MOCK) {
       return mockExerciseCategories;
     }
-    const response = await publicApiClient.get(API_URLS.exercises.categories);
+    const response = await apiClient.get(API_URLS.exercises.categories);
     return response.data.data;
   },
 
@@ -117,7 +117,7 @@ export const exerciseService = {
       }
       throw new Error("Không tìm thấy bài tập.");
     }
-    const response = await publicApiClient.get(API_URLS.exercises.detail(id));
+    const response = await apiClient.get(API_URLS.exercises.detail(id));
     return response.data.data;
   },
 
@@ -147,7 +147,7 @@ export const exerciseService = {
       mockExerciseLogs.push(newLog);
       return newLog;
     }
-    const response = await publicApiClient.post(API_URLS.exercises.logs, data);
+    const response = await apiClient.post(API_URLS.exercises.logs, data);
     return response.data.data;
   },
 

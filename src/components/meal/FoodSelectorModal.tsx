@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, typography, radius } from "@/constants";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { FoodDetailModal } from "./FoodDetailModal";
+import { useTranslation } from "@/constants/i18n";
 
 interface FoodSelectorModalProps {
   visible: boolean;
@@ -22,18 +23,24 @@ interface FoodSelectorModalProps {
 }
 
 const categories = [
-  { id: 1, name: "Cơm & Xôi" },
-  { id: 2, name: "Phở & Bún" },
-  { id: 3, name: "Bánh mì & Bánh" },
-  { id: 4, name: "Đồ uống" },
-  { id: 5, name: "Thực phẩm đóng gói" },
-  { id: 6, name: "Rau củ quả" },
-  { id: 7, name: "Thịt & Hải sản" },
-  { id: 10, name: "Khác" }
+  { id: 1, dbName: "Cơm & Xôi", uiKey: "riceAndStickyRice" as const },
+  { id: 2, dbName: "Phở & Bún", uiKey: "noodleSoup" as const },
+  { id: 3, dbName: "Bánh mì & Bánh", uiKey: "breadAndPastries" as const },
+  { id: 4, dbName: "Đồ uống", uiKey: "drinks" as const },
+  { id: 5, dbName: "Thực phẩm đóng gói", uiKey: "packagedFood" as const },
+  { id: 6, dbName: "Rau củ quả", uiKey: "vegetablesAndFruits" as const },
+  { id: 7, dbName: "Thịt & Hải sản", uiKey: "meatAndSeafood" as const },
+  { id: 10, dbName: "Khác", uiKey: "other" as const }
 ];
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
+  const t = useTranslation();
   const { data: foods = [], isLoading } = useFoodList();
+
+  const getCategoryUiLabel = (dbCategoryName: string) => {
+    const cat = categories.find(c => c.dbName === dbCategoryName);
+    return cat ? t.categories[cat.uiKey] : dbCategoryName;
+  };
 
   const [filteredFoods, setFilteredFoods] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,9 +82,9 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
       let result = foods;
 
       if (selectedCategoryId) {
-        const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name;
-        if (selectedCategoryName) {
-          result = result.filter((f: FoodItem) => f.category === selectedCategoryName);
+        const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+        if (selectedCategory) {
+          result = result.filter((f: FoodItem) => f.category === selectedCategory.dbName);
         }
       }
 
@@ -122,7 +129,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Chọn món ăn</Text>
+            <Text style={styles.headerTitle}>{t.mealEntry.selectFood}</Text>
             <Pressable hitSlop={12} onPress={handleClose}>
               <Ionicons color={colors.textPrimary} name="close" size={24} />
             </Pressable>
@@ -135,7 +142,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                 <Ionicons color={colors.textMuted} name="search-outline" size={18} />
                 <TextInput
                   onChangeText={setSearchQuery}
-                  placeholder="Tìm thực phẩm hoặc món ăn"
+                  placeholder={t.mealEntry.searchPlaceholder}
                   placeholderTextColor={colors.textMuted}
                   style={styles.searchInput}
                   value={searchQuery}
@@ -158,7 +165,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                   style={[styles.tabButton, activeTab === "recent" && styles.tabButtonActive]}
                 >
                   <Text style={[styles.tabButtonText, activeTab === "recent" && styles.tabButtonTextActive]}>
-                    Gần đây
+                    {t.mealEntry.recent}
                   </Text>
                   {activeTab === "recent" && <View style={styles.activeLine} />}
                 </Pressable>
@@ -168,7 +175,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                   style={[styles.tabButton, activeTab === "created" && styles.tabButtonActive]}
                 >
                   <Text style={[styles.tabButtonText, activeTab === "created" && styles.tabButtonTextActive]}>
-                    Tạo bởi tôi
+                    {t.mealEntry.created}
                   </Text>
                   {activeTab === "created" && <View style={styles.activeLine} />}
                 </Pressable>
@@ -178,7 +185,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                   style={[styles.tabButton, activeTab === "favorite" && styles.tabButtonActive]}
                 >
                   <Text style={[styles.tabButtonText, activeTab === "favorite" && styles.tabButtonTextActive]}>
-                    Yêu thích
+                    {t.mealEntry.favorite}
                   </Text>
                   {activeTab === "favorite" && <View style={styles.activeLine} />}
                 </Pressable>
@@ -191,7 +198,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                   <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(59, 130, 246, 0.15)" }]}>
                     <Ionicons color="#3b82f6" name="barcode-outline" size={22} />
                   </View>
-                  <Text style={styles.quickActionText}>Quét mã vạch</Text>
+                  <Text style={styles.quickActionText}>{t.mealEntry.scanBarcode}</Text>
                 </Pressable>
 
                 {/* AI Dishes Recognition */}
@@ -199,7 +206,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                   <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
                     <Ionicons color="#10b981" name="sparkles-outline" size={22} />
                   </View>
-                  <Text style={styles.quickActionText}>Nhận diện món ăn</Text>
+                  <Text style={styles.quickActionText}>{t.mealEntry.aiRecognition}</Text>
                 </Pressable>
 
                 {/* Voice Record */}
@@ -207,7 +214,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                   <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(239, 68, 68, 0.15)" }]}>
                     <Ionicons color="#ef4444" name="mic-outline" size={22} />
                   </View>
-                  <Text style={styles.quickActionText}>Ghi bằng giọng nói</Text>
+                  <Text style={styles.quickActionText}>{t.mealEntry.voiceRecord}</Text>
                 </Pressable>
               </View>
 
@@ -223,7 +230,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                       !selectedCategoryId && styles.categoryTextActive,
                     ]}
                   >
-                    Tất cả
+                    {t.categories.all}
                   </Text>
                 </Pressable>
                 {categories.map((cat) => (
@@ -241,7 +248,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                         selectedCategoryId === cat.id && styles.categoryTextActive,
                       ]}
                     >
-                      {cat.name}
+                      {t.categories[cat.uiKey]}
                     </Text>
                   </Pressable>
                 ))}
@@ -264,8 +271,8 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                       <Ionicons color={colors.textMuted} name="restaurant-outline" size={48} />
                       <Text style={styles.emptyListText}>
                         {searchQuery || selectedCategoryId
-                          ? "Không tìm thấy món ăn nào"
-                          : "Chưa có món ăn nào"}
+                          ? t.mealEntry.noResults
+                          : t.mealEntry.noFoods}
                       </Text>
                     </View>
                   ) : (
@@ -300,7 +307,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                               <Text style={styles.foodName} numberOfLines={2}>
                                 {item.name}
                               </Text>
-                              <Text style={styles.foodCategory}>{item.category}</Text>
+                              <Text style={styles.foodCategory}>{getCategoryUiLabel(item.category)}</Text>
 
                               {/* Nutrition info */}
                               <View style={styles.nutritionRow}>
@@ -323,7 +330,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                               </View>
 
                               <Text style={styles.servingSize}>
-                                Khẩu phần: {item.servingSize}g
+                                {t.mealEntry.portionLabel(item.servingSize)}
                               </Text>
                             </View>
 
@@ -346,13 +353,13 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                         >
                           <Text style={styles.viewMoreText}>
                             {showAllFoods
-                              ? "Thu gọn"
-                              : `Xem thêm ${filteredFoods.length - DEFAULT_DISPLAY_COUNT} món`}
+                              ? t.mealEntry.viewLess
+                              : t.mealEntry.viewMore(filteredFoods.length - DEFAULT_DISPLAY_COUNT)}
                           </Text>
                           <Ionicons
-                            color={colors.primary}
-                            name={showAllFoods ? "chevron-up" : "chevron-down"}
-                            size={18}
+                             color={colors.primary}
+                             name={showAllFoods ? "chevron-up" : "chevron-down"}
+                             size={18}
                           />
                         </Pressable>
                       )}
@@ -418,7 +425,7 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#221a3a",
+    borderBottomColor: colors.borderSoft,
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
   },
@@ -456,14 +463,14 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     flex: 1,
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
   },
   quickActionIconBg: {
     width: 44,

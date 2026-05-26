@@ -1,8 +1,10 @@
+import React, { useMemo } from "react";
 import { ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors, gradients, radius, shadows, typography } from "@/constants";
+import { gradients, radius, shadows, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type GradientButtonProps = {
   label: string;
@@ -24,6 +26,11 @@ export function GradientButton({
   testID,
 }: GradientButtonProps) {
   const inactive = disabled || loading;
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
+  // Use a light or dark inactive color representation based on the theme colors.surfaceAlt
+  const inactiveGradient = [colors.surfaceAlt, colors.surfaceAlt] as const;
 
   return (
     <Pressable
@@ -33,7 +40,7 @@ export function GradientButton({
       testID={testID}
     >
       <LinearGradient
-        colors={inactive ? ["#2B273E", "#2B273E"] : [...gradients.button]}
+        colors={inactive ? inactiveGradient : [...gradients.button]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={styles.inner}
@@ -46,7 +53,7 @@ export function GradientButton({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrapper: {
     width: "100%",
     borderRadius: radius.xl,

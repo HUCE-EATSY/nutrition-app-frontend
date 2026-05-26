@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { colors } from "@/constants";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Path, Circle, G, Text as SvgText, Line } from "react-native-svg";
 
@@ -34,7 +35,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   height = 220,
   width = 300,
   actualColor = "#8B5CF6",
-  targetColor = "#FFFFFF",
+  targetColor = colors.textPrimary,
   maxValue,
   minValue,
   yUnit = "kg",
@@ -176,7 +177,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                 cy={tooltip.y}
                 r="6"
                 fill={actualColor}
-                stroke="#FFFFFF"
+                stroke={colors.textPrimary}
                 strokeWidth="2"
               />
               <Line
@@ -233,7 +234,7 @@ export const LineChart: React.FC<LineChartProps> = ({
 const styles = StyleSheet.create({
   tooltip: {
     position: "absolute",
-    backgroundColor: "#1E1B2E",
+    backgroundColor: colors.bgElevated,
     borderWidth: 1,
     borderColor: "#8B5CF6",
     borderRadius: 8,
@@ -244,12 +245,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   tooltipValue: {
-    color: "#FFFFFF",
+    color: colors.textPrimary,
     fontSize: 13,
     fontWeight: "bold",
   },
   tooltipDate: {
-    color: "#9CA3AF",
+    color: colors.textSecondary,
     fontSize: 11,
   },
 });

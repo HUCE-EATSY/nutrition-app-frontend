@@ -2,7 +2,8 @@ import { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { colors, gradients } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
+import { useSettingsStore } from "@/store/settingsStore";
 
 type ScreenBackgroundProps = {
   withGlow?: boolean;
@@ -10,18 +11,28 @@ type ScreenBackgroundProps = {
 };
 
 export function ScreenBackground({ withGlow = true, children }: ScreenBackgroundProps) {
-  return (
-    <View style={styles.root}>
-      {/* Top extension for bounce overscroll */}
-      <View style={styles.topExtension} />
-      {/* Bottom extension for bounce overscroll */}
-      <View style={styles.bottomExtension} />
+  const colors = useAppColors();
+  const theme = useSettingsStore((state) => state.theme);
 
-      <LinearGradient colors={[...gradients.background]} style={StyleSheet.absoluteFillObject} />
+  const bgGradient = theme === "dark" 
+    ? (["#4A1F76", "#151124", "#111020"] as const)
+    : (["#EDE4FF", "#F3EEFE", "#F4F5F7"] as const);
+
+  const topGlowColor = theme === "dark" ? "rgba(165,108,255,0.16)" : "rgba(165,108,255,0.08)";
+  const bottomGlowColor = theme === "dark" ? "rgba(109,61,230,0.12)" : "rgba(109,61,230,0.06)";
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.bgBase }]}>
+      {/* Top extension for bounce overscroll */}
+      <View style={[styles.topExtension, { backgroundColor: bgGradient[0] }]} />
+      {/* Bottom extension for bounce overscroll */}
+      <View style={[styles.bottomExtension, { backgroundColor: bgGradient[bgGradient.length - 1] }]} />
+
+      <LinearGradient colors={bgGradient} style={StyleSheet.absoluteFillObject} />
       {withGlow ? (
         <>
-          <View style={styles.topGlow} />
-          <View style={styles.bottomGlow} />
+          <View style={[styles.topGlow, { backgroundColor: topGlowColor }]} />
+          <View style={[styles.bottomGlow, { backgroundColor: bottomGlowColor }]} />
         </>
       ) : null}
       {children}
@@ -32,7 +43,6 @@ export function ScreenBackground({ withGlow = true, children }: ScreenBackground
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bgBase,
   },
   topExtension: {
     position: "absolute",
@@ -40,7 +50,6 @@ const styles = StyleSheet.create({
     height: 1000,
     left: 0,
     right: 0,
-    backgroundColor: gradients.background[0],
   },
   bottomExtension: {
     position: "absolute",
@@ -48,7 +57,6 @@ const styles = StyleSheet.create({
     height: 1000,
     left: 0,
     right: 0,
-    backgroundColor: gradients.background[gradients.background.length - 1],
   },
   topGlow: {
     position: "absolute",
@@ -57,7 +65,6 @@ const styles = StyleSheet.create({
     right: -20,
     height: 240,
     borderRadius: 240,
-    backgroundColor: "rgba(165,108,255,0.16)",
     transform: [{ scaleX: 1.2 }],
   },
   bottomGlow: {
@@ -67,6 +74,5 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 200,
-    backgroundColor: "rgba(109,61,230,0.12)",
   },
 });

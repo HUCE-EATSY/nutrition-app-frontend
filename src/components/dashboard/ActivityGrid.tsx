@@ -1,16 +1,20 @@
+import React, { useEffect, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useEffect, useState } from "react";
 
-import { colors, spacing, typography } from "@/constants";
-import { t } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
 import { ACTIVITIES, ActivityId } from "@/constants/activities";
 import { getExerciseNameFromActivity } from "@/constants/exerciseMapping";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 
 export function ActivityGrid() {
+  const t = useTranslation();
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
 
   // Load exercises để lấy ID
@@ -59,7 +63,7 @@ export function ActivityGrid() {
               <View style={styles.iconCircle}>
                 <MaterialCommunityIcons name={activity.icon} size={20} color={colors.textPrimary} />
               </View>
-              <Text style={styles.label}>{activity.label}</Text>
+              <Text style={styles.label}>{t.activities[activity.id]}</Text>
             </TouchableOpacity>
           );
         })}
@@ -68,7 +72,7 @@ export function ActivityGrid() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     gap: spacing.md,
   },
@@ -91,7 +95,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     alignItems: "center",
     justifyContent: "center",
   },

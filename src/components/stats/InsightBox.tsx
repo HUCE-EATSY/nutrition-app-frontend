@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/constants";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -9,7 +10,7 @@ interface InsightBoxProps {
 export const InsightBox = ({ message }: InsightBoxProps) => {
   return (
     <View style={styles.insightBox}>
-      <Ionicons name="sparkles" size={20} color="#A78BFA" />
+      <Ionicons name="sparkles" size={20} color={colors.primary} />
       <Text style={styles.insightText}>{message}</Text>
     </View>
   );
@@ -17,7 +18,7 @@ export const InsightBox = ({ message }: InsightBoxProps) => {
 
 const styles = StyleSheet.create({
   insightBox: {
-    backgroundColor: "#0A2647",
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 16,
     padding: 16,
     flexDirection: "row",

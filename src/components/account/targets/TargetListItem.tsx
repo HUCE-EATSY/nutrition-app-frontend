@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from "@/constants";
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -14,10 +15,10 @@ interface TargetListItemProps {
 
 export function TargetListItem({
   icon,
-  iconColor = '#FFFFFF',
+  iconColor = colors.textPrimary,
   title,
   rightIcon = 'chevron-forward',
-  rightIconColor = '#9E9E9E',
+  rightIconColor = colors.textSecondary,
   onPress,
   showDivider = true,
 }: TargetListItemProps) {
@@ -49,13 +50,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: '#2D274E',
+    backgroundColor: colors.surfaceAlt,
     marginHorizontal: 16,
   },
 });

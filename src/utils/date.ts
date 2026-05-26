@@ -1,3 +1,7 @@
+import { format, parseISO, differenceInYears, addDays as addDaysFns, formatISO } from "date-fns";
+import { vi, enUS } from "date-fns/locale";
+import { useSettingsStore } from "@/store/settingsStore";
+
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -6,12 +10,10 @@ export function roundToStep(value: number, step: number) {
   return Math.round(value / step) * step;
 }
 
-import { format, parseISO, differenceInYears, addDays as addDaysFns, formatISO } from "date-fns";
-import { vi } from "date-fns/locale";
-
 export function formatShortDate(dateISO: string) {
   try {
-    return format(parseISO(dateISO), "dd MMM yyyy", { locale: vi });
+    const lang = useSettingsStore.getState?.()?.language || "vi";
+    return format(parseISO(dateISO), "dd MMM yyyy", { locale: lang === "en" ? enUS : vi });
   } catch {
     return dateISO;
   }
@@ -19,11 +21,13 @@ export function formatShortDate(dateISO: string) {
 
 export function formatDateForHero(dateISO: string) {
   try {
-    return format(parseISO(dateISO), "d MMMM yyyy", { locale: vi });
+    const lang = useSettingsStore.getState?.()?.language || "vi";
+    return format(parseISO(dateISO), "d MMMM yyyy", { locale: lang === "en" ? enUS : vi });
   } catch {
     return dateISO;
   }
 }
+
 
 export function createBirthDateISO(day: number, month: number, year: number) {
   const safeMonth = `${month}`.padStart(2, "0");
