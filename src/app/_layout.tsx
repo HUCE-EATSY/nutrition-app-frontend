@@ -1,0 +1,151 @@
+import {
+  GoogleSans_400Regular,
+  GoogleSans_600SemiBold,
+  GoogleSans_700Bold,
+  useFonts,
+} from "@expo-google-fonts/google-sans";
+import { Stack, useRouter, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import * as SystemUI from "expo-system-ui";
+import { View, ActivityIndicator, Text, Platform } from "react-native";
+
+import { useOnboardingStore } from "@/store/onboardingStore";
+import { useAuthStore } from "@/store/authStore";
+import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useAppColors } from "@/hooks/useAppColors";
+
+// Import global CSS for web
+if (Platform.OS === 'web') {
+  require('../global.css');
+}
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: false,
+      staleTime: Infinity,
+    },
+  },
+});
+
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+export default function RootLayout() {
+  const themeMode = useSettingsStore((state) => state.theme);
+  const settingsHydrated = useSettingsStore((state) => state.hydrated);
+  useSettingsStore((state) => state.language); // Force layout and child screen tree to re-render on language change
+  const colors = useAppColors();
+  const { bgBase } = colors;
+
+  const basePaperTheme = themeMode === "light" ? MD3LightTheme : MD3DarkTheme;
+  const paperTheme = {
+    ...basePaperTheme,
+    colors: {
+      ...basePaperTheme.colors,
+      primary: colors.primary,
+      secondary: colors.primaryDark,
+      background: colors.bgBase,
+      surface: colors.surface,
+    },
+  };
+
+  const [loaded, error] = useFonts({
+    GoogleSans_400Regular,
+    GoogleSans_600SemiBold,
+    GoogleSans_700Bold,
+  });
+
+  const hydrated = useOnboardingStore((state) => state.hydrated);
+  const authHydrated = useAuthStore((state) => state.hydrated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync().catch(() => undefined);
+    }
+  }, [loaded, error]);
+
+  useEffect(() => {
+    if (bgBase) {
+      SystemUI.setBackgroundColorAsync(bgBase).catch(() => undefined);
+    }
+  }, [bgBase]);
+
+  const userInfo = useAuthStore((state) => state.userInfo);
+
+  // Auth protection logic — role-based routing (includes admin group support from nam branch)
+  useEffect(() => {
+    if (!loaded || !hydrated || !authHydrated || !settingsHydrated) return;
+
+    const [firstSegment] = segments as string[];
+    const inPublicGroup = firstSegment === '(public)';
+    const inAdminGroup = firstSegment === 'admin';
+    const inOnboardingGroup = firstSegment === '(onboarding)';
+    const role = userInfo?.role;
+
+    if (inAdminGroup) {
+      // Admin group handles its own auth via useAdminAuth — don't interfere
+      return;
+    }
+
+    if (!isAuthenticated && !inPublicGroup && !inOnboardingGroup) {
+      router.replace('/(public)/welcome');
+    } else if (isAuthenticated && inPublicGroup) {
+      const [, secondSegment] = segments as string[];
+      if (secondSegment !== 'mascot-intro') {
+        router.replace('/');
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, segments, userInfo, loaded, hydrated, authHydrated, settingsHydrated]);
+
+  if (!loaded && !error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
+        <Text style={{ color: 'white', marginTop: 10 }}>Loading fonts...</Text>
+      </View>
+    );
+  }
+
+  if (!hydrated || !authHydrated || !settingsHydrated) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
+        <Text style={{ color: 'white', marginTop: 10 }}>Hydrating stores...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PaperProvider theme={paperTheme}>
+        <StatusBar style={themeMode === "light" ? "dark" : "light"} />
+        <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(public)" />
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="quick-add" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+          <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+          <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+          <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
+          <Stack.Screen name="log-water" options={{ presentation: "modal" }} />
+          <Stack.Screen name="create-food" options={{ presentation: "modal" }} />
+          <Stack.Screen name="create-recipe" options={{ presentation: "modal" }} />
+          <Stack.Screen name="webview" options={{ presentation: "modal" }} />
+        </Stack>
+      </PaperProvider>
+    </QueryClientProvider>
+  );
+}
