@@ -54,7 +54,7 @@ export default function QuickAddModal() {
             <Text style={styles.primaryText}>Ghi bữa ăn</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast("Quét mã")}>
+          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/scan-barcode")}>
             <View style={[styles.primaryIconBox, { backgroundColor: "#3D8BFF" }]}>
               <Ionicons name="barcode-outline" size={24} color="#FFF" />
             </View>

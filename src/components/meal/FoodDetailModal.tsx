@@ -9,6 +9,8 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -126,7 +128,10 @@ export function FoodDetailModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.detailOverlay}>
+      <KeyboardAvoidingView 
+        style={styles.detailOverlay} 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <SafeAreaView style={styles.detailContent} edges={["top", "bottom"]}>
           {/* Header */}
           <View style={styles.detailHeader}>
@@ -364,7 +369,7 @@ export function FoodDetailModal({
             </Pressable>
           </View>
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

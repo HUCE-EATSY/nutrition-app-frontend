@@ -234,13 +234,39 @@ export const foodService = {
    * Tìm theo barcode
    * GET /api/foods/barcode/:barcode
    */
-  getFoodByBarcode: async (barcode: number): Promise<FoodItemDto | null> => {
+  getFoodByBarcode: async (barcode: string): Promise<FoodItemDto | null> => {
     if (USE_MOCK) {
       return mockFoods[0] || null;
     }
-    const response = await apiClient.get(API_URLS.foods.barcode(barcode));
-    const raw = response.data.data ?? response.data ?? null;
-    return raw ? mapDetailToDto(raw) : null;
+    try {
+      const response = await apiClient.get(API_URLS.foods.barcode(barcode));
+      const raw = response.data.data ?? response.data ?? null;
+      return raw ? mapDetailToDto(raw) : null;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null; // Không tìm thấy
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Tìm theo barcode và map sẵn sang định dạng FoodItem dùng cho UI
+   */
+  getFoodForUIByBarcode: async (barcode: string): Promise<any | null> => {
+    const dto = await foodService.getFoodByBarcode(barcode);
+    if (!dto) return null;
+    return {
+      id: dto.id,
+      name: dto.nameVi || dto.nameEn || "Không xác định",
+      category: dto.category || "Khác",
+      calories: dto.caloriesKcal || 0,
+      protein: dto.proteinG || 0,
+      carbs: dto.carbsG || 0,
+      fat: dto.fatG || 0,
+      servingSize: dto.servingSizeG || 100,
+      imageUrl: dto.imageUrl || null,
+    };
   },
 
   /**
