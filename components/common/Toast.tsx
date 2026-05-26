@@ -1,109 +1,85 @@
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, typography, radius } from "@/constants";
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 
 interface ToastProps {
-  visible: boolean;
   message: string;
-  type?: "success" | "error" | "info";
+  type?: 'success' | 'error' | 'warning' | 'info';
+  visible: boolean;
+  onHide: () => void;
   duration?: number;
-  onHide?: () => void;
 }
 
-export function Toast({ visible, message, type = "success", duration = 2000, onHide }: ToastProps) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(-20)).current;
+const Toast: React.FC<ToastProps> = ({
+  message,
+  type = 'info',
+  visible,
+  onHide,
+  duration = 3000,
+}) => {
+  const opacity = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
-      // Fade in
-      Animated.parallel([
+      Animated.sequence([
         Animated.timing(opacity, {
           toValue: 1,
           duration: 300,
           useNativeDriver: true,
         }),
-        Animated.timing(translateY, {
+        Animated.delay(duration),
+        Animated.timing(opacity, {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
         }),
-      ]).start();
-
-      // Auto hide
-      const timer = setTimeout(() => {
-        Animated.parallel([
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(translateY, {
-            toValue: -20,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]).start(() => {
-          if (onHide) onHide();
-        });
-      }, duration);
-
-      return () => clearTimeout(timer);
+      ]).start(() => {
+        onHide();
+      });
     }
-  }, [visible, duration, onHide]);
+  }, [visible]);
 
   if (!visible) return null;
 
-  const iconName = type === "success" ? "checkmark-circle" : type === "error" ? "close-circle" : "information-circle";
-  const iconColor = type === "success" ? colors.success : type === "error" ? colors.danger : colors.primary;
+  const backgroundColor = {
+    success: '#00ff88',
+    error: '#ff3b30',
+    warning: '#ff9500',
+    info: '#00d4ff',
+  }[type];
 
   return (
     <Animated.View
       style={[
         styles.container,
-        {
-          opacity,
-          transform: [{ translateY }],
-        },
+        { backgroundColor, opacity },
       ]}
     >
-      <View style={styles.content}>
-        <Ionicons name={iconName} size={20} color={iconColor} />
-        <Text style={styles.message}>{message}</Text>
-      </View>
+      <Text style={styles.message}>{message}</Text>
     </Animated.View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
+    position: 'absolute',
     top: 60,
-    left: spacing.lg,
-    right: spacing.lg,
+    left: 20,
+    right: 20,
+    padding: 16,
+    borderRadius: 12,
     zIndex: 9999,
     elevation: 10,
-  },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
   },
   message: {
-    ...typography.body,
-    color: colors.textPrimary,
-    flex: 1,
+    color: '#1a1a2e',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
+
+export default Toast;

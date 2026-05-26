@@ -18,7 +18,7 @@ import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { formatShortDate } from "@/hooks/utils/date";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
-import { Toast } from "@/components/common/Toast";
+import Toast from "@/components/common/Toast";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 

@@ -1,10 +1,10 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState, useEffect, useCallback } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
+  ScrollView,
   Pressable,
   StyleSheet,
   Text,
@@ -15,32 +15,33 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography, radius } from "@/constants";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
-import { getTodayDateISO, formatShortDate } from "@/hooks/utils/date";
+import { getTodayDateISO } from "@/hooks/utils/date";
 
 export default function ExerciseDiaryScreen() {
   const [logs, setLogs] = useState<ExerciseLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(getTodayDateISO());
 
-  useEffect(() => {
-    loadLogs();
-  }, [selectedDate]);
+  // Reload logs when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadLogs();
+    }, [])
+  );
 
   async function loadLogs() {
     try {
       setLoading(true);
-      // Lấy logs trong vòng 30 ngày gần nhất
-      const endDate = selectedDate;
-      const startDate = new Date(selectedDate);
-      startDate.setDate(startDate.getDate() - 30);
+      // Lấy logs trong vòng 90 ngày gần nhất
+      const endDate = getTodayDateISO();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 90);
       const startDateISO = startDate.toISOString().split("T")[0];
       
       const data = await exerciseService.getLogs(startDateISO, endDate);
       setLogs(data);
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể tải nhật ký tập luyện");
-      console.error(error);
+      console.error("Load logs error:", error);
     } finally {
       setLoading(false);
     }
@@ -65,7 +66,6 @@ export default function ExerciseDiaryScreen() {
             try {
               await exerciseService.deleteLog(id);
               setLogs(prev => prev.filter(log => log.id !== id));
-              Alert.alert("Thành công", "Đã xóa nhật ký");
             } catch (error) {
               Alert.alert("Lỗi", "Không thể xóa nhật ký");
             }
@@ -75,33 +75,44 @@ export default function ExerciseDiaryScreen() {
     );
   }
 
-  function goToPrevDay() {
-    const date = new Date(selectedDate);
-    date.setDate(date.getDate() - 1);
-    setSelectedDate(date.toISOString().split("T")[0]);
+  // Format date to show "Hôm nay", "Hôm qua", or date
+  function formatDateLabel(dateStr: string): string {
+    const today = getTodayDateISO();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayISO = yesterday.toISOString().split('T')[0];
+
+    if (dateStr === today) return "Hôm nay";
+    if (dateStr === yesterdayISO) return "Hôm qua";
+    
+    return dateStr;
   }
 
-  function goToNextDay() {
-    const date = new Date(selectedDate);
-    date.setDate(date.getDate() + 1);
-    setSelectedDate(date.toISOString().split("T")[0]);
+  // Format month header
+  function formatMonthHeader(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
-  // Nhóm logs theo ngày
-  const logsByDate = logs.reduce((acc, log) => {
-    const date = log.logDate;
-    if (!acc[date]) {
-      acc[date] = [];
+  // Nhóm logs theo tháng và ngày
+  const logsByMonth: Record<string, Record<string, ExerciseLog[]>> = {};
+  logs.forEach(log => {
+    const monthKey = log.logDate.substring(0, 7); // "2026-05"
+    const dateKey = log.logDate;
+    
+    if (!logsByMonth[monthKey]) {
+      logsByMonth[monthKey] = {};
     }
-    acc[date].push(log);
-    return acc;
-  }, {} as Record<string, ExerciseLog[]>);
+    if (!logsByMonth[monthKey][dateKey]) {
+      logsByMonth[monthKey][dateKey] = [];
+    }
+    logsByMonth[monthKey][dateKey].push(log);
+  });
 
-  const dates = Object.keys(logsByDate).sort((a, b) => b.localeCompare(a));
+  const months = Object.keys(logsByMonth).sort((a, b) => b.localeCompare(a));
 
-  // Tính tổng calo và thời gian
+  // Tính tổng calories
   const totalCalories = logs.reduce((sum, log) => sum + log.caloriesBurned, 0);
-  const totalMinutes = logs.reduce((sum, log) => sum + log.durationMinutes, 0);
 
   if (loading) {
     return (
@@ -121,46 +132,13 @@ export default function ExerciseDiaryScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>Nhật ký tập luyện</Text>
+        <Text style={styles.headerTitle}>Nhật ký luyện tập</Text>
         <Pressable hitSlop={12} onPress={() => router.push("/add-exercise")}>
           <Ionicons color={colors.primary} name="add-circle-outline" size={28} />
         </Pressable>
       </View>
 
-      {/* Date Selector */}
-      <View style={styles.dateSelector}>
-        <Pressable hitSlop={12} onPress={goToPrevDay}>
-          <Ionicons color={colors.textPrimary} name="chevron-back" size={20} />
-        </Pressable>
-        <Text style={styles.dateText}>{formatShortDate(selectedDate)}</Text>
-        <Pressable hitSlop={12} onPress={goToNextDay}>
-          <Ionicons color={colors.textPrimary} name="chevron-forward" size={20} />
-        </Pressable>
-      </View>
-
-      {/* Summary Cards */}
-      <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, { backgroundColor: "rgba(255,107,107,0.15)" }]}>
-          <Ionicons color="#FF6B6B" name="flame" size={24} />
-          <Text style={styles.summaryValue}>{totalCalories}</Text>
-          <Text style={styles.summaryLabel}>Calo đốt</Text>
-        </View>
-        <View style={[styles.summaryCard, { backgroundColor: "rgba(92,214,122,0.15)" }]}>
-          <Ionicons color={colors.success} name="time-outline" size={24} />
-          <Text style={styles.summaryValue}>{totalMinutes}</Text>
-          <Text style={styles.summaryLabel}>Phút</Text>
-        </View>
-        <View style={[styles.summaryCard, { backgroundColor: "rgba(165,108,255,0.15)" }]}>
-          <MaterialCommunityIcons color={colors.primary} name="dumbbell" size={24} />
-          <Text style={styles.summaryValue}>{logs.length}</Text>
-          <Text style={styles.summaryLabel}>Bài tập</Text>
-        </View>
-      </View>
-
-      {/* List */}
-      <FlatList
-        data={dates}
-        keyExtractor={(item) => item}
+      <ScrollView
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -168,8 +146,20 @@ export default function ExerciseDiaryScreen() {
             tintColor={colors.primary}
           />
         }
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Warning Banner */}
+        {totalCalories > 0 && (
+          <View style={styles.warningBanner}>
+            <Text style={styles.warningIcon}>💪⚠️</Text>
+            <Text style={styles.warningText}>
+              Lượng calo bạn đốt qua tập luyện sẽ không ảnh hưởng vào lượng calo mà bạn đã ăn. 👉
+            </Text>
+          </View>
+        )}
+
+        {/* Empty State */}
+        {logs.length === 0 && (
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons color={colors.textMuted} name="dumbbell" size={64} />
             <Text style={styles.emptyText}>Chưa có nhật ký tập luyện</Text>
@@ -180,72 +170,68 @@ export default function ExerciseDiaryScreen() {
               <Text style={styles.emptyButtonText}>Ghi hoạt động</Text>
             </Pressable>
           </View>
-        }
-        renderItem={({ item: date }) => {
-          const dateLogs = logsByDate[date];
-          const dayTotal = dateLogs.reduce((sum, log) => sum + log.caloriesBurned, 0);
+        )}
+
+        {/* Logs by Month */}
+        {months.map((month) => {
+          const dates = Object.keys(logsByMonth[month]).sort((a, b) => b.localeCompare(a));
+          const firstDate = dates[0];
           
           return (
-            <View style={styles.dateSection}>
-              <View style={styles.dateSectionHeader}>
-                <Text style={styles.dateSectionTitle}>{formatShortDate(date)}</Text>
-                <Text style={styles.dateSectionSubtitle}>
-                  {dayTotal} kcal • {dateLogs.length} bài tập
-                </Text>
-              </View>
+            <View key={month} style={styles.monthSection}>
+              <Text style={styles.monthHeader}>{formatMonthHeader(firstDate)}</Text>
               
-              {dateLogs.map((log) => (
-                <View key={log.id} style={styles.logCard}>
-                  <View style={styles.logIcon}>
-                    <MaterialCommunityIcons
-                      color={colors.success}
-                      name="dumbbell"
-                      size={20}
-                    />
-                  </View>
-                  
-                  <View style={styles.logContent}>
-                    <Text style={styles.logTitle}>{log.exerciseNameVi}</Text>
-                    <View style={styles.logDetails}>
-                      <View style={styles.logDetailItem}>
-                        <Ionicons color={colors.textMuted} name="time-outline" size={14} />
-                        <Text style={styles.logDetailText}>{log.durationMinutes} phút</Text>
-                      </View>
-                      <View style={styles.logDetailItem}>
-                        <Ionicons color={colors.textMuted} name="flame" size={14} />
-                        <Text style={styles.logDetailText}>{log.caloriesBurned} kcal</Text>
-                      </View>
-                      <View style={styles.logDetailItem}>
-                        <Ionicons color={colors.textMuted} name="speedometer-outline" size={14} />
-                        <Text style={styles.logDetailText}>
-                          {log.intensity === 1 ? "Nhẹ" : log.intensity === 3 ? "Nặng" : "TB"}
-                        </Text>
-                      </View>
-                    </View>
-                    {log.notes && (
-                      <Text style={styles.logNotes} numberOfLines={2}>
-                        {log.notes}
+              {dates.map((date) => {
+                const dateLogs = logsByMonth[month][date];
+                const dayTotal = dateLogs.reduce((sum, log) => sum + log.caloriesBurned, 0);
+                
+                return (
+                  <View key={date} style={styles.dateGroup}>
+                    <View style={styles.dateHeader}>
+                      <Text style={styles.dateLabel}>{formatDateLabel(date)}</Text>
+                      <Text style={styles.dateSubtitle}>
+                        🔥 {Math.round(dayTotal)} cal   ⏱ {dateLogs.reduce((sum, log) => sum + log.durationMinutes, 0).toString().padStart(2, '0')}:{(0).toString().padStart(2, '0')} phút
                       </Text>
-                    )}
+                    </View>
+                    
+                    {dateLogs.map((log) => (
+                      <View key={log.id} style={styles.logCard}>
+                        <View style={styles.logContent}>
+                          <Text style={styles.logTitle}>{log.exerciseNameVi}</Text>
+                          <View style={styles.logDetails}>
+                            <View style={styles.logDetailItem}>
+                              <Ionicons color={colors.textMuted} name="flame" size={14} />
+                              <Text style={styles.logDetailText}>{Math.round(log.caloriesBurned)} cal</Text>
+                            </View>
+                            <View style={styles.logDetailItem}>
+                              <Ionicons color={colors.textMuted} name="time-outline" size={14} />
+                              <Text style={styles.logDetailText}>{log.durationMinutes.toString().padStart(2, '0')}:{(0).toString().padStart(2, '0')} phút</Text>
+                            </View>
+                          </View>
+                        </View>
+                        
+                        <Pressable hitSlop={8} onPress={() => handleDelete(log.id)}>
+                          <Ionicons color={colors.textMuted} name="trash-outline" size={20} />
+                        </Pressable>
+                      </View>
+                    ))}
                   </View>
-                  
-                  <Pressable hitSlop={8} onPress={() => handleDelete(log.id)}>
-                    <Ionicons color={colors.danger} name="trash-outline" size={20} />
-                  </Pressable>
-                </View>
-              ))}
+                );
+              })}
             </View>
           );
-        }}
-      />
+        })}
+      </ScrollView>
 
       {/* Floating Action Button */}
-      <Pressable
-        style={styles.fab}
-        onPress={() => router.push("/add-exercise")}
-      >
-        <Ionicons color="#fff" name="add" size={28} />
-      </Pressable>
+      {logs.length > 0 && (
+        <Pressable
+          style={styles.fab}
+          onPress={() => router.push("/add-exercise")}
+        >
+          <Ionicons color="#fff" name="add" size={28} />
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }
@@ -271,45 +257,34 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary },
-  dateSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  dateText: {
-    ...typography.bodyStrong,
+  headerTitle: { 
+    ...typography.h3, 
     color: colors.textPrimary,
-    fontSize: 16,
+    fontSize: 18,
   },
-  summaryRow: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  summaryCard: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    borderRadius: radius.sm,
-    gap: spacing.xs,
-  },
-  summaryValue: {
-    ...typography.h2,
-    color: colors.textPrimary,
-    fontSize: 24,
-  },
-  summaryLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  list: {
-    paddingHorizontal: spacing.lg,
+  scrollContent: {
+    padding: spacing.lg,
     paddingBottom: spacing.xxxl * 2,
     gap: spacing.lg,
+  },
+  warningBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(52, 168, 83, 0.15)",
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: "rgba(52, 168, 83, 0.3)",
+  },
+  warningIcon: {
+    fontSize: 20,
+  },
+  warningText: {
+    ...typography.caption,
+    color: colors.textPrimary,
+    flex: 1,
+    lineHeight: 18,
   },
   emptyContainer: {
     alignItems: "center",
@@ -332,36 +307,39 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: "#fff",
   },
-  dateSection: {
-    gap: spacing.sm,
+  monthSection: {
+    gap: spacing.md,
   },
-  dateSectionHeader: {
+  monthHeader: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    fontSize: 18,
     marginBottom: spacing.xs,
   },
-  dateSectionTitle: {
+  dateGroup: {
+    gap: spacing.sm,
+  },
+  dateHeader: {
+    marginBottom: spacing.xs,
+  },
+  dateLabel: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
     fontSize: 16,
+    marginBottom: 2,
   },
-  dateSectionSubtitle: {
+  dateSubtitle: {
     ...typography.caption,
     color: colors.textMuted,
+    fontSize: 13,
   },
   logCard: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: radius.sm,
     padding: spacing.md,
     gap: spacing.md,
-  },
-  logIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    backgroundColor: "rgba(92,214,122,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
   },
   logContent: {
     flex: 1,
@@ -385,12 +363,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
     fontSize: 12,
-  },
-  logNotes: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontStyle: "italic",
-    marginTop: 2,
   },
   fab: {
     position: "absolute",

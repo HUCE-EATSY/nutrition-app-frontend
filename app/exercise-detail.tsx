@@ -10,26 +10,39 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { colors, spacing, typography, radius } from "@/constants";
 import { getTodayDateISO } from "@/hooks/utils/date";
 import { exerciseService, Exercise } from "@/services/exerciseService";
+import { userService } from "@/services/userService";
+import { useAuthStore } from "@/hooks/store/authStore";
 
 export default function ExerciseDetailScreen() {
   const { exerciseId, date } = useLocalSearchParams<{ exerciseId: string; date?: string }>();
-  const targetDate = date ?? getTodayDateISO();
-
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
   const [intensity, setIntensity] = useState<1 | 2 | 3>(2);
   const [duration, setDuration] = useState("30");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [userWeight, setUserWeight] = useState(65); // Default 65kg
+  const [selectedDate, setSelectedDate] = useState(new Date(date ?? getTodayDateISO()));
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const targetDate = selectedDate.toISOString().split('T')[0];
 
   useEffect(() => {
+    console.log("Auth status:", { isAuthenticated, hasToken: !!accessToken });
     loadExercise();
+    loadUserWeight();
   }, [exerciseId]);
 
   async function loadExercise() {
@@ -46,10 +59,23 @@ export default function ExerciseDetailScreen() {
     }
   }
 
+  async function loadUserWeight() {
+    try {
+      const userInfo = await userService.getUserInfo();
+      const weight = userInfo?.profile?.weightKg;
+      if (weight && weight > 0) {
+        setUserWeight(weight);
+        console.log("User weight loaded:", weight);
+      }
+    } catch (error) {
+      console.error("Failed to load user weight:", error);
+      // Keep default 65kg if failed
+    }
+  }
+
   const durationNum = parseFloat(duration) || 0;
   const met = exercise?.metValue || 0;
-  const DEFAULT_WEIGHT_KG = 65;
-  let caloriesBurned = met * DEFAULT_WEIGHT_KG * (durationNum / 60);
+  let caloriesBurned = met * userWeight * (durationNum / 60);
   
   if (intensity === 1) caloriesBurned *= 0.8;
   if (intensity === 3) caloriesBurned *= 1.2;
@@ -58,6 +84,19 @@ export default function ExerciseDetailScreen() {
   async function handleSave() {
     if (!exercise) return;
     
+    // Check authentication first
+    if (!isAuthenticated) {
+      Alert.alert(
+        "Yêu cầu đăng nhập",
+        "Bạn cần đăng nhập để lưu nhật ký tập luyện",
+        [
+          { text: "Hủy", style: "cancel" },
+          { text: "Đăng nhập", onPress: () => router.push("/(public)/login") }
+        ]
+      );
+      return;
+    }
+    
     if (durationNum <= 0 || durationNum > 600) {
       Alert.alert("Lỗi", "Thời gian phải từ 1 đến 600 phút.");
       return;
@@ -65,7 +104,15 @@ export default function ExerciseDetailScreen() {
 
     setIsSaving(true);
     try {
-      await exerciseService.createLog({
+      console.log("Creating exercise log:", {
+        exerciseId: exercise.id,
+        logDate: targetDate,
+        durationMinutes: durationNum,
+        intensity,
+        notes: notes.trim() || undefined,
+      });
+
+      const result = await exerciseService.createLog({
         exerciseId: exercise.id,
         logDate: targetDate,
         durationMinutes: durationNum,
@@ -73,12 +120,20 @@ export default function ExerciseDetailScreen() {
         notes: notes.trim() || undefined,
       });
       
-      Alert.alert("Thành công", "Đã ghi nhật ký tập luyện!", [
-        { text: "OK", onPress: () => router.replace("/exercise-diary") }
-      ]);
+      console.log("Exercise log created successfully:", result);
+      
+      // Navigate to exercise-diary to show the saved log
+      router.replace("/exercise-diary");
     } catch (error: any) {
       console.error("Save exercise error:", error);
-      Alert.alert("Thất bại", error?.message || "Không thể ghi hoạt động");
+      console.error("Error response:", error.response?.data);
+      
+      const errorMessage = error.response?.data?.message 
+        || error.response?.data?.title
+        || error.message 
+        || "Không thể ghi hoạt động";
+      
+      Alert.alert("Thất bại", errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -108,6 +163,13 @@ export default function ExerciseDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
+          {exercise.iconUrl && (
+            <Image 
+              source={{ uri: exercise.iconUrl }} 
+              style={styles.exerciseImage}
+              resizeMode="cover"
+            />
+          )}
           <Text style={styles.infoLabel}>Bài tập</Text>
           <Text style={styles.infoValue}>{exercise.nameVi}</Text>
           <Text style={styles.infoSubtext}>{exercise.nameEn}</Text>
@@ -115,6 +177,38 @@ export default function ExerciseDetailScreen() {
             <Text style={styles.infoDescription}>{exercise.description}</Text>
           )}
         </View>
+
+        <Text style={styles.sectionLabel}>Ngày tập</Text>
+        <Pressable 
+          onPress={() => setShowDatePicker(true)}
+          style={styles.dateButton}
+        >
+          <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+          <Text style={styles.dateButtonText}>
+            {new Date(targetDate).toLocaleDateString('vi-VN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Text>
+          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+        </Pressable>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(event, date) => {
+              setShowDatePicker(Platform.OS === 'ios');
+              if (date) {
+                setSelectedDate(date);
+              }
+            }}
+            maximumDate={new Date()}
+          />
+        )}
 
         <Text style={styles.sectionLabel}>Cường độ</Text>
         <View style={styles.intensityRow}>
@@ -244,6 +338,13 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.xs,
   },
+  exerciseImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: radius.sm,
+    marginBottom: spacing.md,
+    backgroundColor: colors.bgBase,
+  },
   infoLabel: {
     ...typography.caption,
     color: colors.textMuted,
@@ -272,6 +373,21 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
     marginTop: spacing.sm,
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  dateButtonText: {
+    ...typography.body,
+    color: colors.textPrimary,
+    flex: 1,
   },
   intensityRow: { flexDirection: "row", gap: spacing.sm },
   intensityBtn: {

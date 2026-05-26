@@ -28,7 +28,7 @@ export function ActivityGrid() {
     }
   }
 
-  function handleActivityPress(activityId: string) {
+  function handleActivityPress(activityId: any) {
     const exerciseName = getExerciseNameFromActivity(activityId);
     
     // Tìm exercise theo tên (NameEn)

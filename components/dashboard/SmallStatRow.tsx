@@ -1,13 +1,42 @@
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { t } from "@/constants/i18n";
 import { colors, spacing, typography } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
+import { exerciseService } from "@/services/exerciseService";
+import { getTodayDateISO } from "@/hooks/utils/date";
 
 export function SmallStatRow() {
   const router = useRouter();
+  const [caloriesBurned, setCaloriesBurned] = useState(0);
+  const [exerciseCount, setExerciseCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Refresh data khi component được focus
+  useFocusEffect(
+    useCallback(() => {
+      loadTodayExercises();
+    }, [])
+  );
+
+  async function loadTodayExercises() {
+    try {
+      setLoading(true);
+      const today = getTodayDateISO();
+      const summary = await exerciseService.getDailySummary(today);
+      setCaloriesBurned(Math.round(summary.totalCaloriesBurned));
+      setExerciseCount(summary.exerciseCount);
+    } catch (error) {
+      console.log("Failed to load exercise stats:", error);
+      // Keep default values (0)
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -28,7 +57,7 @@ export function SmallStatRow() {
       <View style={styles.cardWrapper}>
         <TouchableOpacity 
           activeOpacity={0.7}
-          onPress={() => router.push("/exercise-stats")}
+          onPress={() => router.push("/stats/activity")}
           style={styles.touchableCard}
         >
           <SurfaceCard style={styles.card}>
@@ -50,7 +79,19 @@ export function SmallStatRow() {
               <View style={styles.iconWrapper}>
                 <MaterialCommunityIcons name="fire" size={20} color={colors.danger} />
               </View>
-              <Text style={styles.emptyText}>{t.home.noData}</Text>
+              {loading ? (
+                <Text style={styles.emptyText}>Đang tải...</Text>
+              ) : caloriesBurned > 0 ? (
+                <>
+                  <View style={styles.burningRow}>
+                    <Text style={styles.statValue}>{caloriesBurned}</Text>
+                    <Text style={styles.hint}>kcal</Text>
+                  </View>
+                  <Text style={styles.hint}>{exerciseCount} bài tập</Text>
+                </>
+              ) : (
+                <Text style={styles.emptyText}>{t.home.noData}</Text>
+              )}
             </View>
           </SurfaceCard>
         </TouchableOpacity>

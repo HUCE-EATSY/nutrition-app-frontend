@@ -1,0 +1,55 @@
+/* Custom Scrollbar for Web */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(165, 108, 255, 0.3) transparent;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(165, 108, 255, 0.3);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(165, 108, 255, 0.5);
+}
+
+/* Hide scrollbar for specific elements if needed */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove outline on web */
+* {
+  outline: none !important;
+}
+
+/* Fix text selection color */
+::selection {
+  background-color: rgba(165, 108, 255, 0.3);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: rgba(165, 108, 255, 0.3);
+  color: #ffffff;
+}

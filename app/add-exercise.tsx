@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +11,8 @@ import {
   TextInput,
   View,
   SectionList,
+  Image,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,6 +28,10 @@ export default function AddExerciseScreen() {
   const [categories, setCategories] = useState<ExerciseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const sectionListRef = useRef<SectionList>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sectionRefs = useRef<{ [key: string]: number }>({});
 
   // ── Load danh sách bài tập từ API ────────────────────────────────────────
   useEffect(() => {
@@ -63,13 +69,34 @@ export default function AddExerciseScreen() {
       )
     : allExercises;
 
-  // Nhóm theo chữ cái đầu
+  // Hàm chuẩn hóa chữ cái có dấu về chữ cái gốc
+  const normalizeVietnamese = (str: string): string => {
+    const map: Record<string, string> = {
+      'À': 'A', 'Á': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+      'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
+      'Â': 'A', 'Ầ': 'A', 'Ấ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
+      'Đ': 'D',
+      'È': 'E', 'É': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+      'Ê': 'E', 'Ề': 'E', 'Ế': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
+      'Ì': 'I', 'Í': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+      'Ò': 'O', 'Ó': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+      'Ô': 'O', 'Ồ': 'O', 'Ố': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
+      'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
+      'Ù': 'U', 'Ú': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+      'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
+      'Ỳ': 'Y', 'Ý': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y',
+    };
+    const firstChar = str.charAt(0).toUpperCase();
+    return map[firstChar] || firstChar;
+  };
+
+  // Nhóm theo chữ cái đầu (chuẩn hóa)
   const groupedExercises = filteredExercises.reduce((acc, exercise) => {
-    const firstLetter = exercise.nameVi.charAt(0).toUpperCase();
-    if (!acc[firstLetter]) {
-      acc[firstLetter] = [];
+    const normalizedLetter = normalizeVietnamese(exercise.nameVi);
+    if (!acc[normalizedLetter]) {
+      acc[normalizedLetter] = [];
     }
-    acc[firstLetter].push(exercise);
+    acc[normalizedLetter].push(exercise);
     return acc;
   }, {} as Record<string, Exercise[]>);
 
@@ -79,6 +106,64 @@ export default function AddExerciseScreen() {
       title: letter,
       data: groupedExercises[letter],
     }));
+
+  console.log('Available sections:', sections.map(s => s.title).join(', '));
+
+  // Tạo danh sách chữ cái cho alphabet slider
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  
+  // Hiển thị tất cả các chữ cái, không chỉ những chữ có data
+  const displayedAlphabet = alphabet;
+
+  // Hàm scroll đến section theo chữ cái
+  const scrollToLetter = (letter: string) => {
+    const sectionIndex = sections.findIndex(s => s.title === letter);
+    console.log(`Scrolling to letter: ${letter}, sectionIndex: ${sectionIndex}`);
+    
+    if (sectionIndex === -1) {
+      console.log(`Letter ${letter} not found in sections`);
+      return;
+    }
+
+    if (sectionListRef.current) {
+      try {
+        // Tính toán offset thủ công
+        const ITEM_HEIGHT = 77; // height của mỗi exercise item
+        const SECTION_HEADER_HEIGHT = 41; // height của section header
+        
+        let offset = 0;
+        for (let i = 0; i < sectionIndex; i++) {
+          offset += SECTION_HEADER_HEIGHT;
+          offset += sections[i].data.length * ITEM_HEIGHT;
+        }
+        
+        console.log(`Calculated offset: ${offset}`);
+        
+        // Lấy scrollable node từ SectionList
+        const scrollResponder = (sectionListRef.current as any).getScrollResponder?.();
+        if (scrollResponder && scrollResponder.scrollTo) {
+          console.log('Using scrollResponder.scrollTo');
+          scrollResponder.scrollTo({ y: offset, animated: true });
+        } else if ((sectionListRef.current as any).scrollToOffset) {
+          console.log('Using scrollToOffset');
+          (sectionListRef.current as any).scrollToOffset({ offset, animated: true });
+        } else {
+          console.log('Using scrollToLocation');
+          sectionListRef.current.scrollToLocation({
+            sectionIndex,
+            itemIndex: 0,
+            animated: true,
+            viewPosition: 0,
+          });
+        }
+      } catch (error) {
+        console.error('Scroll error:', error);
+      }
+    }
+  };
+
+  // Kiểm tra chữ cái nào có data
+  const availableLetters = new Set(sections.map(s => s.title));
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (loading) {
@@ -106,7 +191,10 @@ export default function AddExerciseScreen() {
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      <View style={[
+        styles.searchContainer,
+        isSearchFocused && styles.searchContainerFocused
+      ]}>
         <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
         <TextInput
           placeholder="Tìm kiếm hoạt động"
@@ -114,50 +202,114 @@ export default function AddExerciseScreen() {
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
-      </View>
-
-      {/* Apple Health Section */}
-      <View style={styles.healthSection}>
-        <Text style={styles.sectionTitle}>THEO DỐI TỰ ĐỘNG</Text>
-        <Pressable style={styles.healthCard}>
-          <View style={styles.healthIconWrapper}>
-            <Ionicons name="heart" size={32} color="#FF2D55" />
-          </View>
-          <View style={styles.healthContent}>
-            <Text style={styles.healthText}>
-              Kết nối Apple Health để Wao tự theo dõi calo hoạt động cho bạn.
-            </Text>
-            <Text style={styles.healthLink}>Kết nối</Text>
-          </View>
-        </Pressable>
-      </View>
-
-      {/* Exercise List */}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        renderSectionHeader={({ section: { title } }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderText}>{title}</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.exerciseItem}
-            onPress={() => handleSelectExercise(item)}
-          >
-            <Text style={styles.exerciseName}>{item.nameVi} ({item.nameEn})</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+        {searchQuery.length > 0 && (
+          <Pressable onPress={() => setSearchQuery("")} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
           </Pressable>
         )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Không tìm thấy bài tập</Text>
+      </View>
+
+      {/* Apple Health Section - chỉ hiện khi không search */}
+      {!searchQuery && (
+        <View style={styles.healthSection}>
+          <Text style={styles.sectionTitle}>THEO DỐI TỰ ĐỘNG</Text>
+          <Pressable style={styles.healthCard}>
+            <View style={styles.healthIconWrapper}>
+              <Ionicons name="heart" size={32} color="#FF2D55" />
+            </View>
+            <View style={styles.healthContent}>
+              <Text style={styles.healthText}>
+                Kết nối Apple Health để Wao tự theo dõi calo hoạt động cho bạn.
+              </Text>
+              <Text style={styles.healthLink}>Kết nối</Text>
+            </View>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Exercise List */}
+      <View style={styles.listContainer}>
+        <SectionList
+          ref={sectionListRef}
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          stickySectionHeadersEnabled={true}
+          getItemLayout={(data, index) => {
+            const ITEM_HEIGHT = 77;
+            return {
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            };
+          }}
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>{title}</Text>
+            </View>
+          )}
+          renderItem={({ item }) => (
+            <Pressable
+              style={styles.exerciseItem}
+              onPress={() => handleSelectExercise(item)}
+            >
+              {item.iconUrl ? (
+                <Image 
+                  source={{ uri: item.iconUrl }} 
+                  style={styles.exerciseIcon}
+                />
+              ) : (
+                <View style={styles.exerciseIconPlaceholder}>
+                  <Ionicons name="fitness-outline" size={24} color={colors.textMuted} />
+                </View>
+              )}
+              <View style={styles.exerciseInfo}>
+                <Text style={styles.exerciseName}>{item.nameVi}</Text>
+                {item.nameEn && (
+                  <Text style={styles.exerciseNameEn}>{item.nameEn}</Text>
+                )}
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            </Pressable>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="search-outline" size={48} color={colors.textMuted} />
+              <Text style={styles.emptyText}>Không tìm thấy bài tập</Text>
+            </View>
+          }
+        />
+
+        {/* Alphabet Slider - chỉ hiện khi không search */}
+        {!searchQuery && (
+          <View style={styles.alphabetSlider}>
+            {displayedAlphabet.map((letter) => {
+              const hasData = availableLetters.has(letter);
+              return (
+                <Pressable
+                  key={letter}
+                  onPress={() => hasData && scrollToLetter(letter)}
+                  style={styles.alphabetItem}
+                  hitSlop={4}
+                  disabled={!hasData}
+                >
+                  <Text style={[
+                    styles.alphabetText,
+                    hasData && styles.alphabetTextActive
+                  ]}>
+                    {letter}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-        }
-      />
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -198,15 +350,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
     height: 48,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  searchContainerFocused: {
+    borderColor: colors.primary,
   },
   searchIcon: {
-    marginRight: spacing.sm,
+    marginRight: 0,
   },
   searchInput: {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
     fontSize: 15,
+    paddingVertical: 0,
+    outlineStyle: "none" as any,
   },
   healthSection: {
     paddingHorizontal: spacing.lg,
@@ -253,42 +413,104 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
+  listContainer: {
+    flex: 1,
+    position: "relative",
+  },
   listContent: {
     paddingBottom: spacing.xxxl,
   },
   sectionHeader: {
     backgroundColor: colors.bgBase,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   sectionHeaderText: {
     ...typography.caption,
     color: colors.textMuted,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
+    letterSpacing: 0.5,
   },
   exerciseItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.bgBase,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  exerciseIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+  },
+  exerciseIconPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  exerciseInfo: {
+    flex: 1,
+    gap: 2,
+  },
   exerciseName: {
     ...typography.body,
     color: colors.textPrimary,
     fontSize: 15,
+    fontWeight: "600",
+  },
+  exerciseNameEn: {
+    ...typography.caption,
+    color: colors.textMuted,
+    fontSize: 13,
   },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: spacing.xxxl,
+    gap: spacing.md,
   },
   emptyText: {
     ...typography.body,
     color: colors.textMuted,
+    fontSize: 15,
+  },
+  alphabetSlider: {
+    position: "absolute",
+    right: 4,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    paddingHorizontal: 4,
+    width: 24,
+    zIndex: 10,
+  },
+  alphabetItem: {
+    paddingVertical: 1,
+    paddingHorizontal: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 14,
+  },
+  alphabetText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.3)",
+    letterSpacing: 0,
+  },
+  alphabetTextActive: {
+    color: colors.primary,
+    fontWeight: "700",
   },
 });

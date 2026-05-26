@@ -22,10 +22,7 @@ export default function AccountScreen() {
   const { userInfo } = useAuthStore();
   const { data: userGoalInfo } = useGetUserInfo();
   const resetOnboarding = useOnboardingStore((state) => state.reset);
-  // Bypass Google Auth to prevent Client ID error during UI development
-  // const { logout, deleteAccount } = useGoogleAuth();
-  const logout = async () => console.log("Mock logout");
-  const deleteAccount = async () => console.log("Mock deleteAccount");
+  const { logout, deleteAccount } = useGoogleAuth();
 
   const profile = userGoalInfo?.activeGoal;
   

@@ -10,13 +10,18 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import * as SystemUI from "expo-system-ui";
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, Platform } from "react-native";
 
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { PaperProvider, MD3DarkTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Import global CSS for web
+if (Platform.OS === 'web') {
+  require('../global.css');
+}
 
 const paperTheme = {
   ...MD3DarkTheme,
@@ -60,24 +65,35 @@ export default function RootLayout() {
     }
   }, []);
 
-  // Auth protection logic - DISABLED FOR TESTING
+  const userInfo = useAuthStore((state) => state.userInfo);
+
+  // Auth protection logic — role-based routing
   useEffect(() => {
     if (!loaded || !hydrated || !authHydrated) return;
 
-    const [firstSegment, secondSegment] = segments as string[];
-    const inPublicGroup = firstSegment === "(public)";
-    const isMascotIntro = secondSegment === "mascot-intro";
+    const [firstSegment] = segments as string[];
+    const inPublicGroup = firstSegment === '(public)';
+    const inAdminGroup = firstSegment === 'admin';
+    const inOnboardingGroup = firstSegment === '(onboarding)';
+    const role = userInfo?.role;
 
-    // TEMPORARILY DISABLED: Allow access without authentication for testing
-    // if (!isAuthenticated && !inPublicGroup) {
-    //   // Redirect to the welcome page if not authenticated and not in public group
-    //   router.replace("/(public)/welcome");
-    // } else if (isAuthenticated && inPublicGroup && !isMascotIntro) {
-    //   // If we are authenticated but in a public screen (like welcome or social-login), 
-    //   // go back to the index to let it decide where to go (home or onboarding)
-    //   router.replace("/");
-    // }
-  }, [isAuthenticated, segments, loaded, hydrated, authHydrated, router]);
+    if (inAdminGroup) {
+      // Admin group handles its own auth via useAdminAuth — don't interfere
+      return;
+    }
+
+    if (!isAuthenticated && !inPublicGroup && !inOnboardingGroup) {
+      // Chưa login → về trang welcome
+      router.replace('/(public)/welcome');
+    } else if (isAuthenticated && inPublicGroup) {
+      const [, secondSegment] = segments as string[];
+      // Đã login và đang ở public page (ngoại trừ mascot-intro phục vụ onboarding) → redirect về app chính
+      if (secondSegment !== 'mascot-intro') {
+        router.replace('/');
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, segments, userInfo, loaded, hydrated, authHydrated]);
 
   if (!loaded && !error) {
     return (

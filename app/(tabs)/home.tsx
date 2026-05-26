@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -12,8 +14,41 @@ import { ActivityGrid } from "@/components/dashboard/ActivityGrid";
 import { SmallStatRow } from "@/components/dashboard/SmallStatRow";
 import { WaterIntakeCard } from "@/components/dashboard/WaterIntakeCard";
 import { WeightChartCard } from "@/components/dashboard/WeightChartCard";
+import { exerciseService } from "@/services/exerciseService";
+import { getTodayDateISO } from "@/hooks/utils/date";
+import { useDiaryStore } from "@/hooks/store/diaryStore";
 
 export default function HomeScreen() {
+  const [caloriesBurned, setCaloriesBurned] = useState(0);
+  const { summary, fetchDiary } = useDiaryStore();
+
+  // Refresh data khi quay lại trang home
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
+
+  async function loadData() {
+    try {
+      const today = getTodayDateISO();
+      
+      // Load exercise data
+      const exerciseSummary = await exerciseService.getDailySummary(today);
+      setCaloriesBurned(Math.round(exerciseSummary.totalCaloriesBurned));
+      
+      // Load diary summary để lấy targetCalories
+      await fetchDiary(today);
+    } catch (error) {
+      console.log("Failed to load data:", error);
+    }
+  }
+
+  const targetCalories = summary?.targetCalories || 1925;
+  const consumedCalories = summary?.consumedCalories || 0;
+  const remaining = targetCalories + caloriesBurned - consumedCalories;
+  const percentage = targetCalories > 0 ? Math.round((consumedCalories / targetCalories) * 100) : 0;
+
   return (
     <SafeScreen scrollable>
       <View style={styles.screen}>
@@ -21,11 +56,11 @@ export default function HomeScreen() {
         <DateScroller />
 
         <CalorieOverview 
-          remaining={1925} 
-          goal={1925} 
-          consumed={0} 
-          burned={0} 
-          percentage={0} 
+          remaining={remaining} 
+          goal={targetCalories} 
+          consumed={consumedCalories} 
+          burned={caloriesBurned} 
+          percentage={percentage} 
         />
 
         <SurfaceCard style={styles.macroCard}>

@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  SectionList,
   FlatList,
   Pressable,
   StyleSheet,
@@ -16,7 +17,7 @@ import { colors, spacing, typography, radius } from "@/constants";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { useAuthStore } from "@/hooks/store/authStore";
 import { getTodayDateISO } from "@/hooks/utils/date";
-import { Toast } from "@/components/common/Toast";
+import Toast from "@/components/common/Toast";
 import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -45,6 +46,8 @@ export default function AddEntryScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [foods, setFoods] = useState<FoodItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [allFoods, setAllFoods] = useState<FoodItem[]>([]);
+  const sectionListRef = useRef<SectionList>(null);
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [grams, setGrams] = useState("100");
@@ -62,6 +65,26 @@ export default function AddEntryScreen() {
 
   // Danh sách khung giờ (7:00 - 23:00)
   const hours = Array.from({ length: 17 }, (_, i) => i + 7);
+
+  // ── Load tất cả món ăn khi mount ─────────────────────────────────────────
+  useEffect(() => {
+    loadAllFoods();
+  }, []);
+
+  async function loadAllFoods() {
+    setIsSearching(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/Food`);
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      setAllFoods(json.data ?? []);
+    } catch (error) {
+      console.error("Failed to load foods:", error);
+      setAllFoods([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }
 
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────
   useEffect(() => {
@@ -207,14 +230,14 @@ export default function AddEntryScreen() {
           )}
           <FlatList
             data={foods}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item: FoodItem) => String(item.id)}
             style={styles.list}
             ListEmptyComponent={
               searchQuery.length >= 2 && !isSearching ? (
                 <Text style={styles.emptyText}>Không tìm thấy món ăn nào</Text>
               ) : null
             }
-            renderItem={({ item }) => (
+            renderItem={({ item }: { item: FoodItem }) => (
               <Pressable
                 onPress={() => setSelected(item)}
                 style={styles.foodRow}

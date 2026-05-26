@@ -71,7 +71,7 @@ export const exerciseService = {
 
   /** POST /api/exercises/logs - Tạo nhật ký tập luyện */
   createLog: async (data: CreateExerciseLogRequest): Promise<ExerciseLog> => {
-    const response = await publicApiClient.post(API_URLS.exercises.logs, data);
+    const response = await apiClient.post(API_URLS.exercises.logs, data);
     return response.data.data;
   },
 
