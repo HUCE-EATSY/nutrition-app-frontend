@@ -60,14 +60,14 @@ export default function QuickAddModal() {
             <Text style={styles.primaryText}>{t.quickAdd.logMeal}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast(t.quickAdd.scanCode)}>
+          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/scan-barcode")}>
             <View style={[styles.primaryIconBox, { backgroundColor: "#3D8BFF" }]}>
               <Ionicons name="barcode-outline" size={24} color="#FFF" />
             </View>
             <Text style={styles.primaryText}>{t.quickAdd.scanCode}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast(t.quickAdd.aiRecognize)}>
+          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/detect-food")}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.success }]}>
               <Ionicons name="sparkles-outline" size={24} color="#FFF" />
             </View>

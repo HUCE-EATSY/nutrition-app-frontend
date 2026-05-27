@@ -9,7 +9,10 @@
  */
 
 import { apiClient } from "./apiClient";
-import { API_URLS } from "../constants/api";
+import { API_URLS, API_BASE } from "../constants/api";
+import { useAuthStore } from "../store/authStore";
+import axios from "axios";
+import * as FileSystem from 'expo-file-system';
 
 // ── Response shape trả về từ backend ──────────────────────────────────────────
 export interface FoodItemDto {
@@ -22,7 +25,7 @@ export interface FoodItemDto {
   servingSizeG: number;
   servingUnitVi?: string | null;
   imageUrl?: string | null;
-  barcode?: number | null;
+  barcode?: string | null;
   source?: number;
   /** Nutrition per serving */
   caloriesKcal: number;
@@ -47,6 +50,24 @@ export interface MealTypeDto {
   nameEn?: string;
 }
 
+// ── EstimatedFoodResponse từ backend (POST /api/foods/estimate-nutrients) ──────
+export interface EstimatedFoodNutrition {
+  calories_kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  sodium_mg?: number;
+}
+
+export interface EstimatedFoodResponse {
+  name_en: string;
+  image_url: string;
+  serving_size_g: number;
+  nutrition: EstimatedFoodNutrition;
+}
+
 // ── Request cho tạo food mới ───────────────────────────────────────────────────
 export interface CreateFoodRequest {
   nameVi: string;
@@ -55,7 +76,8 @@ export interface CreateFoodRequest {
   servingSizeG: number;
   servingUnitVi?: string;
   image?: File | Blob;
-  barcode?: number;
+  imageUrl?: string; // URL Cloudinary đã upload sẵn (flow nhận diện AI)
+  barcode?: string;
   nutrition: {
     caloriesKcal: number;
     proteinG?: number;
@@ -234,13 +256,39 @@ export const foodService = {
    * Tìm theo barcode
    * GET /api/foods/barcode/:barcode
    */
-  getFoodByBarcode: async (barcode: number): Promise<FoodItemDto | null> => {
+  getFoodByBarcode: async (barcode: string): Promise<FoodItemDto | null> => {
     if (USE_MOCK) {
       return mockFoods[0] || null;
     }
-    const response = await apiClient.get(API_URLS.foods.barcode(barcode));
-    const raw = response.data.data ?? response.data ?? null;
-    return raw ? mapDetailToDto(raw) : null;
+    try {
+      const response = await apiClient.get(API_URLS.foods.barcode(barcode));
+      const raw = response.data.data ?? response.data ?? null;
+      return raw ? mapDetailToDto(raw) : null;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null; // Không tìm thấy
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Tìm theo barcode và map sẵn sang định dạng FoodItem dùng cho UI
+   */
+  getFoodForUIByBarcode: async (barcode: string): Promise<any | null> => {
+    const dto = await foodService.getFoodByBarcode(barcode);
+    if (!dto) return null;
+    return {
+      id: dto.id,
+      name: dto.nameVi || dto.nameEn || "Không xác định",
+      category: dto.category || "Khác",
+      calories: dto.caloriesKcal || 0,
+      protein: dto.proteinG || 0,
+      carbs: dto.carbsG || 0,
+      fat: dto.fatG || 0,
+      servingSize: dto.servingSizeG || 100,
+      imageUrl: dto.imageUrl || null,
+    };
   },
 
   /**
@@ -271,9 +319,9 @@ export const foodService = {
     form.append("ServingSizeG", String(req.servingSizeG));
     if (req.servingUnitVi) form.append("ServingUnitVi", req.servingUnitVi);
     if (req.image) form.append("Image", req.image as any);
-    if (req.barcode != null) form.append("Barcode", String(req.barcode));
+    if (req.imageUrl && !req.image) form.append("ImageUrl", req.imageUrl);
+    if (req.barcode != null) form.append("Barcode", req.barcode);
 
-    // Nutrition keys
     form.append("Nutrition.CaloriesKcal", String(req.nutrition.caloriesKcal));
     if (req.nutrition.proteinG != null) form.append("Nutrition.ProteinG", String(req.nutrition.proteinG));
     if (req.nutrition.carbsG != null) form.append("Nutrition.CarbsG", String(req.nutrition.carbsG));
@@ -283,11 +331,55 @@ export const foodService = {
     if (req.nutrition.sodiumMg != null) form.append("Nutrition.SodiumMg", String(req.nutrition.sodiumMg));
 
     const response = await apiClient.post(API_URLS.foods.create, form, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
+
     const raw = response.data.data ?? response.data;
     return mapDetailToDto(raw);
   },
+
+
+  /**
+   * Nhận diện dinh dưỡng từ URL ảnh Cloudinary
+   * POST /api/foods/estimate-nutrients
+   */
+  estimateNutrients: async (image: any): Promise<EstimatedFoodResponse | null> => {
+    try {
+      const form = new FormData();
+      form.append("Image", image as any);
+
+      const response = await apiClient.post(API_URLS.foods.estimateNutrients, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000, // Spoonacular cần 15-30s để phân tích ảnh
+      });
+
+      const resData = response.data;
+      return resData.data ?? resData ?? null;
+    } catch (error: any) {
+      console.error("estimateNutrients error:", error);
+      if (error.response?.status === 404) return null;
+      throw error;
+    }
+  },
+
+
+  /**
+   * Map EstimatedFoodResponse → FoodItem shape dùng cho FoodDetailModal.
+   * Đặt id = "" vì food chưa tồn tại trong DB.
+   */
+  mapEstimatedToFoodItem: (estimated: EstimatedFoodResponse): any => ({
+    id: "",           // Chưa có ID thật — sẽ tạo sau khi user xác nhận
+    name: estimated.name_en || "Món ăn được nhận diện",
+    category: "Nhận diện AI",
+    calories: estimated.nutrition.calories_kcal,
+    protein: estimated.nutrition.protein_g,
+    carbs: estimated.nutrition.carbs_g,
+    fat: estimated.nutrition.fat_g,
+    servingSize: estimated.serving_size_g,
+    imageUrl: estimated.image_url,
+    // Giữ lại raw data để dùng khi gọi POST /api/foods
+    _raw: estimated,
+  }),
 
   /**
    * Tạo công thức mới (từ các nguyên liệu có sẵn)
@@ -310,6 +402,10 @@ export const foodService = {
       mockFoods.unshift(newMock);
       return newMock;
     }
+    const url = API_URLS.foods.createRecipe || "/api/foods/recipes";
+    const token = useAuthStore.getState().accessToken;
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+    
     const form = new FormData();
     form.append("NameVi", req.nameVi);
     if (req.nameEn) form.append("NameEn", req.nameEn);
@@ -322,14 +418,16 @@ export const foodService = {
       form.append(`Components[${index}].QuantityG`, String(comp.quantity_g));
     });
 
-    // NOTE: Cần thêm API_URLS.foods.createRecipe vào api.ts nếu chưa có. Ở đây tạm dùng "/api/foods/recipes"
-    const url = API_URLS.foods.createRecipe || "/api/foods/recipes";
-    const response = await apiClient.post(url, form, {
-      headers: { "Content-Type": "multipart/form-data" },
+
+    const response = await apiClient.post(API_URLS.foods.createRecipe, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
-    const raw = response.data.data ?? response.data;
+
+    const resData = response.data;
+    const raw = resData.data ?? resData;
     return mapDetailToDto(raw);
   },
+
 };
 
 // ── Meal Types ─────────────────────────────────────────────────────────────────
