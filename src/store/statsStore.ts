@@ -1,13 +1,30 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { ActivityPeriod, NutritionPeriod, StepsPeriod, WeightPeriod } from "@/constants/stats";
-import { DailySummaryResponse, WeightLogEntry } from "@/types/contracts";
+import { DailySummaryResponse, WeightLogEntry, StepLogEntry } from "@/types/contracts";
 import { getDailySummary } from "@/services/nutritionLogService";
 import { getWeightTimeline, getUserGoal } from "@/services/weightLogService";
 import { getTodayDateISO, getDateRangeForPeriod } from "@/utils/date";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { pedometerService } from "@/services/pedometerService";
 import { secureStorage } from "./secureStorage";
+import { getStepsTimeline, saveStepLog } from "@/services/stepLogService";
+
+const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === "true";
+
+let syncTimeout: NodeJS.Timeout | null = null;
+const debounceSyncSteps = (steps: number, goal: number, dateISO: string, provider: number, calories: number) => {
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
+  }
+  syncTimeout = setTimeout(async () => {
+    try {
+      await saveStepLog(steps, goal, dateISO, provider, calories);
+    } catch (err) {
+      console.warn("Lỗi đồng bộ số bước chân lên backend:", err);
+    }
+  }, 3000);
+};
 
 let pedometerSubscription: { remove: () => void } | null = null;
 let lastPedometerSteps = 0;
@@ -218,8 +235,24 @@ export const useStepsStore = create<StepsState>()(
           const steps = await pedometerService.fetchTodaySteps();
           const todayStr = getTodayDateISO();
           const persistedSteps = (get().stepRecords || {})[todayStr] || 0;
-          const finalSteps = Math.max(steps, persistedSteps);
+          let finalSteps = Math.max(steps, persistedSteps);
           
+          if (!USE_MOCK) {
+            try {
+              const backendTimeline = await getStepsTimeline(todayStr, todayStr);
+              if (backendTimeline && backendTimeline.length > 0) {
+                const backendToday = backendTimeline[0];
+                finalSteps = Math.max(finalSteps, backendToday.steps);
+                
+                if (backendToday.step_goal && backendToday.step_goal !== get().stepGoal) {
+                  set({ stepGoal: backendToday.step_goal });
+                }
+              }
+            } catch (err) {
+              console.warn("Lỗi tải thông tin bước chân hôm nay từ backend:", err);
+            }
+          }
+
           const updatedRecords = { ...(get().stepRecords || {}) };
           updatedRecords[todayStr] = finalSteps;
 
@@ -227,6 +260,12 @@ export const useStepsStore = create<StepsState>()(
             todaySteps: finalSteps,
             stepRecords: updatedRecords
           });
+
+          if (!USE_MOCK) {
+            const provider = Platform.OS === "ios" ? 1 : 2;
+            const calories = finalSteps * 0.04;
+            await saveStepLog(finalSteps, get().stepGoal, todayStr, provider, calories);
+          }
         } catch (err: any) {
           set({ error: err.message || "Lỗi tải số bước hôm nay" });
         } finally {
@@ -248,12 +287,45 @@ export const useStepsStore = create<StepsState>()(
             (a, b) => new Date(a.dateISO).getTime() - new Date(b.dateISO).getTime()
           );
 
-          // Gộp dữ liệu từ pedometerService và stepRecords cục bộ
+          // Lấy lịch sử từ backend nếu không phải mock
+          let apiHistory: StepLogEntry[] = [];
+          if (!USE_MOCK) {
+            try {
+              const fromStr = prevStartDate.toISOString().slice(0, 10);
+              const toStr = endDate.toISOString().slice(0, 10);
+              apiHistory = await getStepsTimeline(fromStr, toStr);
+            } catch (err) {
+              console.warn("Lỗi tải lịch sử bước chân từ backend:", err);
+            }
+          }
+
+          // Gộp dữ liệu từ pedometerService, backend và local
           const mergedHistory = sortedHistory.map((item) => {
             const persistedSteps = (get().stepRecords || {})[item.dateISO] || 0;
+            const apiDay = apiHistory.find(h => h.log_date === item.dateISO);
+            const apiSteps = apiDay ? apiDay.steps : 0;
+            const maxSteps = Math.max(item.steps, persistedSteps, apiSteps);
+
+            // Tự động đồng bộ lên backend nếu dữ liệu local lớn hơn backend
+            if (!USE_MOCK && maxSteps > apiSteps) {
+              const provider = Platform.OS === "ios" ? 1 : 2;
+              const calories = maxSteps * 0.04;
+              const dayGoal = apiDay?.step_goal ?? get().stepGoal;
+              saveStepLog(maxSteps, dayGoal, item.dateISO, provider, calories).catch(err => {
+                console.warn(`Lỗi đồng bộ bước chân ngày ${item.dateISO} lên backend:`, err);
+              });
+            }
+
+            // Đồng bộ ngược lại step goal từ API nếu có khác biệt
+            if (apiDay && apiDay.step_goal && apiDay.step_goal !== (get().historicalGoals || {})[item.dateISO]) {
+              const updatedGoals = { ...(get().historicalGoals || {}) };
+              updatedGoals[item.dateISO] = apiDay.step_goal;
+              set({ historicalGoals: updatedGoals });
+            }
+
             return {
               ...item,
-              steps: Math.max(item.steps, persistedSteps),
+              steps: maxSteps,
             };
           });
 
@@ -385,6 +457,16 @@ export const useStepsStore = create<StepsState>()(
           stepGoal: goal,
           historicalGoals: updatedGoals,
         });
+
+        // Đồng bộ mục tiêu bước chân lên backend cho ngày hôm nay
+        if (!USE_MOCK) {
+          const provider = Platform.OS === "ios" ? 1 : 2;
+          const currentSteps = get().todaySteps || 0;
+          const calories = currentSteps * 0.04;
+          saveStepLog(currentSteps, goal, todayStr, provider, calories).catch(err => {
+            console.warn("Lỗi đồng bộ mục tiêu bước chân lên backend:", err);
+          });
+        }
       },
 
       startStepTracking: () => {
@@ -413,6 +495,13 @@ export const useStepsStore = create<StepsState>()(
 
             // Cập nhật lại biểu đồ lịch sử
             get().fetchHistory(get().period, get().offset);
+
+            // Đồng bộ số bước với debounce
+            if (!USE_MOCK) {
+              const provider = Platform.OS === "ios" ? 1 : 2;
+              const calories = updatedSteps * 0.04;
+              debounceSyncSteps(updatedSteps, get().stepGoal, todayStr, provider, calories);
+            }
           }
         });
       },

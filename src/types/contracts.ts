@@ -217,6 +217,25 @@ export interface WeightLogEntry {
   created_at: string;
 }
 
+export enum HealthProvider {
+  AppleHealth = 1,
+  GoogleFit = 2,
+  HealthConnect = 3,
+  SamsungHealth = 4,
+  Manual = 5
+}
+
+export interface StepLogEntry {
+  id: number;
+  log_date: string; // "YYYY-MM-DD"
+  steps: number;
+  step_goal: number;
+  provider: HealthProvider | null;
+  calories_burned_kcal: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface UserGoalApiResponse {
   id: string;
   userId: string;

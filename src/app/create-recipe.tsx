@@ -266,21 +266,11 @@ export default function CreateRecipeScreen() {
         let type = match ? `image/${match[1]}` : `image/jpeg`;
         if (type === "image/jpg") type = "image/jpeg";
 
-        if (Platform.OS === "web") {
-          try {
-            const res = await fetch(imageUri);
-            const blob = await res.blob();
-            imageFile = new File([blob], filename, { type });
-          } catch (fetchErr) {
-            console.error("Lỗi chuyển đổi ảnh recipe trên Web:", fetchErr);
-          }
-        } else {
-          imageFile = {
-            uri: imageUri,
-            name: filename,
-            type,
-          };
-        }
+        imageFile = {
+          uri: imageUri,
+          name: filename,
+          type,
+        };
       }
 
       // Gọi API tạo công thức

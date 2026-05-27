@@ -21,7 +21,7 @@ import { useTranslation } from "@/constants/i18n";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useAppColors } from "@/hooks/useAppColors";
-import { formatShortDate } from "@/utils/date";
+import { formatShortDate, getTodayDateISO } from "@/utils/date";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 07:00 → 23:00
 
@@ -201,7 +201,7 @@ export default function DiaryTimelineScreen() {
     }
   }
     const formattedHour = `${selectedHourForMeal.toString().padStart(2, "0")}:00`;
-    const isToday = selectedDate === new Date().toISOString().slice(0, 10);
+    const isToday = selectedDate === getTodayDateISO();
     const dateStr = isToday ? t.common.today : formatShortDate(selectedDate);
     const detailHeaderTitle = `${dateStr} • ${formattedHour}`;
 

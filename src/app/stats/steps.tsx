@@ -21,6 +21,8 @@ import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { useStepsStore } from "@/store/statsStore";
 import { pedometerService } from "@/services/pedometerService";
 import { StepsPeriod } from "@/constants/stats";
+import { getStepsTimeline } from "@/services/stepLogService";
+import { StepLogEntry } from "@/types/contracts";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -100,9 +102,32 @@ export default function StepsStatsScreen() {
       const today = new Date();
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(today.getDate() - 29);
-      const data = await pedometerService.fetchStepsHistory(thirtyDaysAgo, today);
-      // Sắp xếp ngày mới nhất lên đầu
-      const sorted = [...data].sort(
+      const rawData = await pedometerService.fetchStepsHistory(thirtyDaysAgo, today);
+      
+      const records = useStepsStore.getState().stepRecords || {};
+      
+      let backendData: StepLogEntry[] = [];
+      if (process.env.EXPO_PUBLIC_USE_MOCK !== "true") {
+        try {
+          const fromStr = thirtyDaysAgo.toISOString().slice(0, 10);
+          const toStr = today.toISOString().slice(0, 10);
+          backendData = await getStepsTimeline(fromStr, toStr);
+        } catch (err) {
+          console.warn("Lỗi tải nhật ký bước chân từ backend trong modal:", err);
+        }
+      }
+
+      const merged = rawData.map(item => {
+        const persisted = records[item.dateISO] || 0;
+        const apiDay = backendData.find(h => h.log_date === item.dateISO);
+        const apiSteps = apiDay ? apiDay.steps : 0;
+        return {
+          dateISO: item.dateISO,
+          steps: Math.max(item.steps, persisted, apiSteps)
+        };
+      });
+
+      const sorted = [...merged].sort(
         (a, b) => new Date(b.dateISO).getTime() - new Date(a.dateISO).getTime()
       );
       setHistoryList(sorted);

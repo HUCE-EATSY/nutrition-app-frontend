@@ -1,16 +1,11 @@
-import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { StateStorage } from "zustand/middleware";
 
-const isWeb = Platform.OS === "web";
 const CHUNK_SIZE = 1000;
 const CHUNK_PREFIX = "___chunked___:";
 
 export const secureStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    if (isWeb) {
-      return localStorage.getItem(name);
-    }
     try {
       const val = await SecureStore.getItemAsync(name);
       if (val && val.startsWith(CHUNK_PREFIX)) {
@@ -34,10 +29,6 @@ export const secureStorage: StateStorage = {
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
-    if (isWeb) {
-      localStorage.setItem(name, value);
-      return;
-    }
     try {
       if (value.length <= CHUNK_SIZE) {
         // Clean up any previous chunks if they existed
@@ -87,10 +78,6 @@ export const secureStorage: StateStorage = {
     }
   },
   removeItem: async (name: string): Promise<void> => {
-    if (isWeb) {
-      localStorage.removeItem(name);
-      return;
-    }
     try {
       const val = await SecureStore.getItemAsync(name);
       if (val && val.startsWith(CHUNK_PREFIX)) {

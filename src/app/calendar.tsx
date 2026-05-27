@@ -10,6 +10,7 @@ import { colors, spacing, typography, radius } from '@/constants';
 
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from "@/constants/i18n";
+import { useDiaryStore } from '@/store/diaryStore';
 
 // Cấu hình Locale tiếng Việt cho Lịch
 LocaleConfig.locales['vi'] = {
@@ -40,6 +41,8 @@ export default function CalendarPickerModal() {
   const t = useTranslation();
   const language = useSettingsStore((state) => state.language);
   const theme = useSettingsStore((state) => state.theme);
+  const selectedDate = useDiaryStore((state) => state.selectedDate);
+  const setDate = useDiaryStore((state) => state.setDate);
   
   React.useEffect(() => {
     LocaleConfig.defaultLocale = language;
@@ -51,7 +54,7 @@ export default function CalendarPickerModal() {
   const today = new Date();
   const todayString = today.toISOString().split('T')[0];
   
-  const [selected, setSelected] = useState(todayString);
+  const [selected, setSelected] = useState(selectedDate || todayString);
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -63,7 +66,7 @@ export default function CalendarPickerModal() {
 
   const handleDayPress = (day: { dateString: string }) => {
     setSelected(day.dateString);
-    // Ở đây có thể lưu vào Global Store ngày được chọn
+    setDate(day.dateString);
     
     // Tạo cảm giác mượt mà, delay 300ms rồi đóng để user thấy hiệu ứng màu
     setTimeout(() => {

@@ -129,7 +129,7 @@ export default function ExerciseDiaryScreen() {
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
         <Text style={styles.headerTitle}>{t.exercise.diaryTitle}</Text>
-        <Pressable hitSlop={12} onPress={() => router.push("/add-exercise")}>
+        <Pressable hitSlop={12} onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}>
           <Ionicons color={colors.primary} name="add-circle-outline" size={28} />
         </Pressable>
       </View>
@@ -181,7 +181,7 @@ export default function ExerciseDiaryScreen() {
             <MaterialCommunityIcons color={colors.textMuted} name="dumbbell" size={64} />
             <Text style={styles.emptyText}>{t.exercise.emptyDiary}</Text>
             <Pressable
-              onPress={() => router.push("/add-exercise")}
+              onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
               style={styles.emptyButton}
             >
               <Text style={styles.emptyButtonText}>{t.exercise.logActivity}</Text>
@@ -249,7 +249,7 @@ export default function ExerciseDiaryScreen() {
       {/* Floating Action Button */}
       <Pressable
         style={styles.fab}
-        onPress={() => router.push("/add-exercise")}
+        onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
       >
         <Ionicons color="#fff" name="add" size={28} />
       </Pressable>

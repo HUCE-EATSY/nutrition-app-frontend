@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 
 /**
  * Địa chỉ API Backend
@@ -8,10 +7,7 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
-  // Fallback for different platforms if .env is missing
-  if (Platform.OS === 'web') {
-    return "http://localhost:5184";
-  }
+  // Fallback if .env is missing
   return "http://192.168.100.215:5184";
 };
 
@@ -40,6 +36,7 @@ export const API_URLS = {
     foodSummary: `${API_BASE}/api/logs/food/summary`, // GET ?date=
     weight: `${API_BASE}/api/logs/weight`,          // GET ?from=&to=  |  POST
     weightById: (id: number) => `${API_BASE}/api/logs/weight/${id}`, // PUT
+    steps: `${API_BASE}/api/logs/steps`,            // POST | GET ?from=&to=
   },
   /** Meal types */
   mealTypes: `${API_BASE}/api/meal-types`,          // GET

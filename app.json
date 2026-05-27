@@ -26,11 +26,6 @@
         "android.permission.ACTIVITY_RECOGNITION"
       ]
     },
-    "web": {
-      "bundler": "metro",
-      "output": "single",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
       "expo-router",
       [
@@ -46,7 +41,6 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser",
       "@react-native-google-signin/google-signin/app.plugin.js",
       [
         "expo-image-picker",
