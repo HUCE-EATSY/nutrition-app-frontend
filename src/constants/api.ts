@@ -28,7 +28,8 @@ export const API_URLS = {
     search: `${API_BASE}/api/foods/search`,          // GET ?Q=&CategoryId=&Page=&PageSize=
     byId: (id: string) => `${API_BASE}/api/foods/${id}`,        // GET /:uuid
     components: (id: string) => `${API_BASE}/api/foods/${id}/components`, // GET /:uuid/components
-    barcode: (code: number) => `${API_BASE}/api/foods/barcode/${code}`,   // GET /barcode/:int64
+    barcode: (code: string) => `${API_BASE}/api/foods/barcode/${code}`,   // GET /barcode/:barcode
+    estimateNutrients: `${API_BASE}/api/foods/estimate-nutrients`, // POST { image_url }
     create: `${API_BASE}/api/foods`,                // POST multipart/form-data
     createRecipe: `${API_BASE}/api/foods/recipes`,  // POST multipart/form-data
   },

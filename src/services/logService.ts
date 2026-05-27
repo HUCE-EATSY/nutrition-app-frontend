@@ -53,6 +53,7 @@ export interface FoodLogDto {
   carbsG?: number;
   fatG?: number;
   imageUrl?: string;
+  createdAt?: string;
 }
 
 export interface FoodLogSummaryDto {
@@ -84,6 +85,7 @@ function mapFoodLogToDto(rawLog: any): FoodLogDto {
     carbsG: rawLog.carbs_g ?? 0,
     fatG: rawLog.fat_g ?? 0,
     imageUrl: rawLog.image_url,
+    createdAt: rawLog.created_at,
   };
 }
 

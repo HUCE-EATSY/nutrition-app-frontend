@@ -9,6 +9,8 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -112,8 +114,14 @@ export function FoodDetailModal({
         setCustomServings("1");
       }
       setComponents([]);
-      setIsComponentsLoading(true);
 
+      // Skip API call khi food chưa được lưu vào DB (id = "" từ flow nhận diện AI)
+      if (!food.id) {
+        setIsComponentsLoading(false);
+        return;
+      }
+
+      setIsComponentsLoading(true);
       foodService.getFoodComponents(food.id)
         .then((res) => {
           console.log("Danh sách nguyên liệu lấy từ API:", res);
@@ -152,14 +160,17 @@ export function FoodDetailModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.detailOverlay}>
+      <KeyboardAvoidingView
+        style={styles.detailOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <SafeAreaView style={styles.detailContent} edges={["top", "bottom"]}>
           {/* Header */}
           <View style={styles.detailHeader}>
             <Pressable hitSlop={12} style={styles.detailHeaderBtn} onPress={onClose}>
               <Ionicons color={colors.textPrimary} name="chevron-back" size={24} />
             </Pressable>
-            
+
             <View style={styles.detailHeaderTitleContainer}>
               <Text style={styles.detailHeaderTitle}>
                 {headerTitle || t.foodDetail.title}
@@ -390,7 +401,7 @@ export function FoodDetailModal({
             </Pressable>
           </View>
         </SafeAreaView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
