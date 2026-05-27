@@ -61,7 +61,7 @@ export default function QuickAddModal() {
             <Text style={styles.primaryText}>Quét mã</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast("Nhận diện")}>
+          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/detect-food")}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.success }]}>
               <Ionicons name="sparkles-outline" size={24} color="#FFF" />
             </View>

@@ -92,7 +92,7 @@ export const userService = {
       return { avatarUrl: imageUri };
     }
     const form = new FormData();
-    
+
     if (Platform.OS === 'web') {
       // Trên Web, cần fetch blob từ URI và append blob thực tế vào FormData
       const res = await fetch(imageUri);
@@ -110,9 +110,9 @@ export const userService = {
     const response = await apiClient.post(API_URLS.user.avatar, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    
+
     const raw = response.data.data ?? response.data;
-    
+
     // Backend trả về snake_case: { avatar_url: "..." }, chuẩn hóa về camelCase để khớp Destructure
     return {
       avatarUrl: raw?.avatar_url ?? raw?.avatarUrl ?? ""

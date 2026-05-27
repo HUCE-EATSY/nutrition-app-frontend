@@ -120,6 +120,7 @@ export default function RootLayout() {
           <Stack.Screen name="create-food" options={{ presentation: "modal" }} />
           <Stack.Screen name="create-recipe" options={{ presentation: "modal" }} />
           <Stack.Screen name="webview" options={{ presentation: "modal" }} />
+          <Stack.Screen name="detect-food" options={{ presentation: "modal" }} />
         </Stack>
       </PaperProvider>
     </QueryClientProvider>

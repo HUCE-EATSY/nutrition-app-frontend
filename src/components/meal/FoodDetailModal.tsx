@@ -88,8 +88,14 @@ export function FoodDetailModal({
         setCustomServings("1");
       }
       setComponents([]);
-      setIsComponentsLoading(true);
 
+      // Skip API call khi food chưa được lưu vào DB (id = "" từ flow nhận diện AI)
+      if (!food.id) {
+        setIsComponentsLoading(false);
+        return;
+      }
+
+      setIsComponentsLoading(true);
       foodService.getFoodComponents(food.id)
         .then((res) => {
           console.log("Danh sách nguyên liệu lấy từ API:", res);
@@ -128,8 +134,8 @@ export function FoodDetailModal({
       transparent={true}
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView 
-        style={styles.detailOverlay} 
+      <KeyboardAvoidingView
+        style={styles.detailOverlay}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <SafeAreaView style={styles.detailContent} edges={["top", "bottom"]}>
@@ -138,7 +144,7 @@ export function FoodDetailModal({
             <Pressable hitSlop={12} style={styles.detailHeaderBtn} onPress={onClose}>
               <Ionicons color={colors.textPrimary} name="chevron-back" size={24} />
             </Pressable>
-            
+
             <View style={styles.detailHeaderTitleContainer}>
               <Text style={styles.detailHeaderTitle}>
                 {headerTitle || "Chi tiết món ăn"}

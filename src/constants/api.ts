@@ -29,6 +29,7 @@ export const API_URLS = {
     byId: (id: string) => `${API_BASE}/api/foods/${id}`,        // GET /:uuid
     components: (id: string) => `${API_BASE}/api/foods/${id}/components`, // GET /:uuid/components
     barcode: (code: string) => `${API_BASE}/api/foods/barcode/${code}`,   // GET /barcode/:barcode
+    estimateNutrients: `${API_BASE}/api/foods/estimate-nutrients`, // POST { image_url }
     create: `${API_BASE}/api/foods`,                // POST multipart/form-data
     createRecipe: `${API_BASE}/api/foods/recipes`,  // POST multipart/form-data
   },

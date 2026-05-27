@@ -18,7 +18,7 @@ export default function ScanBarcodeScreen() {
   const { addMealEntry, selectedDate } = useDiaryStore();
   const [scannedFood, setScannedFood] = useState<any>(null);
   const [showFoodSelector, setShowFoodSelector] = useState(false);
-  
+
   const [notFoundBarcode, setNotFoundBarcode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -50,7 +50,7 @@ export default function ScanBarcodeScreen() {
       // Dùng hàm map sẵn từ service thay vì map ở UI
       const food = await foodService.getFoodForUIByBarcode(result.data);
       setIsProcessing(false);
-      
+
       if (food) {
         setScannedFood(food);
       } else {
@@ -71,8 +71,8 @@ export default function ScanBarcodeScreen() {
       // Chuyển giờ -> mealTypeId (1: Sáng, 2: Trưa, 3: Tối, 4: Phụ)
       const mealTypeId =
         currentHour >= 5 && currentHour <= 10 ? 1 :
-        currentHour >= 11 && currentHour <= 14 ? 2 :
-        currentHour >= 18 && currentHour <= 22 ? 3 : 4;
+          currentHour >= 11 && currentHour <= 14 ? 2 :
+            currentHour >= 18 && currentHour <= 22 ? 3 : 4;
 
       await addMealEntry({
         foodItemId: food.id,
@@ -108,7 +108,7 @@ export default function ScanBarcodeScreen() {
           }}
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         />
-        
+
         {/* Overlay scanning area */}
         <View style={styles.overlay}>
           <View style={styles.scanArea} />
@@ -131,14 +131,14 @@ export default function ScanBarcodeScreen() {
                 Mã vạch [{notFoundBarcode}] chưa có trong dữ liệu. Bạn muốn làm gì tiếp theo?
               </Text>
               <View style={styles.errorButtons}>
-                <Pressable 
-                  style={[styles.errorBtn, { backgroundColor: "#2a224a" }]} 
+                <Pressable
+                  style={[styles.errorBtn, { backgroundColor: "#2a224a" }]}
                   onPress={() => { setNotFoundBarcode(null); setScanned(false); }}
                 >
                   <Text style={styles.errorBtnText}>Quét lại</Text>
                 </Pressable>
-                <Pressable 
-                  style={[styles.errorBtn, { backgroundColor: colors.primary }]} 
+                <Pressable
+                  style={[styles.errorBtn, { backgroundColor: colors.primary }]}
                   onPress={() => {
                     setNotFoundBarcode(null);
                     setShowFoodSelector(true);
@@ -158,8 +158,8 @@ export default function ScanBarcodeScreen() {
               <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
               <Text style={styles.errorTitle}>Đã xảy ra lỗi</Text>
               <Text style={styles.errorDesc}>{errorMessage}</Text>
-              <Pressable 
-                style={[styles.errorBtn, { backgroundColor: colors.primary, width: "100%", marginTop: spacing.md }]} 
+              <Pressable
+                style={[styles.errorBtn, { backgroundColor: colors.primary, width: "100%", marginTop: spacing.md }]}
                 onPress={() => { setErrorMessage(null); setScanned(false); }}
               >
                 <Text style={styles.errorBtnText}>Đóng</Text>

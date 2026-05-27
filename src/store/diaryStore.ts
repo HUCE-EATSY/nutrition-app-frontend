@@ -68,7 +68,15 @@ function mapSummaryToUI(
   // Build slots
   const slotMap: Record<number, DiaryEntry[]> = {};
   for (const log of logs) {
-    const hour = mealHourMap[log.mealTypeId] ?? 12;
+    let hour = mealHourMap[log.mealTypeId] ?? 12;
+    if (log.createdAt) {
+      // Backend returns UTC datetime ending with 'Z' usually, but just in case, parse it
+      const dateObj = new Date(log.createdAt);
+      if (!isNaN(dateObj.getTime())) {
+        hour = dateObj.getHours();
+      }
+    }
+
     if (!slotMap[hour]) slotMap[hour] = [];
     slotMap[hour].push({
       id: String(log.id),
