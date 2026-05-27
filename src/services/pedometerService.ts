@@ -1,7 +1,7 @@
 import { Pedometer } from "expo-sensors";
 import { Platform } from "react-native";
 
-const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === "true" || Platform.OS === "web";
+const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === "true";
 
 function getMockStepsForDate(dateStr: string): number {
   const hash = dateStr.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -81,7 +81,7 @@ export const pedometerService = {
       if (!hasPermission) return 0;
 
       if (Platform.OS === "android") {
-        // Pedometer.getStepCountAsync không khả dụng trên Android (cần Health Connect)
+        // Pedometer.getStepCountAsync không khả dụng trên Android 
         // Khi không dùng mock, trả về 0 để store dùng dữ liệu cộng dồn thời gian thực
         return 0;
       }

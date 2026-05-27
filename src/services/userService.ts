@@ -1,7 +1,6 @@
 import { apiClient } from "./apiClient";
 import { API_URLS } from "../constants/api";
 import { OnboardingDraft } from "@/types/contracts";
-import { Platform } from "react-native";
 import { useAuthStore } from "../store/authStore";
 import {
   mockGetUserInfoResponse,
@@ -119,19 +118,12 @@ export const userService = {
     }
     const form = new FormData();
     
-    if (Platform.OS === 'web') {
-      // Trên Web, cần fetch blob từ URI và append blob thực tế vào FormData
-      const res = await fetch(imageUri);
-      const blob = await res.blob();
-      form.append('avatar', blob, 'avatar.jpg');
-    } else {
-      // Trên Mobile, append object dạng { uri, name, type }
-      form.append('avatar', {
-        uri: imageUri,
-        name: 'avatar.jpg',
-        type: mimeType,
-      } as any);
-    }
+    // Trên Mobile, append object dạng { uri, name, type }
+    form.append('avatar', {
+      uri: imageUri,
+      name: 'avatar.jpg',
+      type: mimeType,
+    } as any);
 
     const response = await apiClient.post(API_URLS.user.avatar, form, {
       headers: { 'Content-Type': 'multipart/form-data' },

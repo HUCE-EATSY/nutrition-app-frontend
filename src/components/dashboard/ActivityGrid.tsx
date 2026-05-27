@@ -9,6 +9,7 @@ import { useTranslation } from "@/constants/i18n";
 import { ACTIVITIES, ActivityId } from "@/constants/activities";
 import { getExerciseNameFromActivity } from "@/constants/exerciseMapping";
 import { exerciseService, Exercise } from "@/services/exerciseService";
+import { useDiaryStore } from "@/store/diaryStore";
 
 export function ActivityGrid() {
   const t = useTranslation();
@@ -16,6 +17,7 @@ export function ActivityGrid() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const selectedDate = useDiaryStore((state) => state.selectedDate);
 
   // Load exercises để lấy ID
   useEffect(() => {
@@ -42,10 +44,10 @@ export function ActivityGrid() {
 
     if (exercise) {
       // Nếu tìm thấy exercise cụ thể → đi thẳng exercise-detail
-      router.push(`/exercise-detail?exerciseId=${exercise.id}&date=${new Date().toISOString().split('T')[0]}`);
+      router.push(`/exercise-detail?exerciseId=${exercise.id}&date=${selectedDate}`);
     } else {
       // Nếu không tìm thấy (ví dụ: "Khác") → đi add-exercise
-      router.push(`/add-exercise?exerciseName=${encodeURIComponent(exerciseName)}`);
+      router.push(`/add-exercise?exerciseName=${encodeURIComponent(exerciseName)}&date=${selectedDate}`);
     }
   }
 

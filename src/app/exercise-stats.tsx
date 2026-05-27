@@ -17,6 +17,7 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
+import { getTodayDateISO } from "@/utils/date";
 
 export default function ExerciseStatsScreen() {
   const t = useTranslation();
@@ -31,7 +32,7 @@ export default function ExerciseStatsScreen() {
     async function loadStats() {
       try {
         setLoading(true);
-        const endDate = new Date().toISOString().split("T")[0];
+        const endDate = getTodayDateISO();
         const startDate = new Date();
         
         if (period === "week") {
