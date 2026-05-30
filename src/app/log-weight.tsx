@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView, ActivityIndicator, TextInput } from "react-native";
+import { StyleSheet, Text, View, Pressable, Platform, Alert, KeyboardAvoidingView, ActivityIndicator, TextInput, Image } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
-
-
+import * as ImagePicker from "expo-image-picker";
 
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
@@ -35,6 +34,10 @@ export default function LogWeightScreen() {
   // Cho phép tự điền ngày để test (mặc định là ngày hôm nay dạng YYYY-MM-DD)
   const [logDateStr, setLogDateStr] = useState(getTodayDateISO());
 
+  // Trạng thái ảnh chụp cơ thể chọn từ thư viện
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoMimeType, setPhotoMimeType] = useState<string>("image/jpeg");
+
   // Set initial weight when currentWeight is fetched
   useEffect(() => {
     if (currentWeight > 0) {
@@ -42,8 +45,30 @@ export default function LogWeightScreen() {
     }
   }, [currentWeight]);
 
-  const handleUpload = () => {
-    Alert.alert(t.stats.notSupported, t.stats.photoUploadHint);
+  const handleUpload = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          t.account.journey.permissionDenied,
+          t.account.journey.grantPhotoAccess
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets[0]) return;
+
+      const asset = result.assets[0];
+      setPhotoUri(asset.uri);
+      setPhotoMimeType(asset.mimeType ?? "image/jpeg");
+    } catch (err) {
+      console.error("Lỗi chọn ảnh:", err);
+      Alert.alert(t.common.error, "Không thể chọn ảnh từ thư viện.");
+    }
   };
 
   const handleSave = async () => {
@@ -59,7 +84,7 @@ export default function LogWeightScreen() {
     setIsSaving(true);
     try {
       const weightToSend = unit === "lbs" ? parseFloat((weight / 2.20462).toFixed(2)) : weight;
-      await saveWeightLog(weightToSend, logDateStr);
+      await saveWeightLog(weightToSend, logDateStr, undefined, photoUri || undefined, photoMimeType);
 
       // Invalidate react-query cache for user profile (Account & Physical Profile)
       queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -96,11 +121,26 @@ export default function LogWeightScreen() {
 
         {/* Media Upload Section */}
         <View style={styles.mediaSection}>
-          <Pressable style={styles.uploadBox} onPress={handleUpload}>
-            <MaterialCommunityIcons name="camera-plus-outline" size={48} color={colors.textMuted} />
-          </Pressable>
+          {photoUri ? (
+            <View style={styles.imageWrapper}>
+              <Image source={{ uri: photoUri }} style={styles.uploadedImage} />
+              <Pressable
+                style={styles.removeImageBtn}
+                onPress={() => setPhotoUri(null)}
+                hitSlop={10}
+              >
+                <Ionicons name="close-circle" size={24} color="#FF6B6B" />
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.uploadBox} onPress={handleUpload}>
+              <MaterialCommunityIcons name="camera-plus-outline" size={48} color={colors.textMuted} />
+            </Pressable>
+          )}
           <Pressable onPress={handleUpload}>
-            <Text style={styles.uploadText}>{t.stats.addPhoto}</Text>
+            <Text style={styles.uploadText}>
+              {photoUri ? "Thay đổi ảnh cơ thể" : t.stats.addPhoto}
+            </Text>
           </Pressable>
         </View>
 
@@ -158,7 +198,6 @@ export default function LogWeightScreen() {
 
       </KeyboardAvoidingView>
 
-
       {/* Footer Action */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <Pressable
@@ -193,7 +232,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingVertical: spacing.md,
   },
   headerSpacer: {
-    width: 28, // Same width as the close button to center the title
+    width: 28,
   },
   headerTitle: {
     ...typography.h3,
@@ -218,6 +257,23 @@ const getStyles = (colors: any) => StyleSheet.create({
   uploadText: {
     ...typography.bodyStrong,
     color: colors.primary,
+  },
+  imageWrapper: {
+    position: "relative",
+    width: 120,
+    height: 120,
+  },
+  uploadedImage: {
+    width: 120,
+    height: 120,
+    borderRadius: radius.md,
+  },
+  removeImageBtn: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: colors.bgBase,
+    borderRadius: radius.pill,
   },
   inputSection: {
     marginTop: spacing.xxxl,

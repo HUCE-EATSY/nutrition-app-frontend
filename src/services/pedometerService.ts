@@ -74,11 +74,21 @@ export const pedometerService = {
     }
 
     try {
-      const isAvailable = await this.isAvailable();
-      if (!isAvailable) return 0;
+      let realAvailable = false;
+      try {
+        realAvailable = await Pedometer.isAvailableAsync();
+      } catch {}
 
-      const hasPermission = await this.checkStepsPermission();
-      if (!hasPermission) return 0;
+      let realPermission = false;
+      try {
+        const response = await Pedometer.getPermissionsAsync();
+        realPermission = response.granted;
+      } catch {}
+
+      // Nếu không khả dụng thực tế hoặc không có quyền thực tế, trả về 0 (dùng dữ liệu thật)
+      if (!realAvailable || !realPermission) {
+        return 0;
+      }
 
       if (Platform.OS === "android") {
         // Pedometer.getStepCountAsync không khả dụng trên Android 
@@ -124,6 +134,31 @@ export const pedometerService = {
       return history;
     }
 
+    let realAvailable = false;
+    try {
+      realAvailable = await Pedometer.isAvailableAsync();
+    } catch {}
+
+    let realPermission = false;
+    try {
+      const response = await Pedometer.getPermissionsAsync();
+      realPermission = response.granted;
+    } catch {}
+
+    // Nếu không khả dụng thực tế hoặc không có quyền thực tế, trả về 0
+    if (!realAvailable || !realPermission) {
+      const temp = new Date(cur);
+      while (temp <= end) {
+        const dateStr = getLocalDateString(temp);
+        history.push({
+          dateISO: dateStr,
+          steps: 0,
+        });
+        temp.setDate(temp.getDate() + 1);
+      }
+      return history;
+    }
+
     if (Platform.OS === "android") {
       // Trên Android, không lấy được lịch sử từ sensor nên trả về 0, store sẽ tự merge từ stepRecords
       const temp = new Date(cur);
@@ -139,12 +174,6 @@ export const pedometerService = {
     }
 
     try {
-      const isAvailable = await this.isAvailable();
-      const hasPermission = await this.checkStepsPermission();
-      if (!isAvailable || !hasPermission) {
-        throw new Error("Pedometer not available or permission not granted");
-      }
-
       const datesToQuery: Date[] = [];
       const temp = new Date(cur);
       while (temp <= end) {
@@ -196,13 +225,26 @@ export const pedometerService = {
    * Đăng ký theo dõi số bước chân thời gian thực
    */
   watchSteps(callback: (steps: number) => void): { remove: () => void } {
+    if (USE_MOCK) {
+      let currentSteps = 0;
+      const interval = setInterval(() => {
+        currentSteps += Math.floor(Math.random() * 5) + 1; // Tăng ngẫu nhiên từ 1 đến 5 bước
+        callback(currentSteps);
+      }, 5000); // 5 giây một lần
+      return {
+        remove: () => clearInterval(interval),
+      };
+    }
+
     try {
       return Pedometer.watchStepCount((result) => {
         callback(result.steps);
       });
     } catch (error) {
       console.error("Lỗi khi đăng ký watchStepCount:", error);
-      return { remove: () => {} };
+      return {
+        remove: () => {},
+      };
     }
   },
 };

@@ -47,7 +47,13 @@ export async function getUserGoal(): Promise<UserGoalApiResponse | null> {
 /**
  * Create or update a weight log entry for a specific date (YYYY-MM-DD).
  */
-export async function saveWeightLog(weightKg: number, dateISO: string, note?: string): Promise<WeightLogEntry> {
+export async function saveWeightLog(
+  weightKg: number,
+  dateISO: string,
+  note?: string,
+  photoUri?: string,
+  photoMimeType = 'image/jpeg'
+): Promise<WeightLogEntry> {
   if (USE_MOCK) {
     const existingLogs = await getWeightTimeline(dateISO, dateISO);
     if (existingLogs && existingLogs.length > 0) {
@@ -56,6 +62,8 @@ export async function saveWeightLog(weightKg: number, dateISO: string, note?: st
         ...existingLog,
         weight_kg: weightKg,
         note: note ?? existingLog.note,
+        photo_url: photoUri || existingLog.photo_url || null,
+        photoUrl: photoUri || existingLog.photoUrl || null,
       };
       mockWeightLogs = mockWeightLogs.map(log => log.id === existingLog.id ? updatedLog : log);
       return updatedLog;
@@ -66,6 +74,8 @@ export async function saveWeightLog(weightKg: number, dateISO: string, note?: st
         log_date: dateISO,
         note: note ?? null,
         created_at: new Date().toISOString(),
+        photo_url: photoUri || null,
+        photoUrl: photoUri || null,
       };
       mockWeightLogs.push(newLog);
       return newLog;
@@ -74,20 +84,66 @@ export async function saveWeightLog(weightKg: number, dateISO: string, note?: st
 
   // Query timeline for that specific day to see if there is an existing log
   const existingLogs = await getWeightTimeline(dateISO, dateISO);
+  
+  const form = new FormData();
+  form.append("WeightKg", String(weightKg));
+  if (note !== undefined && note !== null) {
+    form.append("Note", note);
+  }
+  
+  if (photoUri) {
+    form.append("Photo", {
+      uri: photoUri,
+      name: "weight_photo.jpg",
+      type: photoMimeType,
+    } as any);
+  }
+
   if (existingLogs && existingLogs.length > 0) {
     const existingLog = existingLogs[0];
-    const res = await apiClient.put(`/api/logs/weight/${existingLog.id}`, {
-      weight_kg: weightKg,
-      note: note ?? existingLog.note,
+    const res = await apiClient.put(`/api/logs/weight/${existingLog.id}`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data.data;
   } else {
-    const res = await apiClient.post("/api/logs/weight", {
-      weight_kg: weightKg,
-      log_date: dateISO,
-      note,
+    form.append("LogDate", dateISO);
+    const res = await apiClient.post("/api/logs/weight", form, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return res.data.data;
   }
+}
+
+/**
+ * Upload body photo for a weight log.
+ */
+export async function uploadWeightPhoto(
+  id: number,
+  photoUri: string,
+  photoMimeType = 'image/jpeg'
+): Promise<WeightLogEntry> {
+  if (USE_MOCK) {
+    const idx = mockWeightLogs.findIndex(log => log.id === id);
+    if (idx !== -1) {
+      mockWeightLogs[idx] = {
+        ...mockWeightLogs[idx],
+        photo_url: photoUri,
+        photoUrl: photoUri,
+      };
+      return mockWeightLogs[idx];
+    }
+    throw new Error("Không tìm thấy log để cập nhật ảnh.");
+  }
+  const form = new FormData();
+  form.append("photo", {
+    uri: photoUri,
+    name: "weight_photo.jpg",
+    type: photoMimeType,
+  } as any);
+
+  const res = await apiClient.post(`/api/logs/weight/${id}/photo`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data.data;
 }
 

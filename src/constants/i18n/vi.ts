@@ -444,6 +444,21 @@ export const vi = {
       dailyTips: "Lời khuyên sức khỏe hàng ngày",
     }
   },
+  notificationCenter: {
+    title: "Thông báo",
+    markAllRead: "Đọc tất cả",
+    noNotifications: "Không có thông báo nào",
+    noNotificationsDesc: "Bạn đã cập nhật tất cả thông tin rồi. Hãy tiếp tục duy trì thói quen tốt nhé!",
+    unread: "Chưa đọc",
+    read: "Đã đọc",
+    delete: "Xóa",
+    errorLoading: "Không thể tải danh sách thông báo.",
+    markReadSuccess: "Đã đánh dấu đã đọc",
+    deleteSuccess: "Đã xóa thông báo",
+    today: "Hôm nay",
+    yesterday: "Hôm qua",
+    older: "Cũ hơn",
+  },
   stats: {
     nutritionTitle: "Thống kê dinh dưỡng",
     workoutTitle: "Thống kê hoạt động",

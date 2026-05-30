@@ -1,5 +1,5 @@
 import React from "react";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -7,6 +7,7 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useGetUnreadCount } from "@/hooks/queries/useNotificationQueries";
 
 export function HomeHeader() {
   const t = useTranslation();
@@ -14,6 +15,8 @@ export function HomeHeader() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
+  
+  const { data: unreadCount = 0 } = useGetUnreadCount();
   
   const getFormattedDate = () => {
     const today = new Date();
@@ -38,6 +41,10 @@ export function HomeHeader() {
           <Pressable hitSlop={10} onPress={() => router.push("/streaks")} style={({ pressed }) => [styles.badge, pressed && styles.badgePressed]}>
             <MaterialCommunityIcons name="fire" size={14} color={colors.warning} />
             <Text style={styles.badgeText}>0</Text>
+          </Pressable>
+          <Pressable hitSlop={10} onPress={() => router.push("/notifications")} style={styles.notifButton}>
+            <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={20} color={unreadCount > 0 ? colors.primary : colors.textSecondary} />
+            {unreadCount > 0 && <View style={styles.badgeDot} />}
           </Pressable>
           <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
             <MaterialCommunityIcons name="calendar-blank-outline" size={20} color={colors.textSecondary} />
@@ -97,6 +104,23 @@ const getStyles = (colors: any) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+  },
+  notifButton: {
+    position: "relative",
+    padding: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeDot: {
+    position: "absolute",
+    top: 1,
+    right: 1,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF5A5F",
+    borderWidth: 1.5,
+    borderColor: colors.bgBase,
   },
   badge: {
     flexDirection: "row",

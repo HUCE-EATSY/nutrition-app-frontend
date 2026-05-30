@@ -444,6 +444,21 @@ export const en = {
       dailyTips: "Daily health tips",
     }
   },
+  notificationCenter: {
+    title: "Notifications",
+    markAllRead: "Mark all read",
+    noNotifications: "No notifications yet",
+    noNotificationsDesc: "You are all caught up! Keep up the great work.",
+    unread: "Unread",
+    read: "Read",
+    delete: "Delete",
+    errorLoading: "Failed to load notifications.",
+    markReadSuccess: "Marked as read",
+    deleteSuccess: "Notification deleted",
+    today: "Today",
+    yesterday: "Yesterday",
+    older: "Older",
+  },
   stats: {
     nutritionTitle: "Nutrition Statistics",
     workoutTitle: "Activity Statistics",

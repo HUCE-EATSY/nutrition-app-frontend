@@ -215,6 +215,8 @@ export interface WeightLogEntry {
   log_date: string; // "YYYY-MM-DD"
   note: string | null;
   created_at: string;
+  photo_url?: string | null;
+  photoUrl?: string | null;
 }
 
 export enum HealthProvider {
@@ -243,6 +245,8 @@ export interface UserGoalApiResponse {
   activityLevel: number;
   goalType: number;
   goalWeightKg: number | null;
+  weeklyGoalKg: number;
+  WeeklyGoalKg?: number;
   bmrKcal: number;
   tdeeKcal: number;
   targetCalories: number;
@@ -250,5 +254,7 @@ export interface UserGoalApiResponse {
   targetCarbsG: number;
   targetFatG: number;
   isActive: boolean;
+  targetDate: string;
+  TargetDate?: string;
   createdAt: string;
 }

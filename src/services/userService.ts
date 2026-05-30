@@ -46,6 +46,7 @@ export const userService = {
       weightKg: draft.currentWeightKg ?? 60,
       goalWeightKg: draft.targetWeightKg ?? draft.currentWeightKg ?? 60,
       activityLevel: activityLevelMap[draft.activityLevel || "sedentary"],
+      weeklyGoalKg: draft.weeklyGoalKg ?? 0,
       goalType: goalTypeMap[draft.goalType || "maintain_weight"],
     };
 

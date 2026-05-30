@@ -10,8 +10,10 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSMotionUsageDescription": "Ứng dụng cần quyền truy cập cảm biến để đếm số bước chân của bạn."
-      }
+        "NSMotionUsageDescription": "Ứng dụng cần quyền truy cập cảm biến để đếm số bước chân của bạn.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.k7625.nutritionappfrontend"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +25,8 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.k7625.nutritionappfrontend",
       "permissions": [
-        "android.permission.ACTIVITY_RECOGNITION"
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -61,6 +64,12 @@
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "528b113d-2847-47e7-b7c6-8f30a8e49b49"
+      }
     }
   }
 }
