@@ -4,7 +4,7 @@ import { ActivityPeriod, NutritionPeriod, StepsPeriod, WeightPeriod } from "@/co
 import { DailySummaryResponse, WeightLogEntry, StepLogEntry } from "@/types/contracts";
 import { getDailySummary } from "@/services/nutritionLogService";
 import { getWeightTimeline, getUserGoal } from "@/services/weightLogService";
-import { getTodayDateISO, getDateRangeForPeriod } from "@/utils/date";
+import { getTodayDateISO, getDateRangeForPeriod, formatLocalDate } from "@/utils/date";
 import { AppState, Platform } from "react-native";
 import { pedometerService } from "@/services/pedometerService";
 import { secureStorage } from "./secureStorage";
@@ -291,8 +291,8 @@ export const useStepsStore = create<StepsState>()(
           let apiHistory: StepLogEntry[] = [];
           if (!USE_MOCK) {
             try {
-              const fromStr = prevStartDate.toISOString().slice(0, 10);
-              const toStr = endDate.toISOString().slice(0, 10);
+              const fromStr = formatLocalDate(prevStartDate);
+              const toStr = formatLocalDate(endDate);
               apiHistory = await getStepsTimeline(fromStr, toStr);
             } catch (err) {
               console.warn("Lỗi tải lịch sử bước chân từ backend:", err);
@@ -488,13 +488,56 @@ export const useStepsStore = create<StepsState>()(
             const updatedRecords = { ...(get().stepRecords || {}) };
             updatedRecords[todayStr] = updatedSteps;
 
+            // Cập nhật historyData locally
+            const currentHistoryData = get().historyData || [];
+            let updatedHistoryData = [...currentHistoryData];
+            
+            if (get().period === StepsPeriod.SIX_MONTHS) {
+              const now = new Date();
+              const currentMonthLabel = `Th${String(now.getMonth() + 1).padStart(2, "0")}`;
+              updatedHistoryData = currentHistoryData.map(item => {
+                if (item.label === currentMonthLabel) {
+                  return {
+                    ...item,
+                    value: item.value + delta
+                  };
+                }
+                return item;
+              });
+            } else {
+              let todayLabel = "";
+              const now = new Date();
+              if (get().period === StepsPeriod.WEEK) {
+                const weekdayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+                todayLabel = weekdayLabels[now.getDay()];
+              } else if (get().period === StepsPeriod.MONTH) {
+                const month = String(now.getMonth() + 1).padStart(2, "0");
+                const day = String(now.getDate()).padStart(2, "0");
+                todayLabel = `${day}/${month}`;
+              }
+              
+              updatedHistoryData = currentHistoryData.map(item => {
+                if (item.label === todayLabel) {
+                  return {
+                    ...item,
+                    value: updatedSteps
+                  };
+                }
+                return item;
+              });
+            }
+
+            // Tính lại averageSteps locally
+            const newAverageSteps = updatedHistoryData.length > 0
+              ? Math.round(updatedHistoryData.reduce((sum, item) => sum + item.value, 0) / updatedHistoryData.length)
+              : get().averageSteps;
+
             set({
               todaySteps: updatedSteps,
               stepRecords: updatedRecords,
+              historyData: updatedHistoryData,
+              averageSteps: newAverageSteps,
             });
-
-            // Cập nhật lại biểu đồ lịch sử
-            get().fetchHistory(get().period, get().offset);
 
             // Đồng bộ số bước với debounce
             if (!USE_MOCK) {

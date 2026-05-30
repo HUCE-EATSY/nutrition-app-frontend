@@ -82,6 +82,10 @@ export function getTodayDateISO() {
   return format(new Date(), "yyyy-MM-dd");
 }
 
+export function formatLocalDate(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}
+
 export function hourLabel(hour: number) {
   return `${`${hour}`.padStart(2, "0")}:00`;
 }

@@ -9,10 +9,7 @@
  */
 
 import { apiClient } from "./apiClient";
-import { API_URLS, API_BASE } from "../constants/api";
-import { useAuthStore } from "../store/authStore";
-import axios from "axios";
-import * as FileSystem from 'expo-file-system';
+import { API_URLS } from "../constants/api";
 
 // ── Response shape trả về từ backend ──────────────────────────────────────────
 export interface FoodItemDto {
@@ -402,10 +399,6 @@ export const foodService = {
       mockFoods.unshift(newMock);
       return newMock;
     }
-    const url = API_URLS.foods.createRecipe || "/api/foods/recipes";
-    const token = useAuthStore.getState().accessToken;
-    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
-    
     const form = new FormData();
     form.append("NameVi", req.nameVi);
     if (req.nameEn) form.append("NameEn", req.nameEn);

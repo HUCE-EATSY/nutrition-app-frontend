@@ -9,7 +9,6 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { NutritionPlan } from "@/types/contracts";
 import { colors, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { formatDateForHero } from "@/utils/date";
@@ -24,17 +23,18 @@ export default function PlanResultScreen() {
 
   // Dữ liệu từ server trả về trong OnboardUserAsync
   // { targetCalories, targetProteinG, targetCarbsG, targetFatG, bmrKcal, tdeeKcal, ... }
-  const plan: NutritionPlan = serverPlan || {
-    targetCalories: 0,
-    bmrKcal: 0,
-    tdeeKcal: 0,
-    targetProteinG: 0,
-    targetCarbsG: 0,
-    targetFatG: 0,
-    targetDateISO: "2026-08-15T00:00:00.000Z"
+  const rawPlan = (serverPlan || {}) as any;
+  const plan = {
+    targetCalories: Number(rawPlan.targetCalories ?? rawPlan.TargetCalories ?? 0),
+    bmrKcal: Number(rawPlan.bmrKcal ?? rawPlan.BmrKcal ?? 0),
+    tdeeKcal: Number(rawPlan.tdeeKcal ?? rawPlan.TdeeKcal ?? 0),
+    targetProteinG: Number(rawPlan.targetProteinG ?? rawPlan.TargetProteinG ?? 0),
+    targetCarbsG: Number(rawPlan.targetCarbsG ?? rawPlan.TargetCarbsG ?? 0),
+    targetFatG: Number(rawPlan.targetFatG ?? rawPlan.TargetFatG ?? 0),
+    targetDateISO: String(rawPlan.targetDate ?? rawPlan.TargetDate ?? rawPlan.targetDateISO ?? rawPlan.TargetDateISO ?? ""),
   };
 
-  const targetDateISO = plan.targetDateISO || "2026-08-15T00:00:00.000Z";
+  const targetDateISO = plan.targetDateISO || "";
 
   const { isCompact, isNarrowWidth } = useResponsiveLayout();
 

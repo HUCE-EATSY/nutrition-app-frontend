@@ -58,7 +58,7 @@ export default function AccountScreen() {
   }, [serverUserInfo?.profile?.avatarUrl]);
 
   const profile = serverUserInfo?.profile;
-  const activeGoal = serverUserInfo?.activeGoal;
+  const activeGoal = serverUserInfo?.activeGoal ?? serverUserInfo?.ActiveGoal;
 
   const age = profile?.dateOfBirth
     ? getAgeFromBirthDate(profile.dateOfBirth)
@@ -76,10 +76,10 @@ export default function AccountScreen() {
 
   const plan = activeGoal
     ? {
-      targetCalories: Number(activeGoal.targetCalories),
-      targetProteinG: Number(activeGoal.targetProteinG),
-      targetCarbsG: Number(activeGoal.targetCarbsG),
-      targetFatG: Number(activeGoal.targetFatG),
+      targetCalories: Number(activeGoal.targetCalories ?? activeGoal.TargetCalories),
+      targetProteinG: Number(activeGoal.targetProteinG ?? activeGoal.TargetProteinG),
+      targetCarbsG: Number(activeGoal.targetCarbsG ?? activeGoal.TargetCarbsG),
+      targetFatG: Number(activeGoal.targetFatG ?? activeGoal.TargetFatG),
     }
     : serverPlan || {
       targetCalories: 2000,

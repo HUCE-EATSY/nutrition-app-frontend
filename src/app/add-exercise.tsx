@@ -25,6 +25,7 @@ import {
 } from "@/constants/activities";
 import { getMetValue } from "@/utils/activities";
 import { useTranslation } from "@/constants/i18n";
+import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 
 // Cân nặng mặc định nếu chưa có profile (kg)
 const DEFAULT_WEIGHT_KG = 65;
@@ -33,22 +34,36 @@ export default function AddExerciseScreen() {
   const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
-  const { date } = useLocalSearchParams<{ date: string }>();
+  const { date, exerciseName } = useLocalSearchParams<{ date: string; exerciseName?: string }>();
   const targetDate = date ?? getTodayDateISO();
   const currentHour = new Date().getHours();
 
   const { addExercise } = useDiaryStore();
+  const { data: userInfo } = useGetUserInfo();
+  const userWeight = userInfo?.profile?.weightKg ?? DEFAULT_WEIGHT_KG;
+
+  // Pre-select activity based on exerciseName query param
+  const initialSelectedId = useMemo(() => {
+    if (!exerciseName) return null;
+    const nameLower = exerciseName.toLowerCase();
+    if (nameLower.includes("run")) return "running" as const;
+    if (nameLower.includes("cycle") || nameLower.includes("bike")) return "cycling" as const;
+    if (nameLower.includes("badminton")) return "badminton" as const;
+    if (nameLower.includes("pickle")) return "pickleball" as const;
+    if (nameLower.includes("yoga")) return "yoga" as const;
+    return "other" as const;
+  }, [exerciseName]);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedId, setSelectedId] = useState<ActivityId | null>(null);
+  const [selectedId, setSelectedId] = useState<ActivityId | null>(initialSelectedId);
   const [intensity, setIntensity] = useState<ActivityIntensity>("amateur");
   const [duration, setDuration] = useState("30");
 
   // ── Tính calo đốt: MET × weight × hours ──────────────────────────────────
   const durationNum = parseFloat(duration) || 0;
   const met = selectedId ? getMetValue(selectedId, intensity) : 0;
-  const caloriesBurned = Math.round(met * DEFAULT_WEIGHT_KG * (durationNum / 60));
+  const caloriesBurned = Math.round(met * userWeight * (durationNum / 60));
 
   const selectedActivity = ACTIVITIES.find((a) => a.id === selectedId);
 

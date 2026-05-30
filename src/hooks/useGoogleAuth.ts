@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { API_URLS } from '@/constants/api';
 import { apiClient } from '@/services/apiClient';
+import { userService } from '@/services/userService';
 
 let GoogleSignin: any = null;
 let statusCodes: any = {};
@@ -151,6 +152,7 @@ export const useGoogleAuth = () => {
     signIn,
     logout,
     deleteAccount: async () => {
+      await userService.deleteAccount();
       await logout();
     },
   };

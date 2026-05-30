@@ -18,7 +18,6 @@ import { foodService } from "@/services/foodService";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
 import { Toast } from "@/components/common/Toast";
 import { useDiaryStore } from "@/store/diaryStore";
-import { API_BASE } from "@/constants/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type DetectionPhase =
@@ -32,7 +31,6 @@ export default function DetectFoodScreen() {
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [detectedFood, setDetectedFood] = useState<any>(null);
-  const [cloudinaryUrl, setCloudinaryUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const { addMealEntry, selectedDate } = useDiaryStore();
@@ -188,7 +186,6 @@ export default function DetectFoodScreen() {
     setSelectedImageUri(null);
     setErrorMsg(null);
     setDetectedFood(null);
-    setCloudinaryUrl(null);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────

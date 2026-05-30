@@ -19,6 +19,7 @@ import { exerciseService, ExerciseLog } from "@/services/exerciseService";
 import { getTodayDateISO, formatShortDate } from "@/utils/date";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useDiaryStore } from "@/store/diaryStore";
 
 export default function ExerciseDiaryScreen() {
   const t = useTranslation();
@@ -72,6 +73,8 @@ export default function ExerciseDiaryScreen() {
             try {
               await exerciseService.deleteLog(id);
               setLogs(prev => prev.filter(log => log.id !== id));
+              // Refresh the main diary store to update total calories burned
+              await useDiaryStore.getState().fetchDiary();
               Alert.alert(t.common.success, t.exercise.deleteSuccess);
             } catch {
               Alert.alert(t.common.error, t.exercise.deleteError);

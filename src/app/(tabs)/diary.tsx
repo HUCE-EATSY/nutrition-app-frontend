@@ -388,7 +388,11 @@ export default function DiaryTimelineScreen() {
 
                     {/* Exercise Entries */}
                     {hourExercises.map((ex) => (
-                      <View key={ex.id} style={styles.exerciseCard}>
+                      <Pressable
+                        key={ex.id}
+                        style={styles.exerciseCard}
+                        onPress={() => router.push("/exercise-diary")}
+                      >
                         <View style={styles.exerciseCardIconBg}>
                           <Ionicons color={colors.success} name="barbell-outline" size={16} />
                         </View>
@@ -400,7 +404,8 @@ export default function DiaryTimelineScreen() {
                             {t.exercise.burnSummary(ex.durationMinutes, ex.caloriesBurned)}
                           </Text>
                         </View>
-                      </View>
+                        <Ionicons color={colors.textMuted} name="chevron-forward" size={16} />
+                      </Pressable>
                     ))}
                   </View>
                 )}

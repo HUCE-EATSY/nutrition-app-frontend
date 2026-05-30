@@ -23,6 +23,7 @@ import { pedometerService } from "@/services/pedometerService";
 import { StepsPeriod } from "@/constants/stats";
 import { getStepsTimeline } from "@/services/stepLogService";
 import { StepLogEntry } from "@/types/contracts";
+import { formatLocalDate } from "@/utils/date";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -109,8 +110,8 @@ export default function StepsStatsScreen() {
       let backendData: StepLogEntry[] = [];
       if (process.env.EXPO_PUBLIC_USE_MOCK !== "true") {
         try {
-          const fromStr = thirtyDaysAgo.toISOString().slice(0, 10);
-          const toStr = today.toISOString().slice(0, 10);
+          const fromStr = formatLocalDate(thirtyDaysAgo);
+          const toStr = formatLocalDate(today);
           backendData = await getStepsTimeline(fromStr, toStr);
         } catch (err) {
           console.warn("Lỗi tải nhật ký bước chân từ backend trong modal:", err);

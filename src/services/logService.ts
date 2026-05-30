@@ -227,9 +227,21 @@ export const foodLogService = {
       mockFoodLogs.push(newLog);
       return newLog;
     }
-    const response = await apiClient.post(API_URLS.logs.food, req);
-    const rawLog = response.data.data ?? response.data;
-    return mapFoodLogToDto(rawLog);
+    try {
+      const response = await apiClient.post(API_URLS.logs.food, req);
+      const rawLog = response.data.data ?? response.data;
+      return mapFoodLogToDto(rawLog);
+    } catch (error: any) {
+      console.error("=== API ERROR: Ghi nhật ký món ăn thất bại (POST /api/logs/food) ===");
+      console.error("Payload gửi đi:", JSON.stringify(req, null, 2));
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Response data (Lỗi chi tiết từ backend):", JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error("Lỗi kết nối / lỗi khác:", error.message);
+      }
+      throw error;
+    }
   },
 
   /**
@@ -255,9 +267,21 @@ export const foodLogService = {
       }
       throw new Error("Không tìm thấy log để cập nhật.");
     }
-    const response = await apiClient.put(API_URLS.logs.foodById(id), req);
-    const rawLog = response.data.data ?? response.data;
-    return mapFoodLogToDto(rawLog);
+    try {
+      const response = await apiClient.put(API_URLS.logs.foodById(id), req);
+      const rawLog = response.data.data ?? response.data;
+      return mapFoodLogToDto(rawLog);
+    } catch (error: any) {
+      console.error(`=== API ERROR: Cập nhật nhật ký món ăn thất bại (PUT /api/logs/food/${id}) ===`);
+      console.error("Payload gửi đi:", JSON.stringify(req, null, 2));
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Response data (Lỗi chi tiết từ backend):", JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error("Lỗi kết nối / lỗi khác:", error.message);
+      }
+      throw error;
+    }
   },
 
   /**

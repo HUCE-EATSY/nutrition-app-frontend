@@ -19,6 +19,7 @@ import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useAppColors } from "@/hooks/useAppColors";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useGetNotificationSettings, useUpdateNotificationSetting } from "@/hooks/queries/useNotificationQueries";
 import { radius, spacing, typography } from "@/constants";
 import { setStringAsync } from "expo-clipboard";
 
@@ -37,13 +38,14 @@ export default function SettingsScreen() {
   const language = useSettingsStore((state) => state.language);
   const unit = useSettingsStore((state) => state.unit);
   const notificationsEnabled = useSettingsStore((state) => state.notificationsEnabled);
-  const notificationConfig = useSettingsStore((state) => state.notificationConfig);
 
   const setTheme = useSettingsStore((state) => state.setTheme);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
   const setUnit = useSettingsStore((state) => state.setUnit);
   const setNotificationsEnabled = useSettingsStore((state) => state.setNotificationsEnabled);
-  const setNotificationConfig = useSettingsStore((state) => state.setNotificationConfig);
+
+  const { data: serverSettings = [], isLoading: isLoadingSettings } = useGetNotificationSettings();
+  const updateSettingMutation = useUpdateNotificationSetting();
 
   // Dialog visibility states
   const [langDialogVisible, setLangDialogVisible] = useState(false);
@@ -265,38 +267,32 @@ export default function SettingsScreen() {
         {/* Dynamic child notification configurations */}
         {notificationsEnabled && (
           <View style={styles.notificationChildren}>
-            <View style={styles.childRow}>
-              <Text style={styles.childRowTitle}>{t.settings.notificationConfig.mealReminders}</Text>
-              <Switch
-                value={notificationConfig.mealReminders}
-                onValueChange={(val) => setNotificationConfig({ mealReminders: val })}
-                trackColor={{ false: "#767577", true: colors.primary }}
-              />
-            </View>
-            <View style={styles.childRow}>
-              <Text style={styles.childRowTitle}>{t.settings.notificationConfig.waterReminders}</Text>
-              <Switch
-                value={notificationConfig.waterReminders}
-                onValueChange={(val) => setNotificationConfig({ waterReminders: val })}
-                trackColor={{ false: "#767577", true: colors.primary }}
-              />
-            </View>
-            <View style={styles.childRow}>
-              <Text style={styles.childRowTitle}>{t.settings.notificationConfig.stepsAlerts}</Text>
-              <Switch
-                value={notificationConfig.stepsAlerts}
-                onValueChange={(val) => setNotificationConfig({ stepsAlerts: val })}
-                trackColor={{ false: "#767577", true: colors.primary }}
-              />
-            </View>
-            <View style={styles.childRow}>
-              <Text style={styles.childRowTitle}>{t.settings.notificationConfig.dailyTips}</Text>
-              <Switch
-                value={notificationConfig.dailyTips}
-                onValueChange={(val) => setNotificationConfig({ dailyTips: val })}
-                trackColor={{ false: "#767577", true: colors.primary }}
-              />
-            </View>
+            {isLoadingSettings ? (
+              <Text style={[styles.childRowTitle, { paddingVertical: spacing.xs, opacity: 0.7 }]}>
+                {language === "vi" ? "Đang tải cài đặt..." : "Loading settings..."}
+              </Text>
+            ) : (
+              serverSettings.map((item) => {
+                const displayName = language === "vi" ? item.notificationNameVi : item.notificationNameEn;
+                return (
+                  <View key={item.id || item.notificationTypeId} style={styles.childRow}>
+                    <Text style={styles.childRowTitle}>{displayName}</Text>
+                    <Switch
+                      value={item.isEnabled}
+                      onValueChange={(val) =>
+                        updateSettingMutation.mutate({
+                          notificationTypeId: item.notificationTypeId,
+                          isEnabled: val,
+                        })
+                      }
+                      trackColor={{ false: "#767577", true: colors.primary }}
+                      thumbColor="#FFFFFF"
+                      disabled={updateSettingMutation.isPending}
+                    />
+                  </View>
+                );
+              })
+            )}
           </View>
         )}
       </View>

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAppColors } from '@/hooks/useAppColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { TargetListItem } from '../../../components/account/targets/TargetListIt
 import { ProgressRingChart } from '../../../components/charts/ProgressRingChart';
 import { EnergyMetricsCard } from '../../../components/account/targets/EnergyMetricsCard';
 import { useTranslation } from "@/constants/i18n";
+import { useGetUserInfo } from '@/hooks/queries/useUserQueries';
 
 export default function TargetCustomizationScreen() {
   const t = useTranslation();
@@ -15,11 +16,35 @@ export default function TargetCustomizationScreen() {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
-  // Mock data for display
-  const targetCalories = 2229;
-  const bmr = 1461;
-  const tdee = 2009;
-  const addedCalories = 220;
+  const { data: userInfo, isLoading } = useGetUserInfo();
+
+  const activeGoal = userInfo?.activeGoal ?? userInfo?.ActiveGoal;
+  const targetCalories = Math.round(activeGoal?.targetCalories ?? activeGoal?.TargetCalories ?? 2000);
+  const bmr = Math.round(activeGoal?.bmrKcal ?? activeGoal?.BmrKcal ?? 1500);
+  const tdee = Math.round(activeGoal?.tdeeKcal ?? activeGoal?.TdeeKcal ?? 2000);
+  const addedCalories = targetCalories - tdee;
+
+  // Calculate percentages based on macros if available
+  const targetProteinG = activeGoal?.targetProteinG ?? activeGoal?.TargetProteinG ?? 120;
+  const targetCarbsG = activeGoal?.targetCarbsG ?? activeGoal?.TargetCarbsG ?? 250;
+  const targetFatG = activeGoal?.targetFatG ?? activeGoal?.TargetFatG ?? 67;
+
+  const proteinCal = targetProteinG * 4;
+  const carbsCal = targetCarbsG * 4;
+  const fatCal = targetFatG * 9;
+  const totalCal = proteinCal + carbsCal + fatCal;
+
+  const proteinPct = totalCal > 0 ? Math.round((proteinCal / totalCal) * 100) : 20;
+  const carbsPct = totalCal > 0 ? Math.round((carbsCal / totalCal) * 100) : 50;
+  const fatPct = totalCal > 0 ? Math.max(0, 100 - proteinPct - carbsPct) : 30;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -40,14 +65,14 @@ export default function TargetCustomizationScreen() {
             <Text style={styles.caloValue}>{targetCalories}</Text>
             <Text style={styles.caloLabel}>{t.targets.calorieGoal}</Text>
           </View>
-          <ProgressRingChart percentage={20} color="#FF6B6B" label={t.targets.protein} />
-          <ProgressRingChart percentage={50} color="#4D96FF" label={t.targets.carbs} />
-          <ProgressRingChart percentage={30} color="#FFD95A" label={t.targets.fat} />
+          <ProgressRingChart percentage={proteinPct} color="#FF6B6B" label={t.targets.protein} />
+          <ProgressRingChart percentage={carbsPct} color="#4D96FF" label={t.targets.carbs} />
+          <ProgressRingChart percentage={fatPct} color="#FFD95A" label={t.targets.fat} />
         </View>
 
         <EnergyMetricsCard bmr={bmr} tdee={tdee} addedCalories={addedCalories} />
 
-        
+
         {/* Section 2: Nutrition Target Customization */}
         <Text style={styles.sectionTitle}>{t.targets.nutritionCustomize}</Text>
         <View style={styles.card}>

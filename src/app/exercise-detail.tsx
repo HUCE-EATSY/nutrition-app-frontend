@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +19,11 @@ import { getTodayDateISO } from "@/utils/date";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslation } from "@/constants/i18n";
+import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
+import { useDiaryStore } from "@/store/diaryStore";
+
+// Cân nặng mặc định nếu chưa có profile (kg)
+const DEFAULT_WEIGHT_KG = 65;
 
 export default function ExerciseDetailScreen() {
   const t = useTranslation();
@@ -34,6 +39,9 @@ export default function ExerciseDetailScreen() {
   const [duration, setDuration] = useState("30");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  const { data: userInfo } = useGetUserInfo();
+  const userWeight = userInfo?.profile?.weightKg ?? DEFAULT_WEIGHT_KG;
 
   useEffect(() => {
     async function loadExercise() {
@@ -54,8 +62,7 @@ export default function ExerciseDetailScreen() {
 
   const durationNum = parseFloat(duration) || 0;
   const met = exercise?.metValue || 0;
-  const DEFAULT_WEIGHT_KG = 65;
-  let caloriesBurned = met * DEFAULT_WEIGHT_KG * (durationNum / 60);
+  let caloriesBurned = met * userWeight * (durationNum / 60);
   
   if (intensity === 1) caloriesBurned *= 0.8;
   if (intensity === 3) caloriesBurned *= 1.2;
@@ -78,6 +85,9 @@ export default function ExerciseDetailScreen() {
         intensity,
         notes: notes.trim() || undefined,
       });
+
+      // Đồng bộ lại diary store
+      await useDiaryStore.getState().fetchDiary(targetDate);
       
       Alert.alert(t.common.success, t.exercise.saveActivitySuccess, [
         { text: "OK", onPress: () => router.replace("/exercise-diary") }

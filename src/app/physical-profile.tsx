@@ -10,8 +10,11 @@ import {
   StyleSheet,
   Text,
   View,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { gradients, radius, spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
@@ -19,7 +22,8 @@ import { t, useTranslation } from "@/constants/i18n";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useSettingsStore } from "@/store/settingsStore";
-import { getAgeFromBirthDate } from "@/utils/date";
+import { getAgeFromBirthDate, createBirthDateISO, getDateParts } from "@/utils/date";
+import { userService } from "@/services/userService";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
@@ -51,8 +55,25 @@ export default function PhysicalProfileScreen() {
   const unit = useSettingsStore((state) => state.unit);
   const [resetModalVisible, setResetModalVisible] = useState(false);
 
+  const queryClient = useQueryClient();
+  const [editBasicVisible, setEditBasicVisible] = useState(false);
+  const [editActivityVisible, setEditActivityVisible] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // States for basic info form
+  const [editName, setEditName] = useState("");
+  const [editGender, setEditGender] = useState<1 | 2>(1);
+  const [editHeight, setEditHeight] = useState("");
+  const [editWeight, setEditWeight] = useState("");
+  const [editBirthDay, setEditBirthDay] = useState("");
+  const [editBirthMonth, setEditBirthMonth] = useState("");
+  const [editBirthYear, setEditBirthYear] = useState("");
+
+  // State for activity level form
+  const [editActivityLevel, setEditActivityLevel] = useState<number>(1);
+
   const profileInfo = userGoalInfo?.profile;
-  const activeGoal = userGoalInfo?.activeGoal;
+  const activeGoal = userGoalInfo?.activeGoal ?? userGoalInfo?.ActiveGoal;
 
   const isLbs = unit === "lbs";
   const convertWeight = (val: number) => {
@@ -80,11 +101,11 @@ export default function PhysicalProfileScreen() {
     GENDER_LABEL[draft.gender ?? ""] ?? "—";
   const heightCm = profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM;
   const weightKg = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
-  const goalWeightKg = activeGoal?.goalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
-  const targetCalories = activeGoal?.targetCalories ?? null;
-  const activityLevel = activeGoal?.activityLevel ?? null;
-  const goalType = activeGoal?.goalType ?? null;
-  const weeklyGoalKg = draft.weeklyGoalKg ?? 0.2;
+  const goalWeightKg = activeGoal?.goalWeightKg ?? activeGoal?.GoalWeightKg ?? draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
+  const targetCalories = activeGoal?.targetCalories ?? activeGoal?.TargetCalories ?? null;
+  const activityLevel = activeGoal?.activityLevel ?? activeGoal?.ActivityLevel ?? null;
+  const goalType = activeGoal?.goalType ?? activeGoal?.GoalType ?? null;
+  const weeklyGoalKg = activeGoal?.weeklyGoalKg ?? activeGoal?.WeeklyGoalKg ?? draft.weeklyGoalKg ?? 0.2;
 
   const displayedWeight = convertWeight(weightKg);
   const displayedGoalWeight = convertWeight(goalWeightKg);
@@ -122,6 +143,127 @@ export default function PhysicalProfileScreen() {
       ? t.physicalProfile.weeklyGoalLabel.gain(String(displayedWeeklyGoal), unit)
       : t.physicalProfile.weeklyGoalLabel.maintain;
 
+  const openEditBasicModal = () => {
+    const curName = profileInfo?.displayName ?? draft.nickname ?? "USER";
+    const curGender = profileInfo?.gender ?? (draft.gender === "male" ? 1 : 2);
+    const curHeight = profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM;
+    const curWeight = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+    
+    const displayedWeightVal = convertWeight(Number(curWeight));
+
+    const dobISO = profileInfo?.dateOfBirth ? String(profileInfo.dateOfBirth) : (draft.birthDateISO ? String(draft.birthDateISO) : "2000-08-15");
+    const dobParts = getDateParts(dobISO);
+
+    setEditName(curName);
+    setEditGender(curGender === 1 || String(curGender).toLowerCase() === "male" ? 1 : 2);
+    setEditHeight(String(curHeight));
+    setEditWeight(String(displayedWeightVal));
+    setEditBirthDay(String(dobParts.day));
+    setEditBirthMonth(String(dobParts.month));
+    setEditBirthYear(String(dobParts.year));
+
+    setEditBasicVisible(true);
+  };
+
+  const openEditActivityModal = () => {
+    const curLevel = activeGoal?.activityLevel ?? activeGoal?.ActivityLevel ?? 1;
+    setEditActivityLevel(Number(curLevel));
+    setEditActivityVisible(true);
+  };
+
+  const handleSaveBasicInfo = async () => {
+    if (!editName.trim()) {
+      Alert.alert(t.common.error, t.validators.nicknameMin);
+      return;
+    }
+
+    const h = parseFloat(editHeight);
+    if (isNaN(h) || h < 50 || h > 300) {
+      Alert.alert(t.common.error, "Chiều cao không hợp lệ (50 - 300 cm)");
+      return;
+    }
+
+    const w = parseFloat(editWeight);
+    if (isNaN(w) || w < 20 || w > 300) {
+      Alert.alert(t.common.error, isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)");
+      return;
+    }
+
+    // Convert weight to kg if it was input in lbs
+    const weightKgVal = isLbs ? parseFloat((w / 2.20462).toFixed(1)) : w;
+
+    const d = parseInt(editBirthDay, 10);
+    const m = parseInt(editBirthMonth, 10);
+    const y = parseInt(editBirthYear, 10);
+    if (isNaN(d) || isNaN(m) || isNaN(y) || d < 1 || d > 31 || m < 1 || m > 12 || y < 1900 || y > new Date().getFullYear()) {
+      Alert.alert(t.common.error, t.validators.invalidBirthDate);
+      return;
+    }
+
+    const birthDateISO = createBirthDateISO(d, m, y);
+    const ageVal = getAgeFromBirthDate(birthDateISO);
+    if (ageVal < 18) {
+      Alert.alert(t.common.error, t.validators.adultOnly);
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      
+      const payload = {
+        displayName: editName,
+        avatarUrl: profileInfo?.avatarUrl ?? null,
+        gender: editGender, // 1 = Male, 2 = Female
+        dateOfBirth: birthDateISO,
+        heightCm: h,
+        weightKg: weightKgVal,
+        activityLevel: activeGoal?.activityLevel ?? activeGoal?.ActivityLevel ?? 1,
+      };
+
+      await userService.updateProfile(payload);
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      setEditBasicVisible(false);
+      Alert.alert(t.common.success, "Cập nhật hồ sơ thành công!");
+    } catch (err: any) {
+      console.error("Save basic profile error:", err);
+      Alert.alert(t.common.error, err?.message || "Không thể cập nhật hồ sơ");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveActivityLevel = async (level: number) => {
+    try {
+      setIsSaving(true);
+
+      const curName = profileInfo?.displayName ?? draft.nickname ?? "USER";
+      const curGender = profileInfo?.gender ?? (draft.gender === "male" ? 1 : 2);
+      const curHeight = profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM;
+      const curWeight = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+      const dobISO = profileInfo?.dateOfBirth ? String(profileInfo.dateOfBirth) : (draft.birthDateISO ? String(draft.birthDateISO) : "2000-08-15");
+
+      const payload = {
+        displayName: curName,
+        avatarUrl: profileInfo?.avatarUrl ?? null,
+        gender: curGender === 1 || String(curGender).toLowerCase() === "male" ? 1 : 2,
+        dateOfBirth: dobISO.split("T")[0],
+        heightCm: Number(curHeight),
+        weightKg: Number(curWeight),
+        activityLevel: level,
+      };
+
+      await userService.updateProfile(payload);
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      setEditActivityVisible(false);
+      Alert.alert(t.common.success, "Cập nhật mức vận động thành công!");
+    } catch (err: any) {
+      console.error("Save activity level error:", err);
+      Alert.alert(t.common.error, err?.message || "Không thể cập nhật mức vận động");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const estimatedDate = calcEstimatedDate(goalWeightKg as number, weightKg as number, weeklyGoalKg);
 
   return (
@@ -153,7 +295,7 @@ export default function PhysicalProfileScreen() {
             <Pressable
               hitSlop={12}
               style={({ pressed }) => pressed && { opacity: 0.6 }}
-              onPress={() => Alert.alert(t.common.edit, t.common.featureUnderDev)}
+              onPress={openEditBasicModal}
             >
               <Ionicons name="pencil-outline" size={18} color={colors.primary} />
             </Pressable>
@@ -203,13 +345,13 @@ export default function PhysicalProfileScreen() {
             label={t.physicalProfile.weeklyGoal}
             value={weeklyGoalLabel}
             clickable
-            onPress={() => Alert.alert(t.physicalProfile.weeklyGoal, t.common.featureUnderDev)}
+            onPress={() => Alert.alert(t.physicalProfile.weeklyGoal, "Để thay đổi tiến trình mục tiêu tuần hoặc cân nặng mong muốn, vui lòng chọn 'Thiết lập mục tiêu mới' ở dưới.")}
           />
           <GoalRow
             label={t.physicalProfile.activityLevel}
             value={activityLabel ?? "—"}
             clickable
-            onPress={() => Alert.alert(t.physicalProfile.activityLevel, t.common.featureUnderDev)}
+            onPress={openEditActivityModal}
             truncate
           />
           <GoalRow
@@ -314,9 +456,9 @@ export default function PhysicalProfileScreen() {
                       birthDateISO: profileInfo.dateOfBirth ? String(profileInfo.dateOfBirth) : null,
                       heightCm: profileInfo.heightCm ? Number(profileInfo.heightCm) : null,
                       currentWeightKg: profileInfo.weightKg ? Number(profileInfo.weightKg) : null,
-                      goalType: activeGoal?.goalType ? goalTypeMapInverse[activeGoal.goalType] : null,
-                      targetWeightKg: activeGoal?.goalWeightKg ? Number(activeGoal.goalWeightKg) : null,
-                      activityLevel: activeGoal?.activityLevel ? activityLevelMapInverse[activeGoal.activityLevel] : null,
+                      goalType: (activeGoal?.goalType ?? activeGoal?.GoalType) ? goalTypeMapInverse[activeGoal?.goalType ?? activeGoal?.GoalType] : null,
+                      targetWeightKg: (activeGoal?.goalWeightKg ?? activeGoal?.GoalWeightKg) ? Number(activeGoal?.goalWeightKg ?? activeGoal?.GoalWeightKg) : null,
+                      activityLevel: (activeGoal?.activityLevel ?? activeGoal?.ActivityLevel) ? activityLevelMapInverse[activeGoal?.activityLevel ?? activeGoal?.ActivityLevel] : null,
                     });
                   }
                   router.push("/(onboarding)/goal-type");
@@ -329,6 +471,225 @@ export default function PhysicalProfileScreen() {
                   style={styles.modalBtnGradient}
                 >
                   <Text style={styles.modalBtnPrimaryText}>{t.physicalProfile.newGoalModal.submit}</Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Edit Basic Info Modal ── */}
+      <Modal
+        transparent
+        animationType="slide"
+        visible={editBasicVisible}
+        onRequestClose={() => {
+          if (!isSaving) setEditBasicVisible(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.xl }]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Cập nhật thông tin cơ bản</Text>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 350 }}>
+              {/* Display Name / Nickname */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>BIỆT DANH</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Nhập biệt danh..."
+                  placeholderTextColor={colors.textMuted}
+                  editable={!isSaving}
+                />
+              </View>
+
+              {/* Gender selection */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>GIỚI TÍNH</Text>
+                <View style={styles.genderContainer}>
+                  <Pressable
+                    style={[styles.genderBtn, editGender === 1 && styles.genderBtnActive]}
+                    onPress={() => !isSaving && setEditGender(1)}
+                  >
+                    <Text style={[styles.genderBtnText, editGender === 1 && styles.genderBtnTextActive]}>
+                      Nam
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.genderBtn, editGender === 2 && styles.genderBtnActive]}
+                    onPress={() => !isSaving && setEditGender(2)}
+                  >
+                    <Text style={[styles.genderBtnText, editGender === 2 && styles.genderBtnTextActive]}>
+                      Nữ
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Height & Weight */}
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, styles.inputCol]}>
+                  <Text style={styles.inputLabel}>CHIỀU CAO (CM)</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editHeight}
+                    onChangeText={setEditHeight}
+                    placeholder="170"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    editable={!isSaving}
+                  />
+                </View>
+                <View style={[styles.inputGroup, styles.inputCol]}>
+                  <Text style={styles.inputLabel}>CÂN NẶNG ({unit.toUpperCase()})</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editWeight}
+                    onChangeText={setEditWeight}
+                    placeholder={unit === "lbs" ? "132" : "60"}
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    editable={!isSaving}
+                  />
+                </View>
+              </View>
+
+              {/* Birthdate day/month/year */}
+              <Text style={styles.inputLabel}>NGÀY SINH (NGÀY / THÁNG / NĂM)</Text>
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, styles.inputCol]}>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editBirthDay}
+                    onChangeText={setEditBirthDay}
+                    placeholder="DD"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    editable={!isSaving}
+                  />
+                </View>
+                <View style={[styles.inputGroup, styles.inputCol]}>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editBirthMonth}
+                    onChangeText={setEditBirthMonth}
+                    placeholder="MM"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    editable={!isSaving}
+                  />
+                </View>
+                <View style={[styles.inputGroup, styles.inputCol]}>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editBirthYear}
+                    onChangeText={setEditBirthYear}
+                    placeholder="YYYY"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    editable={!isSaving}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={({ pressed }) => [styles.modalBtnOutline, pressed && { opacity: 0.7 }]}
+                onPress={() => !isSaving && setEditBasicVisible(false)}
+                disabled={isSaving}
+              >
+                <Text style={styles.modalBtnOutlineText}>{t.common.cancel}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.modalBtnPrimary, pressed && { opacity: 0.85 }]}
+                onPress={handleSaveBasicInfo}
+                disabled={isSaving}
+              >
+                <LinearGradient
+                  colors={gradients.button}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.modalBtnGradient}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.modalBtnPrimaryText}>{t.common.save}</Text>
+                  )}
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Edit Activity Level Modal ── */}
+      <Modal
+        transparent
+        animationType="slide"
+        visible={editActivityVisible}
+        onRequestClose={() => {
+          if (!isSaving) setEditActivityVisible(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.xl }]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>{t.physicalProfile.activityLevel}</Text>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 380 }}>
+              {Object.keys(t.onboarding.activityOptions).map((key, index) => {
+                const optKey = key as keyof typeof t.onboarding.activityOptions;
+                const opt = t.onboarding.activityOptions[optKey];
+                const optVal = index + 1; // 1 to 5
+                const isActive = editActivityLevel === optVal;
+
+                return (
+                  <Pressable
+                    key={key}
+                    style={[styles.activityOption, isActive && styles.activityOptionActive]}
+                    onPress={() => !isSaving && setEditActivityLevel(optVal)}
+                  >
+                    <Text style={[styles.activityOptionTitle, isActive && styles.activityOptionTitleActive]}>
+                      {opt.title}
+                    </Text>
+                    <Text style={styles.activityOptionSub}>{opt.subtitle}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={({ pressed }) => [styles.modalBtnOutline, pressed && { opacity: 0.7 }]}
+                onPress={() => !isSaving && setEditActivityVisible(false)}
+                disabled={isSaving}
+              >
+                <Text style={styles.modalBtnOutlineText}>{t.common.cancel}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.modalBtnPrimary, pressed && { opacity: 0.85 }]}
+                onPress={() => handleSaveActivityLevel(editActivityLevel)}
+                disabled={isSaving}
+              >
+                <LinearGradient
+                  colors={gradients.button}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.modalBtnGradient}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.modalBtnPrimaryText}>{t.common.save}</Text>
+                  )}
                 </LinearGradient>
               </Pressable>
             </View>
@@ -686,5 +1047,80 @@ const getStyles = (colors: any) => StyleSheet.create({
   modalBtnPrimaryText: {
     ...typography.bodyStrong,
     color: "#fff",
+  },
+  inputGroup: {
+    marginBottom: spacing.md,
+  },
+  inputLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+    fontWeight: "700",
+  },
+  textInput: {
+    backgroundColor: colors.surface,
+    color: colors.textPrimary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  inputRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  inputCol: {
+    flex: 1,
+  },
+  genderContainer: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginTop: spacing.xs,
+  },
+  genderBtn: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  genderBtnActive: {
+    borderColor: colors.primary,
+    backgroundColor: "rgba(165, 108, 255, 0.1)",
+  },
+  genderBtnText: {
+    ...typography.bodyStrong,
+    color: colors.textSecondary,
+  },
+  genderBtnTextActive: {
+    color: colors.primary,
+  },
+  activityOption: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  activityOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: "rgba(165, 108, 255, 0.1)",
+  },
+  activityOptionTitle: {
+    ...typography.bodyStrong,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  activityOptionTitleActive: {
+    color: colors.primary,
+  },
+  activityOptionSub: {
+    ...typography.caption,
+    color: colors.textMuted,
   },
 });
