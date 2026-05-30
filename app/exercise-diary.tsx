@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   Pressable,
   StyleSheet,
@@ -75,7 +76,7 @@ export default function ExerciseDiaryScreen() {
     );
   }
 
-  // Format date to show "Hôm nay", "Hôm qua", or date
+  // Format date to show "Hôm nay", "Hôm qua", or dd/MM/yyyy
   function formatDateLabel(dateStr: string): string {
     const today = getTodayDateISO();
     const yesterday = new Date();
@@ -85,13 +86,17 @@ export default function ExerciseDiaryScreen() {
     if (dateStr === today) return "Hôm nay";
     if (dateStr === yesterdayISO) return "Hôm qua";
     
-    return dateStr;
+    // Hiển thị ngày theo format dd/MM
+    const [year, month, day] = dateStr.split('-');
+    const currentYear = new Date().getFullYear().toString();
+    return year === currentYear ? `${day}/${month}` : `${day}/${month}/${year}`;
   }
 
   // Format month header
   function formatMonthHeader(dateStr: string): string {
-    const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const [year, month] = dateStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    return date.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
   }
 
   // Nhóm logs theo tháng và ngày
@@ -133,9 +138,14 @@ export default function ExerciseDiaryScreen() {
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
         <Text style={styles.headerTitle}>Nhật ký luyện tập</Text>
-        <Pressable hitSlop={12} onPress={() => router.push("/add-exercise")}>
-          <Ionicons color={colors.primary} name="add-circle-outline" size={28} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable hitSlop={12} onPress={() => router.push("/stats/activity")} style={{ marginRight: spacing.md }}>
+            <Ionicons color={colors.textSecondary} name="stats-chart-outline" size={22} />
+          </Pressable>
+          <Pressable hitSlop={12} onPress={() => router.push("/add-exercise")}>
+            <Ionicons color={colors.primary} name="add-circle-outline" size={28} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView
@@ -190,25 +200,51 @@ export default function ExerciseDiaryScreen() {
                     <View style={styles.dateHeader}>
                       <Text style={styles.dateLabel}>{formatDateLabel(date)}</Text>
                       <Text style={styles.dateSubtitle}>
-                        🔥 {Math.round(dayTotal)} cal   ⏱ {dateLogs.reduce((sum, log) => sum + log.durationMinutes, 0).toString().padStart(2, '0')}:{(0).toString().padStart(2, '0')} phút
+                        🔥 {Math.round(dayTotal)} cal   ⏱ {dateLogs.reduce((sum, log) => sum + log.durationMinutes, 0)} phút
                       </Text>
                     </View>
                     
                     {dateLogs.map((log) => (
                       <View key={log.id} style={styles.logCard}>
-                        <View style={styles.logContent}>
-                          <Text style={styles.logTitle}>{log.exerciseNameVi}</Text>
-                          <View style={styles.logDetails}>
-                            <View style={styles.logDetailItem}>
-                              <Ionicons color={colors.textMuted} name="flame" size={14} />
-                              <Text style={styles.logDetailText}>{Math.round(log.caloriesBurned)} cal</Text>
+                        <Pressable 
+                          style={styles.logPressableContent}
+                          onPress={() => router.push(`/edit-exercise-log?logId=${log.id}`)}
+                        >
+                          {/* Exercise Icon */}
+                          {log.exerciseIconUrl ? (
+                            <Image
+                              source={{ uri: log.exerciseIconUrl }}
+                              style={styles.logIcon}
+                            />
+                          ) : (
+                            <View style={styles.logIconPlaceholder}>
+                              <Ionicons name="fitness-outline" size={20} color={colors.textMuted} />
                             </View>
-                            <View style={styles.logDetailItem}>
-                              <Ionicons color={colors.textMuted} name="time-outline" size={14} />
-                              <Text style={styles.logDetailText}>{log.durationMinutes.toString().padStart(2, '0')}:{(0).toString().padStart(2, '0')} phút</Text>
+                          )}
+                          
+                          <View style={styles.logContent}>
+                            <Text style={styles.logTitle}>{log.exerciseNameVi}</Text>
+                            <View style={styles.logDetails}>
+                              <View style={styles.logDetailItem}>
+                                <Ionicons color={colors.textMuted} name="flame" size={14} />
+                                <Text style={styles.logDetailText}>{Math.round(log.caloriesBurned)} cal</Text>
+                              </View>
+                              <View style={styles.logDetailItem}>
+                                <Ionicons color={colors.textMuted} name="time-outline" size={14} />
+                                <Text style={styles.logDetailText}>{log.durationMinutes} phút</Text>
+                              </View>
+                              <View style={[styles.intensityBadge,
+                                log.intensity === 1 ? styles.intensityLight :
+                                log.intensity === 3 ? styles.intensityHard :
+                                styles.intensityMed
+                              ]}>
+                                <Text style={styles.intensityBadgeText}>
+                                  {log.intensity === 1 ? 'Nhẹ' : log.intensity === 3 ? 'Nặng' : 'TB'}
+                                </Text>
+                              </View>
                             </View>
                           </View>
-                        </View>
+                        </Pressable>
                         
                         <Pressable hitSlop={8} onPress={() => handleDelete(log.id)}>
                           <Ionicons color={colors.textMuted} name="trash-outline" size={20} />
@@ -261,6 +297,10 @@ const styles = StyleSheet.create({
     ...typography.h3, 
     color: colors.textPrimary,
     fontSize: 18,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   scrollContent: {
     padding: spacing.lg,
@@ -341,6 +381,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
+  logPressableContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
   logContent: {
     flex: 1,
     gap: spacing.xs,
@@ -363,6 +409,39 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textMuted,
     fontSize: 12,
+  },
+  logIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.bgBase,
+  },
+  logIconPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.bgBase,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  intensityBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  intensityLight: {
+    backgroundColor: "rgba(59,130,246,0.15)",
+  },
+  intensityMed: {
+    backgroundColor: "rgba(245,158,11,0.15)",
+  },
+  intensityHard: {
+    backgroundColor: "rgba(239,68,68,0.15)",
+  },
+  intensityBadgeText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.textMuted,
   },
   fab: {
     position: "absolute",

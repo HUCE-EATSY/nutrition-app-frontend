@@ -17,45 +17,55 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { colors, spacing, typography, radius } from "@/constants";
-import { getTodayDateISO } from "@/hooks/utils/date";
-import { exerciseService, Exercise } from "@/services/exerciseService";
+import { exerciseService, Exercise, ExerciseLog } from "@/services/exerciseService";
 import { userService } from "@/services/userService";
 import { useAuthStore } from "@/hooks/store/authStore";
 
-export default function ExerciseDetailScreen() {
-  const { exerciseId, date } = useLocalSearchParams<{ exerciseId: string; date?: string }>();
+export default function EditExerciseLogScreen() {
+  const { logId } = useLocalSearchParams<{ logId: string }>();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const accessToken = useAuthStore((state) => state.accessToken);
   
+  const [log, setLog] = useState<ExerciseLog | null>(null);
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
   const [intensity, setIntensity] = useState<1 | 2 | 3>(2);
   const [duration, setDuration] = useState("30");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [userWeight, setUserWeight] = useState(65); // Default 65kg
-  const [selectedDate, setSelectedDate] = useState(
-    // Fix timezone bug: thêm 'T00:00:00' để parse đúng local time, tránh lệch ngày
-    new Date((date ?? getTodayDateISO()) + 'T00:00:00')
-  );
+  
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const targetDate = selectedDate.toISOString().split('T')[0];
 
   useEffect(() => {
-    console.log("Auth status:", { isAuthenticated, hasToken: !!accessToken });
-    loadExercise();
-    loadUserWeight();
-  }, [exerciseId]);
+    if (logId) {
+      loadLogAndExercise();
+    }
+  }, [logId]);
 
-  async function loadExercise() {
+  async function loadLogAndExercise() {
     try {
       setLoading(true);
-      const data = await exerciseService.getExerciseById(exerciseId);
-      setExercise(data);
+      // 1. Load log details
+      const logData = await exerciseService.getLogById(logId);
+      setLog(logData);
+      setIntensity(logData.intensity as 1 | 2 | 3);
+      setDuration(logData.durationMinutes.toString());
+      setNotes(logData.notes ?? "");
+      setSelectedDate(new Date(logData.logDate + 'T00:00:00'));
+
+      // 2. Load exercise details for MET value
+      const exData = await exerciseService.getExerciseById(logData.exerciseId);
+      setExercise(exData);
+
+      // 3. Load user weight
+      await loadUserWeight();
     } catch (error: any) {
-      console.error("Load exercise error:", error);
-      Alert.alert("Lỗi", "Không thể tải thông tin bài tập");
+      console.error("Load log/exercise error:", error);
+      Alert.alert("Lỗi", "Không thể tải thông tin nhật ký tập luyện");
       router.back();
     } finally {
       setLoading(false);
@@ -72,7 +82,6 @@ export default function ExerciseDetailScreen() {
       }
     } catch (error) {
       console.error("Failed to load user weight:", error);
-      // Keep default 65kg if failed
     }
   }
 
@@ -85,18 +94,10 @@ export default function ExerciseDetailScreen() {
   caloriesBurned = Math.round(caloriesBurned);
 
   async function handleSave() {
-    if (!exercise) return;
+    if (!log) return;
     
-    // Check authentication first
     if (!isAuthenticated) {
-      Alert.alert(
-        "Yêu cầu đăng nhập",
-        "Bạn cần đăng nhập để lưu nhật ký tập luyện",
-        [
-          { text: "Hủy", style: "cancel" },
-          { text: "Đăng nhập", onPress: () => router.push("/(public)/login") }
-        ]
-      );
+      Alert.alert("Yêu cầu đăng nhập", "Bạn cần đăng nhập để chỉnh sửa nhật ký");
       return;
     }
     
@@ -107,39 +108,58 @@ export default function ExerciseDetailScreen() {
 
     setIsSaving(true);
     try {
-      console.log("Creating exercise log:", {
-        exerciseId: exercise.id,
-        logDate: targetDate,
+      console.log("Updating exercise log:", logId, {
         durationMinutes: durationNum,
         intensity,
         notes: notes.trim() || undefined,
       });
 
-      const result = await exerciseService.createLog({
-        exerciseId: exercise.id,
-        logDate: targetDate,
+      await exerciseService.updateLog(logId, {
         durationMinutes: durationNum,
         intensity,
-        notes: notes.trim() || undefined,
+        notes: notes.trim(),
       });
       
-      console.log("Exercise log created successfully:", result);
-      
-      // Quay lại màn trước (exercise-diary hoặc màn gọi)
-      router.back();
+      Alert.alert("Thành công", "Đã cập nhật nhật ký tập luyện", [
+        { text: "OK", onPress: () => router.back() }
+      ]);
     } catch (error: any) {
-      console.error("Save exercise error:", error);
-      console.error("Error response:", error.response?.data);
-      
+      console.error("Update exercise error:", error);
       const errorMessage = error.response?.data?.message 
         || error.response?.data?.title
         || error.message 
-        || "Không thể ghi hoạt động";
-      
+        || "Không thể cập nhật hoạt động";
       Alert.alert("Thất bại", errorMessage);
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function handleDelete() {
+    if (!log) return;
+    
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa nhật ký tập luyện này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await exerciseService.deleteLog(logId);
+              router.back();
+            } catch (error) {
+              Alert.alert("Lỗi", "Không thể xóa nhật ký");
+            } finally {
+              setIsDeleting(false);
+            }
+          }
+        }
+      ]
+    );
   }
 
   if (loading) {
@@ -152,16 +172,23 @@ export default function ExerciseDetailScreen() {
     );
   }
 
-  if (!exercise) return null;
+  if (!log || !exercise) return null;
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>{exercise.nameVi}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Sửa nhật ký</Text>
+        <Pressable hitSlop={12} onPress={handleDelete} disabled={isDeleting}>
+          {isDeleting ? (
+            <ActivityIndicator size="small" color={colors.error} />
+          ) : (
+            <Ionicons color={colors.error} name="trash-outline" size={24} />
+          )}
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -181,13 +208,10 @@ export default function ExerciseDetailScreen() {
           )}
         </View>
 
-        <Text style={styles.sectionLabel}>Ngày tập</Text>
-        <Pressable 
-          onPress={() => setShowDatePicker(true)}
-          style={styles.dateButton}
-        >
-          <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-          <Text style={styles.dateButtonText}>
+        <Text style={styles.sectionLabel}>Ngày tập (Không thể sửa)</Text>
+        <View style={[styles.dateButton, { opacity: 0.7 }]}>
+          <Ionicons name="calendar-outline" size={20} color={colors.textMuted} />
+          <Text style={[styles.dateButtonText, { color: colors.textMuted }]}>
             {new Date(targetDate).toLocaleDateString('vi-VN', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -195,23 +219,7 @@ export default function ExerciseDetailScreen() {
               day: 'numeric' 
             })}
           </Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-        </Pressable>
-
-        {showDatePicker && (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(event, date) => {
-              setShowDatePicker(Platform.OS === 'ios');
-              if (date) {
-                setSelectedDate(date);
-              }
-            }}
-            maximumDate={new Date()}
-          />
-        )}
+        </View>
 
         <Text style={styles.sectionLabel}>Cường độ</Text>
         <View style={styles.intensityRow}>
@@ -300,7 +308,7 @@ export default function ExerciseDetailScreen() {
           ) : (
             <>
               <Ionicons color="#fff" name="checkmark-circle-outline" size={20} />
-              <Text style={styles.saveBtnText}>Ghi hoạt động</Text>
+              <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
             </>
           )}
         </Pressable>
@@ -389,7 +397,6 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     ...typography.body,
-    color: colors.textPrimary,
     flex: 1,
   },
   intensityRow: { flexDirection: "row", gap: spacing.sm },

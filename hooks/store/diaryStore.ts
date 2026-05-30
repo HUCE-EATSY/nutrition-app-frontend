@@ -104,13 +104,30 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       const json = await res.json();
       set({ summary: json.data, isLoading: false });
 
-      // Lấy danh sách bài tập trong ngày
-      const exRes = await fetch(`${API_BASE}/api/diary/exercises?date=${date}`, {
+      // Lấy danh sách bài tập thực tế từ API mới
+      const exRes = await fetch(`${API_BASE}/api/exercises/logs/daily/${date}`, {
         headers: getHeaders(),
       });
       if (exRes.ok) {
         const exJson = await exRes.json();
-        set({ exercises: exJson.data ?? [] });
+        const exerciseLogs = exJson.data?.logs ?? [];
+        
+        // Map sang format ExerciseLog của store
+        const mappedExercises = exerciseLogs.map((log: any) => {
+          // Lấy giờ từ CreatedAt
+          const hour = log.createdAt ? new Date(log.createdAt).getHours() : 17;
+          return {
+            id: log.id,
+            activityId: log.exerciseId,
+            activityLabel: log.exerciseNameVi,
+            dateISO: log.logDate,
+            hour: hour,
+            durationMinutes: log.durationMinutes,
+            caloriesBurned: log.caloriesBurned,
+          };
+        });
+        
+        set({ exercises: mappedExercises });
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Không tải được nhật ký";

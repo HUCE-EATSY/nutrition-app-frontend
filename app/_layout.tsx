@@ -73,14 +73,7 @@ export default function RootLayout() {
 
     const [firstSegment] = segments as string[];
     const inPublicGroup = firstSegment === '(public)';
-    const inAdminGroup = firstSegment === 'admin';
     const inOnboardingGroup = firstSegment === '(onboarding)';
-    const role = userInfo?.role;
-
-    if (inAdminGroup) {
-      // Admin group handles its own auth via useAdminAuth — don't interfere
-      return;
-    }
 
     if (!isAuthenticated && !inPublicGroup && !inOnboardingGroup) {
       // Chưa login → về trang welcome

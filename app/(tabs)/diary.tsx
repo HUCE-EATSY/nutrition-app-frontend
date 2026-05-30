@@ -297,7 +297,11 @@ export default function DiaryTimelineScreen() {
 
                     {/* Bài tập */}
                     {hourExercises.map((ex) => (
-                      <View key={ex.id} style={[styles.entryChip, styles.exerciseChip]}>
+                      <Pressable 
+                        key={ex.id} 
+                        style={[styles.entryChip, styles.exerciseChip]}
+                        onPress={() => router.push(`/edit-exercise-log?logId=${ex.id}`)}
+                      >
                         <Ionicons
                           color={theme.colors.success}
                           name="barbell-outline"
@@ -309,7 +313,7 @@ export default function DiaryTimelineScreen() {
                         <Text style={[styles.entryCalText, { color: theme.colors.success }]}>
                           -{ex.caloriesBurned} kcal
                         </Text>
-                      </View>
+                      </Pressable>
                     ))}
                   </View>
                 </View>

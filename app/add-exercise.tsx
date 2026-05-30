@@ -28,6 +28,7 @@ export default function AddExerciseScreen() {
   const [categories, setCategories] = useState<ExerciseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const sectionListRef = useRef<SectionList>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -62,12 +63,14 @@ export default function AddExerciseScreen() {
   // ── Lọc và nhóm bài tập theo alphabet ────────────────────────────────────
   const allExercises = categories.flatMap(cat => cat.exercises);
   
-  const filteredExercises = searchQuery
-    ? allExercises.filter(ex => 
-        ex.nameVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredExercises = allExercises.filter(ex => {
+    const matchesCategory = selectedCategoryId === null || ex.categoryId === selectedCategoryId;
+    const matchesSearch = searchQuery
+      ? ex.nameVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
         ex.nameEn.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : allExercises;
+      : true;
+    return matchesCategory && matchesSearch;
+  });
 
   // Hàm chuẩn hóa chữ cái có dấu về chữ cái gốc
   const normalizeVietnamese = (str: string): string => {
@@ -213,6 +216,59 @@ export default function AddExerciseScreen() {
           </Pressable>
         )}
       </View>
+
+      {/* Category Tabs */}
+      {!searchQuery && categories.length > 0 && (
+        <View style={styles.tabsWrapper}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={styles.tabsContent}
+          >
+            <Pressable
+              onPress={() => setSelectedCategoryId(null)}
+              style={[
+                styles.tabBtn,
+                selectedCategoryId === null && styles.tabBtnActive
+              ]}
+            >
+              <Ionicons 
+                name="apps-outline" 
+                size={15} 
+                color={selectedCategoryId === null ? colors.primary : colors.textMuted} 
+              />
+              <Text style={[
+                styles.tabText,
+                selectedCategoryId === null && styles.tabTextActive
+              ]}>
+                Tất cả
+              </Text>
+            </Pressable>
+            {categories.map((cat) => (
+              <Pressable
+                key={cat.id}
+                onPress={() => setSelectedCategoryId(cat.id)}
+                style={[
+                  styles.tabBtn,
+                  selectedCategoryId === cat.id && styles.tabBtnActive
+                ]}
+              >
+                <Ionicons 
+                  name="fitness-outline" 
+                  size={15} 
+                  color={selectedCategoryId === cat.id ? colors.primary : colors.textMuted} 
+                />
+                <Text style={[
+                  styles.tabText,
+                  selectedCategoryId === cat.id && styles.tabTextActive
+                ]}>
+                  {cat.nameVi}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Apple Health Section - chỉ hiện khi không search */}
       {!searchQuery && (
@@ -510,6 +566,42 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   alphabetTextActive: {
+    color: colors.primary,
+    fontWeight: "700",
+  },
+  tabsWrapper: {
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.bgBase,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    marginBottom: spacing.xs,
+  },
+  tabsContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  tabBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  tabBtnActive: {
+    borderColor: colors.primary,
+    backgroundColor: "rgba(165,108,255,0.1)",
+  },
+  tabText: {
+    ...typography.caption,
+    fontSize: 13,
+    color: colors.textMuted,
+    fontWeight: "600",
+  },
+  tabTextActive: {
     color: colors.primary,
     fontWeight: "700",
   },

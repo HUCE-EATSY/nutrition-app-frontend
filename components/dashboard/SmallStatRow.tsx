@@ -57,7 +57,7 @@ export function SmallStatRow() {
       <View style={styles.cardWrapper}>
         <TouchableOpacity 
           activeOpacity={0.7}
-          onPress={() => router.push("/stats/activity")}
+          onPress={() => router.push("/exercise-diary")}
           style={styles.touchableCard}
         >
           <SurfaceCard style={styles.card}>
