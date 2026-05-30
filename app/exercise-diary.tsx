@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, spacing, typography, radius } from "@/constants";
 import { exerciseService, ExerciseLog } from "@/services/exerciseService";
-import { getTodayDateISO } from "@/hooks/utils/date";
+import { getTodayDateISO, formatLocalDateISO } from "@/hooks/utils/date";
 
 export default function ExerciseDiaryScreen() {
   const [logs, setLogs] = useState<ExerciseLog[]>([]);
@@ -37,7 +37,7 @@ export default function ExerciseDiaryScreen() {
       const endDate = getTodayDateISO();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 90);
-      const startDateISO = startDate.toISOString().split("T")[0];
+      const startDateISO = formatLocalDateISO(startDate);
       
       const data = await exerciseService.getLogs(startDateISO, endDate);
       setLogs(data);
@@ -81,7 +81,7 @@ export default function ExerciseDiaryScreen() {
     const today = getTodayDateISO();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayISO = yesterday.toISOString().split('T')[0];
+    const yesterdayISO = formatLocalDateISO(yesterday);
 
     if (dateStr === today) return "Hôm nay";
     if (dateStr === yesterdayISO) return "Hôm qua";
@@ -115,9 +115,6 @@ export default function ExerciseDiaryScreen() {
   });
 
   const months = Object.keys(logsByMonth).sort((a, b) => b.localeCompare(a));
-
-  // Tính tổng calories
-  const totalCalories = logs.reduce((sum, log) => sum + log.caloriesBurned, 0);
 
   if (loading) {
     return (
@@ -158,16 +155,6 @@ export default function ExerciseDiaryScreen() {
         }
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Warning Banner */}
-        {totalCalories > 0 && (
-          <View style={styles.warningBanner}>
-            <Text style={styles.warningIcon}>💪⚠️</Text>
-            <Text style={styles.warningText}>
-              Lượng calo bạn đốt qua tập luyện sẽ không ảnh hưởng vào lượng calo mà bạn đã ăn. 👉
-            </Text>
-          </View>
-        )}
-
         {/* Empty State */}
         {logs.length === 0 && (
           <View style={styles.emptyContainer}>
@@ -193,14 +180,13 @@ export default function ExerciseDiaryScreen() {
               
               {dates.map((date) => {
                 const dateLogs = logsByMonth[month][date];
-                const dayTotal = dateLogs.reduce((sum, log) => sum + log.caloriesBurned, 0);
                 
                 return (
                   <View key={date} style={styles.dateGroup}>
                     <View style={styles.dateHeader}>
                       <Text style={styles.dateLabel}>{formatDateLabel(date)}</Text>
                       <Text style={styles.dateSubtitle}>
-                        🔥 {Math.round(dayTotal)} cal   ⏱ {dateLogs.reduce((sum, log) => sum + log.durationMinutes, 0)} phút
+                        ⏱ {dateLogs.reduce((sum, log) => sum + log.durationMinutes, 0)} phút
                       </Text>
                     </View>
                     
@@ -225,10 +211,6 @@ export default function ExerciseDiaryScreen() {
                           <View style={styles.logContent}>
                             <Text style={styles.logTitle}>{log.exerciseNameVi}</Text>
                             <View style={styles.logDetails}>
-                              <View style={styles.logDetailItem}>
-                                <Ionicons color={colors.textMuted} name="flame" size={14} />
-                                <Text style={styles.logDetailText}>{Math.round(log.caloriesBurned)} cal</Text>
-                              </View>
                               <View style={styles.logDetailItem}>
                                 <Ionicons color={colors.textMuted} name="time-outline" size={14} />
                                 <Text style={styles.logDetailText}>{log.durationMinutes} phút</Text>
@@ -306,25 +288,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.xxxl * 2,
     gap: spacing.lg,
-  },
-  warningBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(52, 168, 83, 0.15)",
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: "rgba(52, 168, 83, 0.3)",
-  },
-  warningIcon: {
-    fontSize: 20,
-  },
-  warningText: {
-    ...typography.caption,
-    color: colors.textPrimary,
-    flex: 1,
-    lineHeight: 18,
   },
   emptyContainer: {
     alignItems: "center",

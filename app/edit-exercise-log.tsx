@@ -38,7 +38,7 @@ export default function EditExerciseLogScreen() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const targetDate = selectedDate.toISOString().split('T')[0];
+  const targetDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
     if (logId) {

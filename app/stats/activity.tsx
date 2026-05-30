@@ -37,20 +37,20 @@ export default function ActivityStatsScreen() {
 
       const logs = await exerciseService.getLogs(startDateISO, endDate);
 
-      // Tạo map calories theo ngày
-      const caloriesByDate: Record<string, number> = {};
+      // Tạo map thời gian tập (phút) theo ngày
+      const durationByDate: Record<string, number> = {};
       logs.forEach(log => {
-        if (!caloriesByDate[log.logDate]) {
-          caloriesByDate[log.logDate] = 0;
+        if (!durationByDate[log.logDate]) {
+          durationByDate[log.logDate] = 0;
         }
-        caloriesByDate[log.logDate] += log.caloriesBurned;
+        durationByDate[log.logDate] += log.durationMinutes;
       });
 
       // Tạo data cho 7 ngày
       const dayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
       const chartData: { label: string; value: number }[] = [];
       const statusData: { day: string; hasData: boolean }[] = [];
-      let totalCalories = 0;
+      let totalDuration = 0;
 
       for (let i = 0; i < 7; i++) {
         const date = new Date(startDate);
@@ -59,15 +59,15 @@ export default function ActivityStatsScreen() {
         const dayOfWeek = date.getDay();
         const label = dayLabels[dayOfWeek === 0 ? 6 : dayOfWeek - 1];
         
-        const calories = Math.round(caloriesByDate[dateISO] || 0);
-        chartData.push({ label, value: calories });
-        statusData.push({ day: label, hasData: calories > 0 });
-        totalCalories += calories;
+        const duration = Math.round(durationByDate[dateISO] || 0);
+        chartData.push({ label, value: duration });
+        statusData.push({ day: label, hasData: duration > 0 });
+        totalDuration += duration;
       }
 
       setWeekData(chartData);
       setDaysStatus(statusData);
-      setWeeklyAverage(Math.round(totalCalories / 7));
+      setWeeklyAverage(Math.round(totalDuration / 7));
     } catch (error) {
       console.error("Failed to load weekly exercise data:", error);
     } finally {
@@ -121,7 +121,7 @@ export default function ActivityStatsScreen() {
             {weekData.every(d => d.value === 0) ? (
               <InsightBox message="Hãy bắt đầu ghi nhận các bài tập để theo dõi tiến độ của bạn nhé!" />
             ) : (
-              <InsightBox message={`Bạn đã đốt cháy trung bình ${weeklyAverage} kcal/ngày trong tuần này!`} />
+              <InsightBox message={`Bạn đã tập luyện trung bình ${weeklyAverage} phút/ngày trong tuần này!`} />
             )}
           </>
         )}

@@ -77,4 +77,12 @@ export const notificationService = {
     const response = await apiClient.get(API_URLS.notifications.unreadCount);
     return response.data.data;
   },
+
+  /** POST /api/notifications/register-token - Đăng ký device token */
+  registerToken: async (deviceToken: string, deviceType?: string): Promise<void> => {
+    await apiClient.post(API_URLS.notifications.registerToken, {
+      deviceToken,
+      deviceType: deviceType || 'expo',
+    });
+  },
 };

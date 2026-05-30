@@ -15,7 +15,7 @@ import { colors, spacing, typography, radius } from "@/constants";
 import { API_BASE } from "@/constants/api";
 
 interface FoodItem {
-  id: number;
+  id: string;
   name: string;
   imageUrl: string | null;
   category: string;
@@ -64,20 +64,20 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {
-      let result = foods;
-
-      if (selectedCategory) {
-        result = result.filter((f) => f.category === selectedCategory);
+      if (searchQuery.trim().length >= 2) {
+        searchFoods(searchQuery);
+      } else {
+        // Load lại danh sách tất cả nếu xóa search
+        if (searchQuery.trim().length === 0 && foods.length > 0) {
+          let result = foods;
+          if (selectedCategory) {
+            result = result.filter((f) => f.category === selectedCategory);
+          }
+          setFilteredFoods(result);
+          setShowAllFoods(false);
+        }
       }
-
-      if (searchQuery.trim().length > 0) {
-        const query = searchQuery.toLowerCase();
-        result = result.filter((f) => f.name.toLowerCase().includes(query));
-      }
-
-      setFilteredFoods(result);
-      setShowAllFoods(false);
-    }, 300);
+    }, 400);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -87,14 +87,55 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
   async function loadAllFoods() {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/Food`);
+      const res = await fetch(`${API_BASE}/api/foods?page=1&pageSize=50`);
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setFoods(json.data ?? []);
-      setFilteredFoods(json.data ?? []);
+      const items = json.data?.items ?? [];
+      const mapped = items.map((raw: any) => ({
+        id: raw.id,
+        name: raw.name_vi,
+        imageUrl: raw.image_url ?? null,
+        category: raw.category_id?.toString() ?? "",
+        calories: Number(raw.calories_kcal ?? 0),
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        servingSize: Number(raw.serving_size_g),
+        description: null
+      }));
+      setFoods(mapped);
+      setFilteredFoods(mapped);
     } catch (error) {
       console.error("Failed to load foods:", error);
       setFoods([]);
+      setFilteredFoods([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function searchFoods(query: string) {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/foods/search?q=${encodeURIComponent(query)}&page=1&pageSize=20`);
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      const items = json.data?.items ?? [];
+      const mapped = items.map((raw: any) => ({
+        id: raw.id,
+        name: raw.name_vi,
+        imageUrl: raw.image_url ?? null,
+        category: raw.category_id?.toString() ?? "",
+        calories: Number(raw.calories_kcal ?? 0),
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        servingSize: Number(raw.serving_size_g),
+        description: null
+      }));
+      setFilteredFoods(mapped);
+    } catch (error) {
+      console.error("Failed to search foods:", error);
       setFilteredFoods([]);
     } finally {
       setIsLoading(false);

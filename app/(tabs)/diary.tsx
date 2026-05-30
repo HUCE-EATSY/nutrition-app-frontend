@@ -11,12 +11,13 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { theme, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useDiaryStore } from "@/hooks/store/diaryStore";
 import { formatShortDate } from "@/hooks/utils/date";
+import { useFocusEffect } from "expo-router";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import Toast from "@/components/common/Toast";
 
@@ -37,7 +38,6 @@ export default function DiaryTimelineScreen() {
   const {
     selectedDate,
     summary,
-    exercises,
     isLoading,
     goToPrevDay,
     goToNextDay,
@@ -57,10 +57,12 @@ export default function DiaryTimelineScreen() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  // Load dữ liệu khi màn hình mount hoặc ngày thay đổi
-  useEffect(() => {
-    fetchDiary(selectedDate);
-  }, [selectedDate, fetchDiary]);
+  // Load dữ liệu khi màn hình focus hoặc ngày thay đổi
+  useFocusEffect(
+    useCallback(() => {
+      fetchDiary(selectedDate);
+    }, [selectedDate, fetchDiary])
+  );
 
   const macros: MacroInfo[] = [
     {
@@ -92,9 +94,6 @@ export default function DiaryTimelineScreen() {
       color: theme.colors.fat,
     },
   ];
-
-  // Tổng calo đốt từ bài tập trong ngày
-  const totalBurned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
 
   // Xử lý khi click nút + để thêm bữa ăn
   function handleAddMeal(hour: number) {
@@ -222,14 +221,6 @@ export default function DiaryTimelineScreen() {
         })}
       </View>
 
-      {/* ── Calo đốt từ bài tập ── */}
-      {totalBurned > 0 && (
-        <View style={[styles.burnedRow, { paddingHorizontal: horizontalPadding }]}>
-          <Ionicons color={theme.colors.success} name="flame" size={14} />
-          <Text style={styles.burnedText}>Đốt {totalBurned} kcal từ bài tập</Text>
-        </View>
-      )}
-
       {/* ── Loading ── */}
       {isLoading && (
         <ActivityIndicator
@@ -253,9 +244,6 @@ export default function DiaryTimelineScreen() {
             const timeString = `${hour.toString().padStart(2, "0")}:00`;
             const slot = summary?.slots?.find((s) => s.hour === hour);
             const hasEntries = !!(slot && slot.entries && slot.entries.length > 0);
-
-            // Bài tập trong giờ này
-            const hourExercises = exercises.filter((ex) => ex.hour === hour);
 
             return (
               <View key={hour} style={styles.timelineRow}>
@@ -294,27 +282,6 @@ export default function DiaryTimelineScreen() {
                         </Text>
                       </View>
                     )}
-
-                    {/* Bài tập */}
-                    {hourExercises.map((ex) => (
-                      <Pressable 
-                        key={ex.id} 
-                        style={[styles.entryChip, styles.exerciseChip]}
-                        onPress={() => router.push(`/edit-exercise-log?logId=${ex.id}`)}
-                      >
-                        <Ionicons
-                          color={theme.colors.success}
-                          name="barbell-outline"
-                          size={12}
-                        />
-                        <Text numberOfLines={1} style={styles.entryText}>
-                          {ex.activityLabel} {ex.durationMinutes} phút
-                        </Text>
-                        <Text style={[styles.entryCalText, { color: theme.colors.success }]}>
-                          -{ex.caloriesBurned} kcal
-                        </Text>
-                      </Pressable>
-                    ))}
                   </View>
                 </View>
 
@@ -330,15 +297,6 @@ export default function DiaryTimelineScreen() {
             );
           })}
         </View>
-
-        {/* ── Nút ghi bài tập ── */}
-        <Pressable
-          style={styles.exerciseButton}
-          onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
-        >
-          <Ionicons color={theme.colors.success} name="barbell-outline" size={20} />
-          <Text style={styles.exerciseButtonText}>Ghi hoạt động thể dục</Text>
-        </Pressable>
       </ScrollView>
 
       {/* Food Selector Modal */}
@@ -486,16 +444,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progressBarFill: { height: "100%", borderRadius: 1.5 },
-  burnedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: spacing.xs,
-  },
-  burnedText: {
-    ...typography.caption,
-    color: theme.colors.success,
-  },
   scrollContent: { paddingTop: spacing.lg },
   timelineContainer: { gap: spacing.sm },
   timelineRow: {
@@ -556,23 +504,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,
-  },
-  exerciseButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(92,214,122,0.3)",
-    backgroundColor: "rgba(92,214,122,0.08)",
-  },
-  exerciseButtonText: {
-    ...typography.bodyStrong,
-    color: theme.colors.success,
-    fontSize: 15,
   },
   mealPanel: {
     position: "absolute",

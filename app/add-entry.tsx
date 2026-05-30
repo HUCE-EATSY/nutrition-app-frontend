@@ -21,19 +21,76 @@ import Toast from "@/components/common/Toast";
 import { API_BASE } from "@/constants/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
+// Khớp với FoodSearchResponse từ backend
 interface FoodItem {
-  id: number;
-  name: string;
+  id: string;          // Guid
+  name: string;        // name_vi
   imageUrl: string | null;
   category: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  servingSize: number;
+  calories: number;    // nutrition.calories_kcal
+  protein: number;     // nutrition.protein_g
+  carbs: number;       // nutrition.carbs_g
+  fat: number;         // nutrition.fat_g
+  servingSize: number; // serving_size_g
+}
+
+// Shape raw từ /api/foods/search
+interface RawFoodSearchItem {
+  id: string;
+  name_vi: string;
+  name_en?: string;
+  category_id: number;
+  serving_size_g: number;
+  calories_kcal?: number;
+  image_url?: string;
+}
+
+// Shape raw từ /api/foods/{id}
+interface RawFoodDetail {
+  id: string;
+  name_vi: string;
+  name_en?: string;
+  serving_size_g: number;
+  image_url?: string;
+  category?: { id: number; name_vi: string; name_en?: string };
+  nutrition?: {
+    calories_kcal: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  };
+}
+
+function mapRawSearch(raw: RawFoodSearchItem): FoodItem {
+  return {
+    id: raw.id,
+    name: raw.name_vi,
+    imageUrl: raw.image_url ?? null,
+    category: String(raw.category_id),
+    calories: Number(raw.calories_kcal ?? 0),
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    servingSize: Number(raw.serving_size_g),
+  };
+}
+
+function mapRawDetail(raw: RawFoodDetail): FoodItem {
+  return {
+    id: raw.id,
+    name: raw.name_vi,
+    imageUrl: raw.image_url ?? null,
+    category: raw.category?.name_vi ?? "",
+    calories: Number(raw.nutrition?.calories_kcal ?? 0),
+    protein: Number(raw.nutrition?.protein_g ?? 0),
+    carbs: Number(raw.nutrition?.carbs_g ?? 0),
+    fat: Number(raw.nutrition?.fat_g ?? 0),
+    servingSize: Number(raw.serving_size_g),
+  };
 }
 
 // API base đã được cấu hình trong @/constants/api
+// Endpoint thực của backend: GET /api/foods/search?q=...&page=1&pageSize=20
 
 export default function AddEntryScreen() {
   const { hour, date, foodId } = useLocalSearchParams<{ hour: string; date: string; foodId: string }>();
@@ -46,7 +103,7 @@ export default function AddEntryScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [foods, setFoods] = useState<FoodItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [allFoods, setAllFoods] = useState<FoodItem[]>([]);
+  // allFoods không dùng nữa vì backend yêu cầu query Q bắt buộc
   const sectionListRef = useRef<SectionList>(null);
 
   const [selected, setSelected] = useState<FoodItem | null>(null);
@@ -66,27 +123,8 @@ export default function AddEntryScreen() {
   // Danh sách khung giờ (7:00 - 23:00)
   const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
-  // ── Load tất cả món ăn khi mount ─────────────────────────────────────────
-  useEffect(() => {
-    loadAllFoods();
-  }, []);
-
-  async function loadAllFoods() {
-    setIsSearching(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/v1/Food`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setAllFoods(json.data ?? []);
-    } catch (error) {
-      console.error("Failed to load foods:", error);
-      setAllFoods([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }
-
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────
+  // Endpoint: GET /api/foods/{id} → trả về FoodDetailResponse
   useEffect(() => {
     if (foodId) {
       loadFoodById(foodId);
@@ -95,11 +133,11 @@ export default function AddEntryScreen() {
 
   async function loadFoodById(id: string) {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/Food/${id}`);
+      const res = await fetch(`${API_BASE}/api/foods/${id}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       if (json.data) {
-        setSelected(json.data);
+        setSelected(mapRawDetail(json.data as RawFoodDetail));
       }
     } catch (error) {
       console.error("Failed to load food:", error);
@@ -107,21 +145,26 @@ export default function AddEntryScreen() {
   }
 
   // ── Search với debounce 400ms ─────────────────────────────────────────────
+  // Endpoint: GET /api/foods/search?q=...&page=1&pageSize=20
+  // Response: ApiResponse<PaginatedResponse<FoodSearchResponse>>
+  //   → json.data.items[] (mỗi item có: id, name_vi, serving_size_g, calories_kcal, image_url)
   const searchFoods = useCallback(async (query: string) => {
     setIsSearching(true);
     try {
       const res = await fetch(
-        `${API_BASE}/api/v1/Food?search=${encodeURIComponent(query)}`
+        `${API_BASE}/api/foods/search?q=${encodeURIComponent(query)}&page=1&pageSize=20`
       );
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setFoods(json.data ?? []);
+      // json.data là PaginatedResponse, items nằm trong json.data.items
+      const items: RawFoodSearchItem[] = json.data?.items ?? [];
+      setFoods(items.map(mapRawSearch));
     } catch {
       setFoods([]);
     } finally {
       setIsSearching(false);
     }
-  }, [accessToken]);
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -176,9 +219,9 @@ export default function AddEntryScreen() {
       setToastType("success");
       setShowToast(true);
 
-      // Đợi 2s rồi quay về tab Thực đơn
+      // Đợi 2s rồi quay về tab Nhật ký
       setTimeout(() => {
-        router.replace("/(tabs)/meal-plan");
+        router.replace("/(tabs)/diary");
       }, 2000);
     } catch {
       setToastMessage("Không thể ghi bữa ăn. Vui lòng thử lại.");
@@ -235,6 +278,8 @@ export default function AddEntryScreen() {
             ListEmptyComponent={
               searchQuery.length >= 2 && !isSearching ? (
                 <Text style={styles.emptyText}>Không tìm thấy món ăn nào</Text>
+              ) : searchQuery.length < 2 ? (
+                <Text style={styles.emptyText}>Nhập ít nhất 2 ký tự để tìm kiếm</Text>
               ) : null
             }
             renderItem={({ item }: { item: FoodItem }) => (
@@ -248,7 +293,8 @@ export default function AddEntryScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.foodName}>{item.name}</Text>
                   <Text style={styles.foodSub}>
-                    {item.calories} kcal / {item.servingSize}g • {item.category}
+                    {item.calories} kcal / {item.servingSize}g
+                    {item.category ? ` • ${item.category}` : ""}
                   </Text>
                 </View>
                 <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />

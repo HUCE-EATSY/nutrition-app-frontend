@@ -29,16 +29,50 @@ const tabs = [
 ];
 
 interface FoodItem {
-  id: number;
-  name: string;
+  id: string;          // Guid
+  name: string;        // name_vi
   imageUrl: string | null;
   category: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  servingSize: number;
+  calories: number;    // nutrition.calories_kcal
+  protein: number;     // nutrition.protein_g
+  carbs: number;       // nutrition.carbs_g
+  fat: number;         // nutrition.fat_g
+  servingSize: number; // serving_size_g
   description: string | null;
+}
+
+// Shape raw từ /api/foods/search
+interface RawFoodSearchItem {
+  id: string;
+  name_vi: string;
+  name_en?: string;
+  category_id: number;
+  serving_size_g: number;
+  calories_kcal?: number;
+  image_url?: string;
+}
+
+const CATEGORY_MAP: Record<number, string> = {
+  1: "Vietnamese",
+  2: "Protein",
+  3: "Vegetables",
+  4: "Fruits",
+  5: "Grains",
+};
+
+function mapRaw(raw: RawFoodSearchItem): FoodItem {
+  return {
+    id: raw.id,
+    name: raw.name_vi,
+    imageUrl: raw.image_url ?? null,
+    category: CATEGORY_MAP[raw.category_id] ?? String(raw.category_id),
+    calories: Number(raw.calories_kcal ?? 0),
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    servingSize: Number(raw.serving_size_g),
+    description: null,
+  };
 }
 
 export default function MealPlanScreen() {
@@ -105,11 +139,15 @@ export default function MealPlanScreen() {
   async function loadAllFoods() {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/Food`);
+      // Endpoint: GET /api/foods?page=1&pageSize=50 — load tất cả món đã duyệt (status=1)
+      const res = await fetch(`${API_BASE}/api/foods?page=1&pageSize=50`);
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setFoods(json.data ?? []);
-      setFilteredFoods(json.data ?? []);
+      // json.data là PaginatedResponse { items: RawFoodSearchItem[] }
+      const items: RawFoodSearchItem[] = json.data?.items ?? [];
+      const mapped = items.map(mapRaw);
+      setFoods(mapped);
+      setFilteredFoods(mapped);
     } catch (error) {
       console.error("Failed to load foods:", error);
       setFoods([]);

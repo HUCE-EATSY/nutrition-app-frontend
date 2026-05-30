@@ -12,19 +12,26 @@ export interface ExerciseLog {
   dateISO: string;
   hour: number;
   durationMinutes: number;
-  caloriesBurned: number;
 }
 
 export interface CreateDiaryEntryPayload {
-  foodId: number; // Changed from string to number
+  foodId: string;    // Guid của food_item
   foodName: string;  // hiển thị local, không gửi API
-  dateISO: string;
-  hour: number;
-  quantityG: number;
+  dateISO: string;   // YYYY-MM-DD
+  hour: number;      // dùng để tính meal_type_id
+  quantityG: number; // số gram
   totalCalories: number;
   proteinGram: number;
   carbGram: number;
   fatGram: number;
+}
+
+/** Map giờ → meal_type_id theo convention của backend */
+function hourToMealTypeId(hour: number): number {
+  if (hour < 10) return 1; // Sáng
+  if (hour < 14) return 2; // Trưa
+  if (hour < 18) return 3; // Chiều
+  return 4;                // Tối
 }
 
 export interface CreateExercisePayload {
@@ -33,14 +40,12 @@ export interface CreateExercisePayload {
   dateISO: string;
   hour: number;
   durationMinutes: number;
-  caloriesBurned: number;
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
 interface DiaryState {
   selectedDate: string;
   summary: DiaryDaySummary | null;
-  exercises: ExerciseLog[];
   isLoading: boolean;
   error: string | null;
 
@@ -50,7 +55,6 @@ interface DiaryState {
   goToNextDay: () => void;
   fetchDiary: (dateISO?: string) => Promise<void>;
   addMealEntry: (payload: CreateDiaryEntryPayload) => Promise<void>;
-  addExercise: (payload: CreateExercisePayload) => Promise<void>;
   deleteEntry: (entryId: string) => Promise<void>;
 }
 
@@ -72,7 +76,6 @@ function shiftDate(dateISO: string, days: number): string {
 export const useDiaryStore = create<DiaryState>((set, get) => ({
   selectedDate: getTodayDateISO(),
   summary: null,
-  exercises: [],
   isLoading: false,
   error: null,
 
@@ -97,38 +100,14 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
     const date = dateISO ?? get().selectedDate;
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(`${API_BASE}/api/diary?date=${date}`, {
+      const t = Date.now();
+      // Endpoint đúng: GET /api/logs/food?date=YYYY-MM-DD
+      const res = await fetch(`${API_BASE}/api/logs/food?date=${date}&_t=${t}`, {
         headers: getHeaders(),
       });
       if (!res.ok) throw new Error("Không tải được nhật ký");
       const json = await res.json();
       set({ summary: json.data, isLoading: false });
-
-      // Lấy danh sách bài tập thực tế từ API mới
-      const exRes = await fetch(`${API_BASE}/api/exercises/logs/daily/${date}`, {
-        headers: getHeaders(),
-      });
-      if (exRes.ok) {
-        const exJson = await exRes.json();
-        const exerciseLogs = exJson.data?.logs ?? [];
-        
-        // Map sang format ExerciseLog của store
-        const mappedExercises = exerciseLogs.map((log: any) => {
-          // Lấy giờ từ CreatedAt
-          const hour = log.createdAt ? new Date(log.createdAt).getHours() : 17;
-          return {
-            id: log.id,
-            activityId: log.exerciseId,
-            activityLabel: log.exerciseNameVi,
-            dateISO: log.logDate,
-            hour: hour,
-            durationMinutes: log.durationMinutes,
-            caloriesBurned: log.caloriesBurned,
-          };
-        });
-        
-        set({ exercises: mappedExercises });
-      }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Không tải được nhật ký";
       set({ isLoading: false, error: message });
@@ -137,10 +116,19 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
 
   addMealEntry: async (payload) => {
     try {
-      const res = await fetch(`${API_BASE}/api/diary/entries`, {
+      // Endpoint đúng: POST /api/logs/food
+      // Backend nhận: food_item_id (Guid), meal_type_id, log_date, quantity_g
+      const body = {
+        food_item_id: payload.foodId,
+        meal_type_id: hourToMealTypeId(payload.hour),
+        log_date: payload.dateISO,
+        quantity_g: payload.quantityG,
+        input_method: 5,
+      };
+      const res = await fetch(`${API_BASE}/api/logs/food`, {
         method: "POST",
         headers: getHeaders(),
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Ghi bữa ăn thất bại");
       // Reload diary sau khi thêm thành công
@@ -152,25 +140,10 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
     }
   },
 
-  addExercise: async (payload) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/diary/exercises`, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Ghi hoạt động thất bại");
-      await get().fetchDiary();
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Ghi hoạt động thất bại";
-      set({ error: message });
-      throw e;
-    }
-  },
-
   deleteEntry: async (entryId) => {
     try {
-      const res = await fetch(`${API_BASE}/api/diary/entries/${entryId}`, {
+      // Endpoint đúng: DELETE /api/logs/food/{id}
+      const res = await fetch(`${API_BASE}/api/logs/food/${entryId}`, {
         method: "DELETE",
         headers: getHeaders(),
       });

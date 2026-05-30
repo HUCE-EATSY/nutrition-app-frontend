@@ -94,7 +94,8 @@ export const exerciseService = {
 
   /** GET /api/exercises/logs/daily/{date} - Tổng hợp theo ngày */
   getDailySummary: async (date: string): Promise<DailyExerciseSummary> => {
-    const response = await apiClient.get(API_URLS.exercises.dailySummary(date));
+    const t = Date.now();
+    const response = await apiClient.get(`${API_URLS.exercises.dailySummary(date)}?_t=${t}`);
     return response.data.data;
   },
 

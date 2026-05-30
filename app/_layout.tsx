@@ -15,6 +15,7 @@ import { View, ActivityIndicator, Text, Platform } from "react-native";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/hooks/store/onboardingStore";
 import { useAuthStore } from "@/hooks/store/authStore";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { PaperProvider, MD3DarkTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -49,6 +50,8 @@ export default function RootLayout() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
   const authHydrated = useAuthStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  usePushNotifications(isAuthenticated);
 
   const segments = useSegments();
   const router = useRouter();

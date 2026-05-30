@@ -64,7 +64,7 @@ export function getAgeFromBirthDate(dateISO: string, today = new Date()) {
 export function addDays(dateISO: string, days: number) {
   const date = new Date(dateISO);
   date.setDate(date.getDate() + days);
-  return date.toISOString();
+  return date.toISOString().slice(0, 10);
 }
 
 export function getTodayISO() {
@@ -72,7 +72,12 @@ export function getTodayISO() {
 }
 
 export function getTodayDateISO() {
-  return new Date().toISOString().slice(0, 10);
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+export function formatLocalDateISO(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 export function hourLabel(hour: number) {

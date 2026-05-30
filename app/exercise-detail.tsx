@@ -40,7 +40,7 @@ export default function ExerciseDetailScreen() {
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const targetDate = selectedDate.toISOString().split('T')[0];
+  const targetDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
     console.log("Auth status:", { isAuthenticated, hasToken: !!accessToken });
@@ -125,8 +125,9 @@ export default function ExerciseDetailScreen() {
       
       console.log("Exercise log created successfully:", result);
       
-      // Quay lại màn trước (exercise-diary hoặc màn gọi)
-      router.back();
+      Alert.alert("Thành công", "Đã ghi hoạt động thành công", [
+        { text: "OK", onPress: () => router.back() }
+      ]);
     } catch (error: any) {
       console.error("Save exercise error:", error);
       console.error("Error response:", error.response?.data);
@@ -277,18 +278,6 @@ export default function ExerciseDetailScreen() {
           style={styles.notesInput}
           value={notes}
         />
-
-        {durationNum > 0 && (
-          <View style={styles.burnPreview}>
-            <Ionicons color={colors.success} name="flame" size={24} />
-            <View>
-              <Text style={styles.burnKcal}>{caloriesBurned} kcal</Text>
-              <Text style={styles.burnNote}>
-                {durationNum} phút · {intensity === 1 ? "Nhẹ" : intensity === 3 ? "Nặng" : "Trung bình"}
-              </Text>
-            </View>
-          </View>
-        )}
 
         <Pressable
           disabled={isSaving}
@@ -446,27 +435,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     minHeight: 80,
     textAlignVertical: "top",
-  },
-  burnPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "rgba(92,214,122,0.1)",
-    borderRadius: radius.sm,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(92,214,122,0.25)",
-    marginTop: spacing.sm,
-  },
-  burnKcal: {
-    ...typography.h3,
-    color: colors.success,
-    fontSize: 24,
-  },
-  burnNote: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
   },
   saveBtn: {
     flexDirection: "row",
