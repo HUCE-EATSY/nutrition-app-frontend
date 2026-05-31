@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.borderSoft,
   },
   closeText: {
     color: colors.textPrimary,

@@ -20,7 +20,14 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { getTodayDateISO } from "@/utils/date";
 import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useAuthStore } from "@/store/authStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
+
+const DEFAULT_WATER_DATA = {
+  waterLogs: {} as Record<string, number>,
+  waterGoal: 2000,
+  defaultStep: 250,
+};
 
 export default function LogWaterScreen() {
   const colors = useAppColors();
@@ -28,23 +35,54 @@ export default function LogWaterScreen() {
   const insets = useSafeAreaInsets();
   
   const selectedDate = useDiaryStore((state) => state.selectedDate);
-  const { waterLogs, waterGoal, setWater, setWaterGoal } = useWaterStore();
+  const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
+  
+  const userWater = useWaterStore((state) => state.userWaterData[userId] || DEFAULT_WATER_DATA);
+
+  const { setWater, setWaterGoal, setDefaultStep: setStoreDefaultStep } = useWaterStore();
   
   // Set date state based on diary selectedDate or today
-  const [logDateStr, setLogDateStr] = useState(selectedDate || getTodayDateISO());
+  const [logDateStr] = useState(selectedDate || getTodayDateISO());
   
   // Get initial values from the store
   const [intake, setIntake] = useState(0);
-  const [goal, setGoal] = useState(waterGoal);
+  const [goal, setGoal] = useState(userWater.waterGoal);
+  const [customAmount, setCustomAmount] = useState("");
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleCustomAmountFocus = () => {
+    setIsFocused(true);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 160, animated: true });
+    }, 150);
+  };
+
+  const handleDefaultStepFocus = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 80, animated: true });
+    }, 150);
+  };
+
+  const [defaultStep, setDefaultStep] = useState(userWater.defaultStep ?? 250);
+
+  const handleDefaultStepChange = (text: string) => {
+    const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
+    setDefaultStep(isNaN(val) ? 0 : val);
+  };
   
   // When date or store changes, update locally
   useEffect(() => {
-    setIntake(waterLogs[logDateStr] || 0);
-  }, [logDateStr, waterLogs]);
+    setIntake(userWater.waterLogs[logDateStr] || 0);
+  }, [logDateStr, userWater.waterLogs]);
 
   useEffect(() => {
-    setGoal(waterGoal);
-  }, [waterGoal]);
+    setGoal(userWater.waterGoal);
+  }, [userWater.waterGoal]);
+
+  useEffect(() => {
+    setDefaultStep(userWater.defaultStep ?? 250);
+  }, [userWater.defaultStep]);
 
   const handleSave = () => {
     // Validate date format YYYY-MM-DD
@@ -65,8 +103,9 @@ export default function LogWaterScreen() {
     }
 
     // Save to store
-    setWater(logDateStr, intake);
-    setWaterGoal(goal);
+    setWater(userId, logDateStr, intake);
+    setWaterGoal(userId, goal);
+    setStoreDefaultStep(userId, defaultStep);
 
     // Alert success or go back
     router.back();
@@ -78,6 +117,16 @@ export default function LogWaterScreen() {
 
   const handleQuickSubtract = (amount: number) => {
     setIntake((prev) => Math.max(0, prev - amount));
+  };
+
+  const handleCustomAdd = () => {
+    const val = parseInt(customAmount.replace(/[^0-9]/g, ""), 10);
+    if (isNaN(val) || val <= 0) {
+      Alert.alert("Lỗi nhập liệu", "Vui lòng nhập lượng nước hợp lệ.");
+      return;
+    }
+    setIntake((prev) => prev + val);
+    setCustomAmount("");
   };
 
   const handleTextChange = (text: string) => {
@@ -107,14 +156,14 @@ export default function LogWaterScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Wave/Droplet Progress Card */}
           <View style={styles.progressCard}>
             <View style={styles.waterDropOuter}>
               <View style={[styles.waterDropInner, { height: `${Math.min(100, progressPercentage)}%` }]} />
               <MaterialCommunityIcons
                 name={progressPercentage >= 100 ? "trophy-outline" : "water"}
-                size={54}
+                size={36}
                 color={progressPercentage >= 100 ? "#F5B323" : "#FFF"}
                 style={styles.dropIcon}
               />
@@ -131,33 +180,104 @@ export default function LogWaterScreen() {
             </View>
           </View>
 
-          {/* Stepper controls */}
-          <View style={styles.inputSection}>
-            <Text style={styles.sectionLabel}>Lượng nước đã uống</Text>
-            <View style={styles.stepperContainer}>
-              <Pressable
-                style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
-                onPress={() => handleQuickSubtract(250)}
-              >
-                <MaterialCommunityIcons name="minus" size={28} color={colors.textPrimary} />
-              </Pressable>
-
-              <View style={styles.valueInputContainer}>
+          {/* Daily Goal row (Moved from bottom to top) */}
+          <View style={styles.settingsSection}>
+            <View style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
+              <Text style={styles.settingsLabel}>Mục tiêu ngày</Text>
+              <View style={styles.goalInputContainer}>
                 <TextInput
-                  style={styles.intakeInput}
-                  value={String(intake)}
-                  onChangeText={handleTextChange}
+                  style={styles.settingsInput}
+                  value={String(goal)}
+                  onChangeText={handleGoalChange}
                   keyboardType="numeric"
                   maxLength={5}
                 />
-                <Text style={styles.mlLabel}>ml</Text>
+                <Text style={styles.goalInputMlLabel}>ml</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Stepper controls */}
+          <View style={styles.inputSection}>
+            <Text style={styles.sectionLabel}>Lượng nước đã uống</Text>
+            
+            <View style={styles.stepperCard}>
+              {/* Main Stepper Row */}
+              <View style={styles.mainStepperRow}>
+                <Pressable
+                  style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
+                  onPress={() => handleQuickSubtract(defaultStep)}
+                >
+                  <MaterialCommunityIcons name="minus" size={20} color={colors.textPrimary} />
+                </Pressable>
+
+                <View style={styles.valueInputContainer}>
+                  <TextInput
+                    style={styles.intakeInput}
+                    value={String(intake)}
+                    onChangeText={handleTextChange}
+                    keyboardType="numeric"
+                    maxLength={5}
+                  />
+                  <Text style={styles.mlLabel}>ml</Text>
+                </View>
+
+                <Pressable
+                  style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
+                  onPress={() => handleQuickAdd(defaultStep)}
+                >
+                  <MaterialCommunityIcons name="plus" size={20} color={colors.textPrimary} />
+                </Pressable>
               </View>
 
+              {/* Minimalist Default Step Capsule */}
+              <View style={styles.minimalistDefaultStepRow}>
+                <View style={styles.minimalistControls}>
+                  <View style={styles.miniInputContainer}>
+                    <Text style={styles.minimalistLabel}>Mặc định: </Text>
+                    <TextInput
+                      style={styles.miniInput}
+                      value={String(defaultStep)}
+                      onChangeText={handleDefaultStepChange}
+                      keyboardType="numeric"
+                      maxLength={4}
+                      onFocus={handleDefaultStepFocus}
+                    />
+                    <Text style={styles.miniUnit}>ml</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Custom Add Section */}
+          <View style={styles.customAddSection}>
+            <Text style={styles.sectionLabel}>Lượng nước vừa uống tùy chỉnh</Text>
+            <View style={styles.customAddContainer}>
+              <View style={[styles.customInputContainer, isFocused && styles.customInputContainerFocused]}>
+                <TextInput
+                  style={styles.customInput}
+                  value={customAmount}
+                  onChangeText={setCustomAmount}
+                  placeholder="Số ml..."
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  maxLength={5}
+                  onFocus={handleCustomAmountFocus}
+                  onBlur={() => setIsFocused(false)}
+                />
+                <Text style={styles.customInputMlLabel}>ml</Text>
+              </View>
               <Pressable
-                style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
-                onPress={() => handleQuickAdd(250)}
+                style={({ pressed }) => [
+                  styles.customAddBtn,
+                  { backgroundColor: colors.carbs },
+                  pressed && { opacity: 0.8 }
+                ]}
+                onPress={handleCustomAdd}
               >
-                <MaterialCommunityIcons name="plus" size={28} color={colors.textPrimary} />
+                <Ionicons name="add" size={20} color="#FFF" />
+                <Text style={styles.customAddBtnText}>Thêm</Text>
               </Pressable>
             </View>
           </View>
@@ -192,35 +312,6 @@ export default function LogWaterScreen() {
             </View>
           </View>
 
-          {/* Settings Section: Goal & Date */}
-          <View style={styles.settingsSection}>
-            <View style={styles.settingsRow}>
-              <Text style={styles.settingsLabel}>Mục tiêu ngày (ml)</Text>
-              <TextInput
-                style={styles.settingsInput}
-                value={String(goal)}
-                onChangeText={handleGoalChange}
-                keyboardType="numeric"
-                maxLength={5}
-              />
-            </View>
-
-            <View style={styles.settingsRow}>
-              <Text style={styles.settingsLabel}>Ngày ghi nhận</Text>
-              <View style={styles.dateInputContainer}>
-                <TextInput
-                  style={[styles.settingsInput, styles.dateInput]}
-                  value={logDateStr}
-                  onChangeText={setLogDateStr}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.textMuted}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                />
-                <Ionicons name="calendar-outline" size={18} color={colors.textPrimary} style={styles.dateIcon} />
-              </View>
-            </View>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -260,27 +351,27 @@ const getStyles = (colors: any) => StyleSheet.create({
     width: 32,
   },
   scrollContent: {
-    padding: spacing.lg,
-    gap: spacing.xl,
-    paddingBottom: spacing.xxxl,
+    padding: spacing.md,
+    gap: 12,
+    paddingBottom: 30, // Reduced bottom padding since Y offsets are much smaller
   },
   progressCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    padding: spacing.lg,
+    padding: 12,
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing.lg,
+    gap: 12,
   },
   waterDropOuter: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.surfaceAlt,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "rgba(61, 139, 255, 0.3)",
   },
   waterDropInner: {
@@ -298,7 +389,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     gap: 4,
   },
   progressMl: {
-    ...typography.h2,
+    ...typography.h3,
     color: colors.textPrimary,
   },
   unitText: {
@@ -319,18 +410,21 @@ const getStyles = (colors: any) => StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  stepperContainer: {
+  stepperCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: 1,
+    gap: 1,
+  },
+  mainStepperRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.surface,
-    padding: spacing.sm,
-    borderRadius: radius.md,
   },
   stepperBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
@@ -344,12 +438,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: "center",
   },
   intakeInput: {
-    ...typography.display,
+    ...typography.h2,
+    lineHeight: undefined,
     color: colors.textPrimary,
     textAlign: "center",
-    minWidth: 100,
+    minWidth: 80,
     padding: 0,
     margin: 0,
+    textAlignVertical: "center",
   },
   mlLabel: {
     ...typography.bodyStrong,
@@ -368,10 +464,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   presetItem: {
     width: "48%",
     backgroundColor: colors.surface,
-    padding: spacing.md,
+    padding: 10,
     borderRadius: radius.sm,
     alignItems: "center",
-    gap: 4,
+    gap: 2,
   },
   presetName: {
     ...typography.caption,
@@ -382,6 +478,114 @@ const getStyles = (colors: any) => StyleSheet.create({
     ...typography.bodyStrong,
     color: colors.carbs,
   },
+  customAddSection: {
+    gap: spacing.md,
+  },
+  customAddContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  customInputContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    height: 40,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  customInputContainerFocused: {
+    borderColor: colors.carbs,
+    borderWidth: 1.5,
+  },
+  customInput: {
+    flex: 1,
+    height: "100%",
+    ...typography.bodyStrong,
+    lineHeight: undefined,
+    color: colors.textPrimary,
+    paddingVertical: 0,
+    margin: 0,
+    textAlignVertical: "center",
+  },
+  customInputMlLabel: {
+    ...typography.bodyStrong,
+    color: colors.textSecondary,
+    marginLeft: 4,
+  },
+  customAddBtn: {
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  customAddBtnText: {
+    ...typography.bodyStrong,
+    color: "#FFF",
+  },
+  goalInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  goalInputMlLabel: {
+    ...typography.bodyStrong,
+    color: colors.textSecondary,
+  },
+  minimalistDefaultStepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+  },
+  minimalistLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  minimalistControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  miniInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  miniInput: {
+    ...typography.bodyStrong,
+    color: colors.carbs,
+    textAlign: "center",
+
+    minWidth: 40,
+
+    padding: 0,
+    margin: 0,
+
+    height: 24,
+    lineHeight: 24,
+
+    textAlignVertical: "center",
+    includeFontPadding: false,
+  },
+  miniUnit: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginLeft: 2,
+  },
   settingsSection: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
@@ -391,7 +595,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderSoft,
   },
@@ -402,12 +606,20 @@ const getStyles = (colors: any) => StyleSheet.create({
   settingsInput: {
     ...typography.bodyStrong,
     color: colors.textPrimary,
-    textAlign: "right",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+
+    minWidth: 80,
+    height: 44,
+
+    paddingHorizontal: 12,
+    paddingVertical: 0,
+
+    textAlign: "center",
+    textAlignVertical: "center",
+
     backgroundColor: colors.surfaceAlt,
     borderRadius: 8,
-    minWidth: 80,
+
+    includeFontPadding: false,
   },
   dateInputContainer: {
     flexDirection: "row",

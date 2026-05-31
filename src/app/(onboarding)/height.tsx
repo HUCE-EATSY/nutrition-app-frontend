@@ -8,7 +8,7 @@ import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { DEFAULT_HEIGHT_CM } from "@/constants/onboarding";
 
 const heightSchema = z.object({
-  heightCm: z.number().min(140).max(220),
+  heightCm: z.number().min(50).max(300),
 });
 
 export default function HeightScreen() {
@@ -37,8 +37,8 @@ export default function HeightScreen() {
         render={({ field: { onChange, value } }) => (
           <HorizontalRulerPicker
             majorTickEvery={10}
-            max={220}
-            min={140}
+            max={300}
+            min={50}
             onChange={onChange}
             step={1}
             unit="cm"
@@ -49,4 +49,3 @@ export default function HeightScreen() {
     </OnboardingStepScaffold>
   );
 }
-

@@ -90,24 +90,6 @@ const styles = StyleSheet.create({
     minHeight: 200,
     marginTop: 0,
   },
-  emojiContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emoji: {
-    textAlign: 'center',
-    zIndex: 2,
-  },
-  emojiShadow: {
-    position: 'absolute',
-    bottom: '15%',
-    width: '60%',
-    height: 20,
-    backgroundColor: 'rgba(165, 108, 255, 0.2)',
-    borderRadius: 100,
-    transform: [{ scaleX: 2 }],
-    zIndex: 1,
-  },
   copyWrap: {
     alignItems: "center",
     gap: spacing.sm,

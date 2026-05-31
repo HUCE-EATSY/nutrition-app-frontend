@@ -1,40 +1,44 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState, useEffect } from "react";
+import { StyleSheet, View } from "react-native";
 import { Controller } from "react-hook-form";
 import * as z from "zod";
 
-import { GradientButton } from "@/components/buttons/GradientButton";
 import { HorizontalRulerPicker } from "@/components/onboarding/HorizontalRulerPicker";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { BmiCard } from "@/components/onboarding/BmiCard";
-import { colors, spacing, typography } from "@/constants";
+import { OnboardingWeightCta } from "@/components/onboarding/OnboardingWeightCta";
+import { spacing } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
 import {
   DEFAULT_CURRENT_WEIGHT_KG,
   DEFAULT_HEIGHT_CM,
 } from "@/constants/onboarding";
-import { showBmiReferencesAlert } from "@/utils/onboarding";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 
 const currentWeightSchema = z.object({
-  currentWeightKg: z.number().min(35).max(160),
+  currentWeightKg: z.number().min(20).max(300),
 });
 
 export default function CurrentWeightScreen() {
   const t = useTranslation();
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   
-  const { control, isValid, meta, onContinue, onBack } = useOnboardingForm(
+  const { control, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
     "CurrentWeight",
     "currentWeightKg",
     currentWeightSchema,
     DEFAULT_CURRENT_WEIGHT_KG
   );
 
-  // Read direct value from store for initial localWeight
-  const initialWeight = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
-  const [localWeight, setLocalWeight] = useState(initialWeight);
+  const formWeight = watch("currentWeightKg");
+  const [localWeight, setLocalWeight] = useState(formWeight || DEFAULT_CURRENT_WEIGHT_KG);
+
+  useEffect(() => {
+    if (formWeight !== undefined && formWeight !== null) {
+      setLocalWeight(formWeight);
+    }
+  }, [formWeight]);
 
   return (
     <OnboardingStepScaffold
@@ -53,19 +57,19 @@ export default function CurrentWeightScreen() {
           <Controller
             control={control}
             name="currentWeightKg"
-            render={({ field: { onChange } }) => (
+            render={({ field: { onChange, value } }) => (
               <HorizontalRulerPicker
                 decimalPlaces={1}
                 majorTickEvery={10}
-                max={160}
-                min={35}
+                max={300}
+                min={20}
                 onChange={onChange}
                 onScrollValueChange={(val) => {
                   setLocalWeight(val);
                 }}
                 step={0.5}
                 unit="kg"
-                value={localWeight}
+                value={value}
               />
             )}
           />
@@ -75,18 +79,7 @@ export default function CurrentWeightScreen() {
         <BmiCard heightCm={heightCm} type="current" weightKg={localWeight} />
 
         {/* References and continue */}
-        <View style={styles.bottomSection}>
-          <Pressable onPress={showBmiReferencesAlert} style={styles.refButton}>
-            <Text style={styles.refText}>{t.nutrition.referenceSource}</Text>
-          </Pressable>
-
-          <GradientButton
-            disabled={!isValid}
-            label={t.common.continue}
-            onPress={onContinue}
-            style={styles.continueButton}
-          />
-        </View>
+        <OnboardingWeightCta isValid={isValid} onContinue={onContinue} />
       </View>
     </OnboardingStepScaffold>
   );
@@ -103,23 +96,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: spacing.md,
-  },
-  bottomSection: {
-    width: "100%",
-    alignItems: "center",
-    paddingBottom: spacing.sm,
-  },
-  refButton: {
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  refText: {
-    ...typography.body,
-    color: colors.textMuted,
-    fontSize: 14,
-    textDecorationLine: "underline",
-  },
-  continueButton: {
-    width: "100%",
   },
 });
