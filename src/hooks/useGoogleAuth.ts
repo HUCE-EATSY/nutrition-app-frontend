@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { useOnboardingStore } from '@/store/onboardingStore';
+import { useStepsStore } from '@/store/statsStore';
 import { API_URLS } from '@/constants/api';
 import { apiClient } from '@/services/apiClient';
 import { userService } from '@/services/userService';
@@ -141,6 +142,7 @@ export const useGoogleAuth = () => {
     }
     clearAuth();
     resetOnboarding();
+    useStepsStore.getState().reset();
     queryClient.clear();
   };
 

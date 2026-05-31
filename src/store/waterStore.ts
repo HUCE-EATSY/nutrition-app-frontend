@@ -2,55 +2,106 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { secureStorage } from "./secureStorage";
 
-interface WaterState {
+export interface UserWater {
   waterLogs: Record<string, number>; // maps dateISO (YYYY-MM-DD) -> water intake in ml
   waterGoal: number; // daily goal in ml
+  defaultStep: number; // default step in ml
+}
+
+interface WaterState {
+  userWaterData: Record<string, UserWater>; // maps userId (or "guest") -> UserWater
   hydrated: boolean;
 
   setHydrated: (value: boolean) => void;
-  setWaterGoal: (goal: number) => void;
-  addWater: (dateISO: string, amount: number) => void;
-  subtractWater: (dateISO: string, amount: number) => void;
-  setWater: (dateISO: string, amount: number) => void;
+  setWaterGoal: (userId: string, goal: number) => void;
+  setDefaultStep: (userId: string, step: number) => void;
+  addWater: (userId: string, dateISO: string, amount: number) => void;
+  subtractWater: (userId: string, dateISO: string, amount: number) => void;
+  setWater: (userId: string, dateISO: string, amount: number) => void;
 }
+
+const DEFAULT_USER_WATER: UserWater = {
+  waterLogs: {},
+  waterGoal: 2000, // Default 2000 ml
+  defaultStep: 250, // Default step 250 ml
+};
+
+const getUserWater = (userWaterData: Record<string, UserWater>, userId: string): UserWater => {
+  return userWaterData[userId] || { ...DEFAULT_USER_WATER };
+};
 
 export const useWaterStore = create<WaterState>()(
   persist(
     (set, get) => ({
-      waterLogs: {},
-      waterGoal: 2000, // Default 2000 ml
+      userWaterData: {},
       hydrated: false,
 
       setHydrated: (value) => set({ hydrated: value }),
 
-      setWaterGoal: (goal) => set({ waterGoal: goal }),
+      setWaterGoal: (userId, goal) => {
+        const data = { ...get().userWaterData };
+        const userWater = getUserWater(data, userId);
+        data[userId] = { ...userWater, waterGoal: goal };
+        set({ userWaterData: data });
+      },
 
-      addWater: (dateISO, amount) => {
-        const logs = { ...get().waterLogs };
+      setDefaultStep: (userId, step) => {
+        const data = { ...get().userWaterData };
+        const userWater = getUserWater(data, userId);
+        data[userId] = { ...userWater, defaultStep: step };
+        set({ userWaterData: data });
+      },
+
+      addWater: (userId, dateISO, amount) => {
+        const data = { ...get().userWaterData };
+        const userWater = getUserWater(data, userId);
+        const logs = { ...userWater.waterLogs };
         const current = logs[dateISO] || 0;
         logs[dateISO] = current + amount;
-        set({ waterLogs: logs });
+        data[userId] = { ...userWater, waterLogs: logs };
+        set({ userWaterData: data });
       },
 
-      subtractWater: (dateISO, amount) => {
-        const logs = { ...get().waterLogs };
+      subtractWater: (userId, dateISO, amount) => {
+        const data = { ...get().userWaterData };
+        const userWater = getUserWater(data, userId);
+        const logs = { ...userWater.waterLogs };
         const current = logs[dateISO] || 0;
         logs[dateISO] = Math.max(0, current - amount);
-        set({ waterLogs: logs });
+        data[userId] = { ...userWater, waterLogs: logs };
+        set({ userWaterData: data });
       },
 
-      setWater: (dateISO, amount) => {
-        const logs = { ...get().waterLogs };
+      setWater: (userId, dateISO, amount) => {
+        const data = { ...get().userWaterData };
+        const userWater = getUserWater(data, userId);
+        const logs = { ...userWater.waterLogs };
         logs[dateISO] = Math.max(0, amount);
-        set({ waterLogs: logs });
+        data[userId] = { ...userWater, waterLogs: logs };
+        set({ userWaterData: data });
       },
     }),
     {
       name: "dnt-water-store",
       storage: createJSONStorage(() => secureStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0 || (persistedState && persistedState.waterLogs)) {
+          // Migrate old single-user schema to multi-user format under key 'guest'
+          return {
+            userWaterData: {
+              guest: {
+                waterLogs: persistedState.waterLogs || {},
+                waterGoal: persistedState.waterGoal || 2000,
+                defaultStep: persistedState.defaultStep || 250,
+              },
+            },
+          };
+        }
+        return persistedState as any;
+      },
       partialize: (state) => ({
-        waterLogs: state.waterLogs,
-        waterGoal: state.waterGoal,
+        userWaterData: state.userWaterData,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);

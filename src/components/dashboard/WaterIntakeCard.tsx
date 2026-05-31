@@ -9,6 +9,13 @@ import { spacing, typography, radius } from "@/constants";
 import { SurfaceCard } from "../common/SurfaceCard";
 import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useAuthStore } from "@/store/authStore";
+
+const DEFAULT_WATER_DATA = {
+  waterLogs: {} as Record<string, number>,
+  waterGoal: 2000,
+  defaultStep: 250,
+};
 
 export function WaterIntakeCard() {
   const t = useTranslation();
@@ -16,9 +23,14 @@ export function WaterIntakeCard() {
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   
   const selectedDate = useDiaryStore((state) => state.selectedDate);
-  const { waterLogs, waterGoal, addWater, subtractWater } = useWaterStore();
+  const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
+  
+  const userWater = useWaterStore((state) => state.userWaterData[userId] || DEFAULT_WATER_DATA);
 
-  const intake = waterLogs[selectedDate] || 0;
+  const { addWater, subtractWater } = useWaterStore();
+
+  const intake = userWater.waterLogs[selectedDate] || 0;
+  const step = userWater.defaultStep ?? 250;
 
   const handlePressCard = () => {
     router.navigate("/log-water");
@@ -30,14 +42,14 @@ export function WaterIntakeCard() {
         <MaterialCommunityIcons name="water" size={26} color={colors.carbs} />
         <View style={styles.textContainer}>
            <Text style={styles.label}>{t.home.waterTitle}</Text>
-           <Text style={styles.value}>{intake} / {waterGoal} {t.home.mlSuffix}</Text>
+           <Text style={styles.value}>{intake} / {userWater.waterGoal} {t.home.mlSuffix}</Text>
         </View>
       </Pressable>
       
       <View style={styles.controls}>
          <TouchableOpacity 
            style={styles.btn} 
-           onPress={() => subtractWater(selectedDate, 250)}
+           onPress={() => subtractWater(userId, selectedDate, step)}
            activeOpacity={0.7}
          >
             <MaterialCommunityIcons name="minus" size={18} color={colors.textSecondary} />
@@ -45,7 +57,7 @@ export function WaterIntakeCard() {
          <View style={styles.divider} />
          <TouchableOpacity 
            style={[styles.btn, styles.btnActive]} 
-           onPress={() => addWater(selectedDate, 250)}
+           onPress={() => addWater(userId, selectedDate, step)}
            activeOpacity={0.7}
          >
             <MaterialCommunityIcons name="plus" size={18} color={colors.carbs} />

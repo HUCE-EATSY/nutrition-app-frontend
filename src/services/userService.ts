@@ -1,6 +1,6 @@
 import { apiClient } from "./apiClient";
 import { API_URLS } from "../constants/api";
-import { OnboardingDraft } from "@/types/contracts";
+import { OnboardingDraft, NutritionPlan } from "@/types/contracts";
 import { useAuthStore } from "../store/authStore";
 import {
   mockGetUserInfoResponse,
@@ -10,6 +10,18 @@ import {
 } from "../constants/mocks/userMocks";
 
 const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === "true";
+
+function mapToNutritionPlan(raw: any): NutritionPlan {
+  return {
+    targetCalories: Number(raw?.targetCalories ?? raw?.TargetCalories ?? 0),
+    bmrKcal: Number(raw?.bmrKcal ?? raw?.BmrKcal ?? 0),
+    tdeeKcal: Number(raw?.tdeeKcal ?? raw?.TdeeKcal ?? 0),
+    targetProteinG: Number(raw?.targetProteinG ?? raw?.TargetProteinG ?? 0),
+    targetCarbsG: Number(raw?.targetCarbsG ?? raw?.TargetCarbsG ?? 0),
+    targetFatG: Number(raw?.targetFatG ?? raw?.TargetFatG ?? 0),
+    targetDateISO: String(raw?.targetDate ?? raw?.TargetDate ?? raw?.targetDateISO ?? raw?.TargetDateISO ?? ""),
+  };
+}
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -28,11 +40,11 @@ const goalTypeMap: Record<string, number> = {
 };
 
 export const userService = {
-  /** POST /api/User/onboarding → UserGoalResponse */
-  onboardUser: async (draft: OnboardingDraft) => {
+  /** POST /api/User/onboarding → NutritionPlan */
+  onboardUser: async (draft: OnboardingDraft): Promise<NutritionPlan> => {
     if (USE_MOCK) {
       await delay(500);
-      return mockOnboardingResponse;
+      return mapToNutritionPlan(mockOnboardingResponse);
     }
 
     console.log("userService.onboardUser called with draft:", JSON.stringify(draft, null, 2));
@@ -55,7 +67,7 @@ export const userService = {
 
     try {
       const response = await apiClient.post(API_URLS.user.onboarding, body);
-      return response.data.data;
+      return mapToNutritionPlan(response.data.data);
     } catch (error: any) {
       const errorData = error.response?.data;
       const errorCode = errorData?.code || errorData?.extensions?.code;
@@ -75,7 +87,7 @@ export const userService = {
 
       if (errorCode === "USER_ALREADY_ONBOARDED" || errorDetail?.includes("already onboarded")) {
         const infoRes = await apiClient.get(API_URLS.user.info);
-        return infoRes.data.data?.activeGoal;
+        return mapToNutritionPlan(infoRes.data.data?.activeGoal);
       }
       throw new Error(errorDetail || "Failed to onboard user");
     }

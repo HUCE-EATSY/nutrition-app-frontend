@@ -117,6 +117,7 @@ interface StepsState {
   startStepTracking: () => void;
   stopStepTracking: () => void;
   setHydrated: (value: boolean) => void;
+  reset: () => void;
 }
 
 // Helper to get calendar aligned dates
@@ -555,6 +556,22 @@ export const useStepsStore = create<StepsState>()(
           pedometerSubscription = null;
         }
         lastPedometerSteps = 0;
+      },
+
+      reset: () => {
+        get().stopStepTracking();
+        set({
+          isConnected: false,
+          isLoading: false,
+          error: null,
+          todaySteps: 0,
+          stepGoal: 8000,
+          averageSteps: 0,
+          previousAverageSteps: 0,
+          historyData: [],
+          historicalGoals: {},
+          stepRecords: {},
+        });
       },
     }),
     {
