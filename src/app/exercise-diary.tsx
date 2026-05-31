@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useState, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,7 +19,6 @@ import { exerciseService, ExerciseLog } from "@/services/exerciseService";
 import { getTodayDateISO, formatShortDate } from "@/utils/date";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
-import { useDiaryStore } from "@/store/diaryStore";
 
 export default function ExerciseDiaryScreen() {
   const t = useTranslation();
@@ -50,9 +49,11 @@ export default function ExerciseDiaryScreen() {
     }
   }, [selectedDate, t]);
 
-  useEffect(() => {
-    loadLogs();
-  }, [loadLogs]);
+  useFocusEffect(
+    useCallback(() => {
+      loadLogs();
+    }, [loadLogs])
+  );
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -73,8 +74,6 @@ export default function ExerciseDiaryScreen() {
             try {
               await exerciseService.deleteLog(id);
               setLogs(prev => prev.filter(log => log.id !== id));
-              // Refresh the main diary store to update total calories burned
-              await useDiaryStore.getState().fetchDiary();
               Alert.alert(t.common.success, t.exercise.deleteSuccess);
             } catch {
               Alert.alert(t.common.error, t.exercise.deleteError);
@@ -132,7 +131,7 @@ export default function ExerciseDiaryScreen() {
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
         <Text style={styles.headerTitle}>{t.exercise.diaryTitle}</Text>
-        <Pressable hitSlop={12} onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}>
+        <Pressable hitSlop={12} onPress={() => router.push("/add-exercise")}>
           <Ionicons color={colors.primary} name="add-circle-outline" size={28} />
         </Pressable>
       </View>
@@ -184,7 +183,7 @@ export default function ExerciseDiaryScreen() {
             <MaterialCommunityIcons color={colors.textMuted} name="dumbbell" size={64} />
             <Text style={styles.emptyText}>{t.exercise.emptyDiary}</Text>
             <Pressable
-              onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
+              onPress={() => router.push("/add-exercise")}
               style={styles.emptyButton}
             >
               <Text style={styles.emptyButtonText}>{t.exercise.logActivity}</Text>
@@ -252,7 +251,7 @@ export default function ExerciseDiaryScreen() {
       {/* Floating Action Button */}
       <Pressable
         style={styles.fab}
-        onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
+        onPress={() => router.push("/add-exercise")}
       >
         <Ionicons color="#fff" name="add" size={28} />
       </Pressable>

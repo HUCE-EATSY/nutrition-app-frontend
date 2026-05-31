@@ -10,7 +10,7 @@ import { HealthConnectBanner } from "@/components/stats/activity/HealthConnectBa
 import { CalorieStatsCard } from "@/components/stats/activity/CalorieStatsCard";
 import { InsightBox } from "@/components/stats/InsightBox";
 import { exerciseService } from "@/services/exerciseService";
-import { getTodayDateISO } from "@/hooks/utils/date";
+import { getTodayDateISO } from "@/utils/date";
 
 export default function ActivityStatsScreen() {
   const router = useRouter();

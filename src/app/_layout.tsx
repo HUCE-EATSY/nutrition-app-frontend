@@ -22,7 +22,7 @@ import { useAppColors } from "@/hooks/useAppColors";
 
 // Import global CSS for web
 if (Platform.OS === 'web') {
-  require('../global.css');
+  require('../../global.css');
 }
 
 const queryClient = new QueryClient({

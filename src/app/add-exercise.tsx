@@ -1,351 +1,332 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
-  ScrollView,
+  SectionList,
   StyleSheet,
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
-import { useDiaryStore } from "@/store/diaryStore";
-import {
-  ACTIVITIES,
-  ActivityId,
-  ActivityIntensity,
-} from "@/constants/activities";
-import { getMetValue } from "@/utils/activities";
 import { useTranslation } from "@/constants/i18n";
-import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
-
-// Cân nặng mặc định nếu chưa có profile (kg)
-const DEFAULT_WEIGHT_KG = 65;
+import { useSettingsStore } from "@/store/settingsStore";
+import { exerciseService, Exercise } from "@/services/exerciseService";
 
 export default function AddExerciseScreen() {
   const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
-  const { date, exerciseName } = useLocalSearchParams<{ date: string; exerciseName?: string }>();
+  const language = useSettingsStore((state) => state.language);
+  const { date } = useLocalSearchParams<{ date: string }>();
   const targetDate = date ?? getTodayDateISO();
-  const currentHour = new Date().getHours();
 
-  const { addExercise } = useDiaryStore();
-  const { data: userInfo } = useGetUserInfo();
-  const userWeight = userInfo?.profile?.weightKg ?? DEFAULT_WEIGHT_KG;
+  const [loading, setLoading] = useState(true);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Pre-select activity based on exerciseName query param
-  const initialSelectedId = useMemo(() => {
-    if (!exerciseName) return null;
-    const nameLower = exerciseName.toLowerCase();
-    if (nameLower.includes("run")) return "running" as const;
-    if (nameLower.includes("cycle") || nameLower.includes("bike")) return "cycling" as const;
-    if (nameLower.includes("badminton")) return "badminton" as const;
-    if (nameLower.includes("pickle")) return "pickleball" as const;
-    if (nameLower.includes("yoga")) return "yoga" as const;
-    return "other" as const;
-  }, [exerciseName]);
-
-  // ── State ─────────────────────────────────────────────────────────────────
-  const [isSaving, setIsSaving] = useState(false);
-  const [selectedId, setSelectedId] = useState<ActivityId | null>(initialSelectedId);
-  const [intensity, setIntensity] = useState<ActivityIntensity>("amateur");
-  const [duration, setDuration] = useState("30");
-
-  // ── Tính calo đốt: MET × weight × hours ──────────────────────────────────
-  const durationNum = parseFloat(duration) || 0;
-  const met = selectedId ? getMetValue(selectedId, intensity) : 0;
-  const caloriesBurned = Math.round(met * userWeight * (durationNum / 60));
-
-  const selectedActivity = ACTIVITIES.find((a) => a.id === selectedId);
-
-  // ── Lưu bài tập ──────────────────────────────────────────────────────────
-  async function handleSave() {
-    if (!selectedId || !selectedActivity) {
-      Alert.alert(t.common.error, t.exercise.selectActivityError);
-      return;
+  useEffect(() => {
+    async function loadExercises() {
+      try {
+        setLoading(true);
+        const categories = await exerciseService.getCategories();
+        let allExercises: Exercise[] = [];
+        categories.forEach(cat => {
+          allExercises = [...allExercises, ...cat.exercises];
+        });
+        setExercises(allExercises);
+      } catch (error) {
+        console.error("Failed to load exercises", error);
+      } finally {
+        setLoading(false);
+      }
     }
-    if (durationNum <= 0 || durationNum > 600) {
-      Alert.alert(t.common.error, t.exercise.durationRangeError);
-      return;
-    }
+    loadExercises();
+  }, []);
 
-    setIsSaving(true);
-    try {
-      await addExercise({
-        activityId: selectedId,
-        activityLabel: `${t.activities[selectedActivity.id]}${intensity === "professional" ? t.exercise.proSuffix : ""}`,
-        dateISO: targetDate,
-        hour: currentHour,
-        durationMinutes: durationNum,
-        caloriesBurned,
-      });
-      router.back();
-    } catch {
-      Alert.alert(t.common.error, t.exercise.saveActivityError);
-    } finally {
-      setIsSaving(false);
-    }
+  const filteredExercises = useMemo(() => {
+    if (!searchQuery) return exercises;
+    return exercises.filter(ex => 
+      ex.nameVi.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      ex.nameEn.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [exercises, searchQuery]);
+
+  function normalizeChar(char: string) {
+    const c = char.toUpperCase();
+    if (["Á", "À", "Ả", "Ã", "Ạ", "Ă", "Ắ", "Ằ", "Ẳ", "Ẵ", "Ặ", "Â", "Ấ", "Ầ", "Ẩ", "Ẫ", "Ậ"].includes(c)) return "A";
+    if (["Đ"].includes(c)) return "D";
+    if (["É", "È", "Ẻ", "Ẽ", "Ẹ", "Ê", "Ế", "Ề", "Ể", "Ễ", "Ệ"].includes(c)) return "E";
+    if (["Í", "Ì", "Ỉ", "Ĩ", "Ị"].includes(c)) return "I";
+    if (["Ó", "Ò", "Ỏ", "Õ", "Ọ", "Ô", "Ố", "Ồ", "Ổ", "Ỗ", "Ộ", "Ơ", "Ớ", "Ờ", "Ở", "Ỡ", "Ợ"].includes(c)) return "O";
+    if (["Ú", "Ù", "Ủ", "Ũ", "Ụ", "Ư", "Ứ", "Ừ", "Ử", "Ữ", "Ự"].includes(c)) return "U";
+    if (["Ý", "Ỳ", "Ỷ", "Ỹ", "Ỵ"].includes(c)) return "Y";
+    return c;
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const sections = useMemo(() => {
+    const grouped: Record<string, Exercise[]> = {};
+    filteredExercises.forEach(ex => {
+      const name = language === "en" ? ex.nameEn : ex.nameVi;
+      const firstLetter = normalizeChar(name.charAt(0));
+      if (!grouped[firstLetter]) {
+        grouped[firstLetter] = [];
+      }
+      grouped[firstLetter].push(ex);
+    });
+
+    const sortedKeys = Object.keys(grouped).sort();
+    return sortedKeys.map(key => ({
+      title: key,
+      data: grouped[key].sort((a, b) => {
+        const nameA = language === "en" ? a.nameEn : a.nameVi;
+        const nameB = language === "en" ? b.nameEn : b.nameVi;
+        return nameA.localeCompare(nameB);
+      })
+    }));
+  }, [filteredExercises, language]);
+
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable hitSlop={12} onPress={() => router.back()}>
-          <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
+          <Ionicons color={colors.textPrimary} name="chevron-back" size={28} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t.exercise.logActivity}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Thêm hoạt động</Text>
+        <View style={{ width: 28 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
-        {/* ── Chọn hoạt động ── */}
-        <Text style={styles.sectionLabel}>{t.exercise.activityType}</Text>
-        <View style={styles.activityGrid}>
-          {ACTIVITIES.map((activity) => {
-            const isActive = activity.id === selectedId;
-            return (
-              <Pressable
-                key={activity.id}
-                onPress={() => setSelectedId(activity.id)}
-                style={[styles.activityCard, isActive && styles.activityCardActive]}
-              >
-                <MaterialCommunityIcons
-                  color={isActive ? colors.primary : colors.textMuted}
-                  name={activity.icon}
-                  size={28}
-                />
-                <Text style={[styles.activityLabel, isActive && styles.activityLabelActive]}>
-                  {t.activities[activity.id] || activity.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* ── Cường độ ── */}
-        <Text style={styles.sectionLabel}>{t.exercise.intensityText}</Text>
-        <View style={styles.intensityRow}>
-          {(["amateur", "professional"] as ActivityIntensity[]).map((level) => (
-            <Pressable
-              key={level}
-              onPress={() => setIntensity(level)}
-              style={[
-                styles.intensityBtn,
-                intensity === level && styles.intensityBtnActive,
-              ]}
-            >
-              <Ionicons
-                color={intensity === level ? colors.primary : colors.textMuted}
-                name={level === "amateur" ? "walk-outline" : "trending-up-outline"}
-                size={18}
-              />
-              <Text
-                style={[
-                  styles.intensityText,
-                  intensity === level && { color: colors.primary },
-                ]}
-              >
-                {level === "amateur" ? t.exercise.normal : t.exercise.pro}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* ── Thời gian ── */}
-        <Text style={styles.sectionLabel}>{t.exercise.timeMinutes}</Text>
-        <View style={styles.durationRow}>
-          <Pressable
-            onPress={() => setDuration((d) => String(Math.max(1, parseFloat(d) - 5)))}
-            style={styles.stepBtn}
-          >
-            <Ionicons color={colors.textPrimary} name="remove" size={22} />
-          </Pressable>
+      <View style={styles.content}>
+        {/* Search */}
+        <View style={styles.searchContainer}>
+          <Ionicons color={colors.textMuted} name="search" size={20} style={styles.searchIcon} />
           <TextInput
-            keyboardType="numeric"
-            onChangeText={setDuration}
-            style={styles.durationInput}
-            value={duration}
+            style={styles.searchInput}
+            placeholder="Tìm kiếm hoạt động"
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
-          <Pressable
-            onPress={() => setDuration((d) => String(parseFloat(d) + 5))}
-            style={styles.stepBtn}
-          >
-            <Ionicons color={colors.textPrimary} name="add" size={22} />
-          </Pressable>
         </View>
 
-        {/* ── Preview calo đốt ── */}
-        {selectedId && durationNum > 0 && (
-          <View style={styles.burnPreview}>
-            <Ionicons color={colors.success} name="flame" size={24} />
-            <View>
-              <Text style={styles.burnKcal}>{caloriesBurned} kcal</Text>
-              <Text style={styles.burnNote}>
-                {t.exercise.burnSuffix(t.activities[selectedId], durationNum, intensity === "professional")}
-              </Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color={colors.primary} size="large" />
+          </View>
+        ) : (
+          <View style={styles.listWrapper}>
+            <SectionList
+              sections={sections}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              ListHeaderComponent={
+                <>
+                  {!searchQuery && (
+                    <>
+                      <Text style={styles.sectionLabel}>THEO DÕI TỰ ĐỘNG</Text>
+                      <View style={styles.healthCard}>
+                        <View style={styles.healthIconContainer}>
+                          <Ionicons name="heart" size={32} color="#FF3B30" />
+                        </View>
+                        <View style={styles.healthTextContainer}>
+                          <Text style={styles.healthText}>
+                            Kết nối Apple Health để Wao tự theo dõi calo hoạt động cho bạn.
+                          </Text>
+                          <Text style={styles.healthLink}>Kết nối</Text>
+                        </View>
+                      </View>
+                    </>
+                  )}
+                </>
+              }
+              renderSectionHeader={({ section: { title } }) => (
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>{title}</Text>
+                </View>
+              )}
+              renderItem={({ item }) => {
+                const name = language === "en" ? item.nameEn : item.nameVi;
+                
+                return (
+                  <Pressable 
+                    style={styles.exerciseItem}
+                    onPress={() => router.push({ pathname: "/exercise-detail", params: { exerciseId: item.id, date: targetDate } })}
+                  >
+                    {item.iconUrl ? (
+                      <Image source={{ uri: item.iconUrl }} style={styles.exerciseImage} />
+                    ) : null}
+                    <View style={styles.exerciseTextContainer}>
+                      <Text style={styles.exerciseName}>
+                        {item.nameVi} ({item.nameEn})
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                  </Pressable>
+                );
+              }}
+            />
+            
+            {/* Alphabet Index */}
+            <View style={styles.alphabetIndex}>
+              {alphabet.map((letter) => (
+                <Text 
+                  key={letter} 
+                  style={[
+                    styles.alphabetLetter, 
+                    sections.some(s => s.title === letter) && styles.alphabetLetterActive
+                  ]}
+                >
+                  {letter}
+                </Text>
+              ))}
             </View>
           </View>
         )}
-
-        {/* ── Nút lưu ── */}
-        <Pressable
-          disabled={isSaving || !selectedId}
-          onPress={handleSave}
-          style={[
-            styles.saveBtn,
-            (!selectedId || isSaving) && { opacity: 0.5 },
-          ]}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons color="#fff" name="checkmark-circle-outline" size={20} />
-              <Text style={styles.saveBtnText}>{t.exercise.logActivity}</Text>
-            </>
-          )}
-        </Pressable>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgBase },
+  container: { flex: 1, backgroundColor: "#151226" }, // Dark background like image
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
   },
-  headerTitle: { ...typography.bodyStrong, color: colors.textPrimary },
+  headerTitle: { ...typography.h3, color: "#FFFFFF", fontSize: 18 },
   content: {
+    flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
   },
-  sectionLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginTop: spacing.sm,
-  },
-  activityGrid: {
+  searchContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  activityCard: {
-    width: "30%",
     alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    height: 48,
+    marginBottom: spacing.lg,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    color: "#FFFFFF",
+    ...typography.body,
+    fontSize: 15,
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: "center",
-    paddingVertical: spacing.md,
-    gap: spacing.xs,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
-    borderColor: "transparent",
+    alignItems: "center",
   },
-  activityCardActive: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(165,108,255,0.1)",
-  },
-  activityLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: "center",
-  },
-  activityLabelActive: { color: colors.primary },
-  intensityRow: { flexDirection: "row", gap: spacing.sm },
-  intensityBtn: {
+  listWrapper: {
     flex: 1,
     flexDirection: "row",
+  },
+  listContent: {
+    paddingBottom: spacing.xxxl,
+    paddingRight: spacing.xl,
+  },
+  sectionLabel: {
+    color: "#8E8E93",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    marginBottom: spacing.md,
+  },
+  healthCard: {
+    flexDirection: "row",
+    backgroundColor: "#2B1B54",
+    borderRadius: radius.md,
+    padding: spacing.md,
     alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  healthIconContainer: {
+    width: 60,
+    height: 60,
+    backgroundColor: "#FFFFFF",
     borderRadius: radius.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.md,
   },
-  intensityBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(165,108,255,0.1)",
+  healthTextContainer: {
+    flex: 1,
+    justifyContent: "center",
   },
-  intensityText: {
-    ...typography.caption,
-    color: colors.textMuted,
+  healthText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  healthLink: {
+    color: "#A56CFF",
+    fontSize: 14,
     fontWeight: "600",
   },
-  durationRow: {
+  sectionHeader: {
+    paddingVertical: spacing.xs,
+    backgroundColor: "#151226",
+  },
+  sectionTitle: {
+    color: "#8E8E93",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  exerciseItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.md,
-  },
-  stepBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  durationInput: {
-    width: 80,
-    height: 56,
-    textAlign: "center",
-    ...typography.h3,
-    color: colors.textPrimary,
-    fontSize: 28,
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-  },
-  burnPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    backgroundColor: "rgba(92,214,122,0.1)",
-    borderRadius: radius.sm,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(92,214,122,0.25)",
-    marginTop: spacing.sm,
-  },
-  burnKcal: {
-    ...typography.h3,
-    color: colors.success,
-    fontSize: 24,
-  },
-  burnNote: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  saveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.success,
-    borderRadius: radius.sm,
     paddingVertical: spacing.md,
-    gap: spacing.sm,
-    marginTop: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
   },
-  saveBtnText: { ...typography.bodyStrong, color: "#fff" },
+  exerciseImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    marginRight: spacing.md,
+  },
+  exerciseTextContainer: {
+    flex: 1,
+  },
+  exerciseName: {
+    color: "#FFFFFF",
+    fontSize: 16,
+  },
+  alphabetIndex: {
+    position: "absolute",
+    right: -spacing.md,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 24,
+  },
+  alphabetLetter: {
+    color: "rgba(255,255,255,0.3)",
+    fontSize: 11,
+    fontWeight: "bold",
+    marginVertical: 1,
+  },
+  alphabetLetterActive: {
+    color: "#A56CFF",
+  },
 });

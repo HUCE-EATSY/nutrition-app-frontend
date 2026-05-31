@@ -3,9 +3,9 @@ import { ActivityIndicator, Text, View } from "react-native";
 
 import { t } from "@/constants/i18n";
 import { colors } from "@/constants";
-import { useOnboardingStore } from "@/hooks/store/onboardingStore";
-import { useAuthStore } from "@/hooks/store/authStore";
-import { getDraftResumePath, getPublicResumePath } from "@/domain/onboarding";
+import { useOnboardingStore } from "@/store/onboardingStore";
+import { useAuthStore } from "@/store/authStore";
+import { getDraftResumePath, getPublicResumePath } from "@/utils/onboarding";
 
 export default function IndexScreen() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
