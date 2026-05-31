@@ -272,10 +272,10 @@ export default function SettingsScreen() {
                 {language === "vi" ? "Đang tải cài đặt..." : "Loading settings..."}
               </Text>
             ) : (
-              serverSettings.map((item) => {
+              serverSettings.map((item, index) => {
                 const displayName = language === "vi" ? item.notificationNameVi : item.notificationNameEn;
                 return (
-                  <View key={item.id || item.notificationTypeId} style={styles.childRow}>
+                  <View key={item.notificationTypeId || `setting-${index}`} style={styles.childRow}>
                     <Text style={styles.childRowTitle}>{displayName}</Text>
                     <Switch
                       value={item.isEnabled}

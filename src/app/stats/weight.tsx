@@ -7,6 +7,8 @@ import { useWeightStats } from "@/hooks/stats/useWeightStats";
 import { FilterTabs } from "@/components/stats/FilterTabs";
 import { LineChart } from "@/components/charts/LineChart";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
+import { useWeightStore } from "@/store/statsStore";
+import { Image } from "react-native";
 
 export default function WeightStatsScreen() {
   const colors = useAppColors();
@@ -20,8 +22,27 @@ export default function WeightStatsScreen() {
     currentBmi, bmiChange, bmiStatus, bmiStatusColor,
     isLoading,
   } = useWeightStats();
+  const { weightLogs } = useWeightStore();
 
   const hasData = actualChartData.length > 0;
+
+  // Lấy những log có ảnh, tối đa 5 ảnh gần nhất
+  const imageLogs = React.useMemo(() => {
+    return weightLogs
+      .filter((log) => log.photo_url || log.photoUrl)
+      .slice(0, 5);
+  }, [weightLogs]);
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}`;
+    } catch {
+      return dateString;
+    }
+  };
 
   return (
     <ScreenBackground withGlow={false}>
@@ -99,6 +120,41 @@ export default function WeightStatsScreen() {
               </View>
             </View>
 
+            {/* Progress Image Section */}
+            <View style={styles.imageSectionContainer}>
+              <View style={styles.imageSectionHeader}>
+                <Text style={styles.imageSectionTitle}>Hình ảnh tiến trình</Text>
+                <TouchableOpacity onPress={() => router.push("/weight-history")} hitSlop={10}>
+                  <Text style={styles.viewAllText}>Xem thêm</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.imageScrollContent}
+              >
+                {/* Data Cards */}
+                {imageLogs.map((log, index) => {
+                  const imageUrl = log.photoUrl || log.photo_url;
+                  return (
+                    <View key={log.id || index} style={styles.dataItemContainer}>
+                      <Image source={{ uri: imageUrl! }} style={styles.imageBox} resizeMode="cover" />
+                      <Text style={styles.weightText}>{log.weight_kg} kg</Text>
+                      <Text style={styles.dateText}>{formatDate(log.log_date)}</Text>
+                    </View>
+                  );
+                })}
+
+                {/* Add Button Item (Bên phải) */}
+                <TouchableOpacity style={styles.addItemContainer} onPress={() => router.push("/log-weight")}>
+                  <View style={styles.addIconBox}>
+                    <Ionicons name="add" size={32} color={colors.textSecondary} />
+                  </View>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+
             {/* BMI Card */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
@@ -136,7 +192,7 @@ export default function WeightStatsScreen() {
 
         {/* Footer nav */}
         <View style={styles.footerNav}>
-          <TouchableOpacity style={styles.footerLink}>
+          <TouchableOpacity style={styles.footerLink} onPress={() => router.push("/weight-history")}>
             <Text style={styles.footerLinkText}>Nhật ký & Lịch sử cân nặng</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
@@ -173,4 +229,67 @@ const getStyles = (colors: any) => StyleSheet.create({
   footerLink: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 16 },
   footerLinkText: { color: colors.textPrimary, fontSize: 16 },
   divider: { height: 1, backgroundColor: colors.borderSoft },
+
+  // Styles cho Progress Image Section
+  imageSectionContainer: {
+    backgroundColor: colors.bgElevated,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  imageSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  imageSectionTitle: {
+    color: colors.textPrimary,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  viewAllText: {
+    color: colors.primary,
+    fontSize: 14,
+  },
+  imageScrollContent: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  addItemContainer: {
+    // Không cần marginRight nếu ở cuối, nhưng giữ cho an toàn
+  },
+  addIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dataItemContainer: {
+    alignItems: "center",
+    marginRight: 12,
+    width: 80,
+  },
+  imageBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceAlt,
+  },
+  weightText: {
+    color: colors.textPrimary,
+    fontWeight: "bold",
+    fontSize: 14,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  dateText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    textAlign: "center",
+  },
 });

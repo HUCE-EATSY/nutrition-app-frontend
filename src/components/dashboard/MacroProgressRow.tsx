@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { StyleSheet, Text, View, Pressable, Animated } from "react-native";
 import { useRouter } from "expo-router";
 
 import { t, useTranslation } from "@/constants/i18n";
@@ -23,6 +23,21 @@ function ProgressItem({ label, current, target, color, icon, type }: MacroItemPr
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
 
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: percentage,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [percentage]);
+
+  const widthInterpolation = animatedValue.interpolate({
+    inputRange: [0, 100],
+    outputRange: ["0%", "100%"]
+  });
+
   return (
     <Pressable style={styles.item} onPress={() => router.push(`/guide/${type}`)}>
       <View style={styles.itemHeader}>
@@ -30,8 +45,8 @@ function ProgressItem({ label, current, target, color, icon, type }: MacroItemPr
         <Text style={styles.label}>{label}</Text>
       </View>
       <View style={styles.track}>
-        <View style={[styles.progress, { width: `${percentage}%`, backgroundColor: color }]} />
-        <View style={[styles.thumb, { left: `${percentage}%`, backgroundColor: color }]} />
+        <Animated.View style={[styles.progress, { width: widthInterpolation, backgroundColor: color }]} />
+        <Animated.View style={[styles.thumb, { left: widthInterpolation, backgroundColor: color, transform: [{ translateX: -3 }] }]} />
       </View>
       <Text style={styles.values}>
         <Text style={styles.current}>{current}</Text>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { spacing, typography, radius } from "@/constants";
@@ -21,6 +22,8 @@ import { getTodayDateISO } from "@/utils/date";
 import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { WaterPresetsGrid } from "@/components/water/WaterPresetsGrid";
 
 export default function LogWaterScreen() {
   const colors = useAppColors();
@@ -41,6 +44,16 @@ export default function LogWaterScreen() {
   useEffect(() => {
     setIntake(waterLogs[logDateStr] || 0);
   }, [logDateStr, waterLogs]);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || new Date(logDateStr);
+    setShowDatePicker(Platform.OS === "ios");
+    setLogDateStr(currentDate.toISOString().split('T')[0]);
+  };
 
   useEffect(() => {
     setGoal(waterGoal);
@@ -96,7 +109,8 @@ export default function LogWaterScreen() {
     <SafeScreen contentContainerStyle={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex1}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "padding"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 25}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -107,7 +121,11 @@ export default function LogWaterScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView 
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContent} 
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Wave/Droplet Progress Card */}
           <View style={styles.progressCard}>
             <View style={styles.waterDropOuter}>
@@ -132,65 +150,18 @@ export default function LogWaterScreen() {
           </View>
 
           {/* Stepper controls */}
-          <View style={styles.inputSection}>
-            <Text style={styles.sectionLabel}>Lượng nước đã uống</Text>
-            <View style={styles.stepperContainer}>
-              <Pressable
-                style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
-                onPress={() => handleQuickSubtract(250)}
-              >
-                <MaterialCommunityIcons name="minus" size={28} color={colors.textPrimary} />
-              </Pressable>
-
-              <View style={styles.valueInputContainer}>
-                <TextInput
-                  style={styles.intakeInput}
-                  value={String(intake)}
-                  onChangeText={handleTextChange}
-                  keyboardType="numeric"
-                  maxLength={5}
-                />
-                <Text style={styles.mlLabel}>ml</Text>
-              </View>
-
-              <Pressable
-                style={({ pressed }) => [styles.stepperBtn, pressed && styles.stepperBtnPressed]}
-                onPress={() => handleQuickAdd(250)}
-              >
-                <MaterialCommunityIcons name="plus" size={28} color={colors.textPrimary} />
-              </Pressable>
-            </View>
-          </View>
+          <QuantityStepper
+            label="Lượng nước đã uống"
+            value={intake}
+            unit="ml"
+            step={250}
+            onChange={handleTextChange}
+            onAdd={handleQuickAdd}
+            onSubtract={handleQuickSubtract}
+          />
 
           {/* Presets Grid */}
-          <View style={styles.presetsSection}>
-            <Text style={styles.sectionLabel}>Thêm nhanh theo cốc/chai</Text>
-            <View style={styles.presetsGrid}>
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(150)}>
-                <MaterialCommunityIcons name="cup-water" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Cốc nhỏ</Text>
-                <Text style={styles.presetVal}>+150 ml</Text>
-              </Pressable>
-              
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(250)}>
-                <MaterialCommunityIcons name="cup" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Cốc tiêu chuẩn</Text>
-                <Text style={styles.presetVal}>+250 ml</Text>
-              </Pressable>
-
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(500)}>
-                <MaterialCommunityIcons name="bottle-wine-outline" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Chai vừa</Text>
-                <Text style={styles.presetVal}>+500 ml</Text>
-              </Pressable>
-
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(750)}>
-                <MaterialCommunityIcons name="bottle-wine" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Chai lớn</Text>
-                <Text style={styles.presetVal}>+750 ml</Text>
-              </Pressable>
-            </View>
-          </View>
+          <WaterPresetsGrid onAdd={handleQuickAdd} />
 
           {/* Settings Section: Goal & Date */}
           <View style={styles.settingsSection}>
@@ -202,32 +173,41 @@ export default function LogWaterScreen() {
                 onChangeText={handleGoalChange}
                 keyboardType="numeric"
                 maxLength={5}
+                onFocus={() => {
+                  setTimeout(() => {
+                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                  }, 250);
+                }}
               />
             </View>
 
             <View style={styles.settingsRow}>
               <Text style={styles.settingsLabel}>Ngày ghi nhận</Text>
-              <View style={styles.dateInputContainer}>
-                <TextInput
-                  style={[styles.settingsInput, styles.dateInput]}
-                  value={logDateStr}
-                  onChangeText={setLogDateStr}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.textMuted}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                />
+              <Pressable style={styles.dateInputContainer} onPress={() => setShowDatePicker(true)}>
+                <Text style={[styles.settingsInput, styles.dateInput]}>
+                  {logDateStr}
+                </Text>
                 <Ionicons name="calendar-outline" size={18} color={colors.textPrimary} style={styles.dateIcon} />
-              </View>
+              </Pressable>
             </View>
           </View>
+          
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date(logDateStr)}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={onDateChange}
+              maximumDate={new Date()}
+            />
+          )}
         </ScrollView>
-      </KeyboardAvoidingView>
 
-      {/* Footer Save Button */}
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <GradientButton label="Lưu thay đổi" onPress={handleSave} />
-      </View>
+        {/* Footer Save Button - Moved inside KeyboardAvoidingView */}
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+          <GradientButton label="Lưu thay đổi" onPress={handleSave} />
+        </View>
+      </KeyboardAvoidingView>
     </SafeScreen>
   );
 }
@@ -308,79 +288,6 @@ const getStyles = (colors: any) => StyleSheet.create({
   progressSub: {
     ...typography.caption,
     color: colors.textMuted,
-  },
-  inputSection: {
-    gap: spacing.md,
-  },
-  sectionLabel: {
-    ...typography.bodyStrong,
-    color: colors.textSecondary,
-    fontSize: 14,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  stepperContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.surface,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-  },
-  stepperBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepperBtnPressed: {
-    opacity: 0.7,
-  },
-  valueInputContainer: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    justifyContent: "center",
-  },
-  intakeInput: {
-    ...typography.display,
-    color: colors.textPrimary,
-    textAlign: "center",
-    minWidth: 100,
-    padding: 0,
-    margin: 0,
-  },
-  mlLabel: {
-    ...typography.bodyStrong,
-    color: colors.textSecondary,
-    marginLeft: 4,
-  },
-  presetsSection: {
-    gap: spacing.md,
-  },
-  presetsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  presetItem: {
-    width: "48%",
-    backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: radius.sm,
-    alignItems: "center",
-    gap: 4,
-  },
-  presetName: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  presetVal: {
-    ...typography.bodyStrong,
-    color: colors.carbs,
   },
   settingsSection: {
     backgroundColor: colors.surface,

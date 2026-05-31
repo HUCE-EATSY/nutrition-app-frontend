@@ -1,27 +1,52 @@
 import React from "react";
 import { useAppColors } from "@/hooks/useAppColors";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useNutritionStats } from "@/hooks/stats/useNutritionStats";
 import { FilterTabs } from "@/components/stats/FilterTabs";
 import { DateSlider } from "@/components/stats/DateSlider";
 import { PieChart } from "@/components/charts/PieChart";
+import { BarChart } from "@/components/charts/BarChart";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
+import { NutritionPeriod } from "@/constants/stats";
+
+const { width: screenWidth } = Dimensions.get("window");
+
+// Helper: tính label khoảng thời gian tuần đang xem
+function getWeekRangeLabel(offset: number): string {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.getFullYear(), now.getMonth(), diffToMonday);
+  monday.setDate(monday.getDate() + offset * 7);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+
+  const fmt = (d: Date) =>
+    `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${fmt(monday)} - ${fmt(sunday)}`;
+}
 
 export default function NutritionStatsScreen() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
-  const { 
+  const {
+    period,
     activeTabLabel, tabs, handleTabChange,
     dates, selectedDate, handleSelectDate,
-    summary, isLoading
+    summary, isLoading,
+    weekOffset, barChartData, targetCalories,
+    weeklyAvgCalories, weeklyAvgProtein, weeklyAvgCarbs, weeklyAvgFat,
+    isLoadingWeek,
+    handlePrevWeek, handleNextWeek, canGoNext,
   } = useNutritionStats();
-  
+
+  // ---- Tab Ngày: dữ liệu ----
   const targetCal = summary?.target?.target_calories ?? 0;
   const consumedCal = summary?.total_calories ?? 0;
-  
+
   const proteinG = summary?.total_protein_g ?? 0;
   const carbG = summary?.total_carbs_g ?? 0;
   const fatG = summary?.total_fat_g ?? 0;
@@ -34,104 +59,182 @@ export default function NutritionStatsScreen() {
   const carbPct = summary?.target?.carbs_pct ?? 0;
   const fatPct = summary?.target?.fat_pct ?? 0;
 
-
-
   const macroData = [
-    { label: "Chất đạm", value: proteinG, color: colors.danger },
-    { label: "Đường bột", value: carbG, color: colors.info },
-    { label: "Chất béo", value: fatG, color: "#F59E0B" },
+    { label: "Chất đạm", value: Number(proteinG), color: colors.danger },
+    { label: "Đường bột", value: Number(carbG), color: colors.info },
+    { label: "Chất béo", value: Number(fatG), color: "#F59E0B" },
   ];
 
   return (
     <ScreenBackground withGlow={false}>
       <ScrollView style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          headerShown: false,
-        }} 
-      />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thống kê dinh dưỡng</Text>
-        <View style={{ width: 24 }} />
-      </View>
+        <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={styles.content}>
-        <FilterTabs 
-          tabs={tabs} 
-          activeTab={activeTabLabel} 
-          onChange={handleTabChange} 
-        />
-        
-        {activeTabLabel === "Ngày" && (
-          <DateSlider dates={dates} selectedDate={selectedDate} onSelectDate={handleSelectDate} />
-        )}
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Thống kê dinh dưỡng</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
-        {activeTabLabel === "Tuần" && (
-           <View style={[styles.card, { alignItems: 'center', paddingVertical: 40 }]}>
-             <Text style={{ color: '#9CA3AF' }}>Đang phát triển</Text>
-           </View>
-        )}
+        <View style={styles.content}>
+          <FilterTabs
+            tabs={tabs}
+            activeTab={activeTabLabel}
+            onChange={handleTabChange}
+          />
 
-        {isLoading ? (
-          <View style={[styles.card, { paddingVertical: 40, alignItems: 'center' }]}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        ) : activeTabLabel === "Ngày" ? (
-          <>
-            {/* Calorie Overview Card */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Thống kê lượng calo trong ngày</Text>
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Calo mục tiêu</Text>
-                <Text style={styles.targetValue}>{targetCal} cal</Text>
-              </View>
-              <View style={styles.divider} />
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>Calo thực phẩm nạp vào</Text>
-                <Text style={styles.greyValue}>{consumedCal} cal</Text>
-              </View>
-            </View>
+          {/* ===== TAB NGÀY ===== */}
+          {period === NutritionPeriod.DAY && (
+            <DateSlider dates={dates} selectedDate={selectedDate} onSelectDate={handleSelectDate} />
+          )}
 
-            {/* Macro Statistics Card */}
-            <View style={styles.card}>
-              <View style={styles.chartContainer}>
-                <PieChart 
-                  data={macroData} 
-                />
+          {period === NutritionPeriod.DAY && (
+            isLoading ? (
+              <View style={[styles.card, { paddingVertical: 40, alignItems: "center" }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
               </View>
-              <View style={styles.legendContainer}>
-                <Text style={styles.legendText}>⚡ Chất đạm ({proteinG}g) | {proteinPct}% | 20%</Text>
-                <Text style={styles.legendText}>🍚 Đường bột ({carbG}g) | {carbPct}% | 50%</Text>
-                <Text style={styles.legendText}>🥑 Chất béo ({fatG}g) | {fatPct}% | 30%</Text>
+            ) : (
+              <>
+                {/* Calorie Overview Card */}
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Thống kê lượng calo trong ngày</Text>
+                  <View style={styles.row}>
+                    <Text style={styles.rowLabel}>Calo mục tiêu</Text>
+                    <Text style={styles.targetValue}>{targetCal} cal</Text>
+                  </View>
+                  <View style={styles.divider} />
+                  <View style={styles.row}>
+                    <Text style={styles.rowLabel}>Calo thực phẩm nạp vào</Text>
+                    <Text style={styles.greyValue}>{consumedCal} cal</Text>
+                  </View>
+                </View>
+
+                {/* Macro Statistics Card */}
+                <View style={styles.card}>
+                  <View style={styles.chartContainer}>
+                    <PieChart data={macroData} />
+                  </View>
+                  <View style={styles.legendContainer}>
+                    <Text style={styles.legendText}>⚡ Chất đạm ({proteinG}g) | {proteinPct}% | 20%</Text>
+                    <Text style={styles.legendText}>🍚 Đường bột ({carbG}g) | {carbPct}% | 50%</Text>
+                    <Text style={styles.legendText}>🥑 Chất béo ({fatG}g) | {fatPct}% | 30%</Text>
+                  </View>
+                </View>
+
+                {/* Detailed Nutrients List */}
+                <View style={styles.card}>
+                  <Text style={styles.sectionTitle}>Giá trị dinh dưỡng</Text>
+                  <NutrientRow label="Đường bột (carb)" current={`${carbG} g`} target={`${targetCarbG} g`} />
+                  <NutrientRow label="Chất xơ" current="-" target="-" />
+                  <NutrientRow label="Đường" current="-" target="-" />
+                  <NutrientRow label="Chất béo (fat)" current={`${fatG} g`} target={`${targetFatG} g`} />
+                  <NutrientRow label="Chất đạm (protein)" current={`${proteinG} g`} target={`${targetProteinG} g`} />
+
+                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Khoáng chất</Text>
+                  <NutrientRow label="Canxi" current="-" target="-" />
+                  <NutrientRow label="Kali" current="-" target="-" />
+                  <NutrientRow label="Sắt" current="-" target="-" isLast />
+                </View>
+              </>
+            )
+          )}
+
+          {/* ===== TAB TUẦN ===== */}
+          {period === NutritionPeriod.WEEK && (
+            <>
+              {/* Date Navigator */}
+              <View style={styles.dateNavigator}>
+                <TouchableOpacity onPress={handlePrevWeek} style={styles.navArrow}>
+                  <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
+                </TouchableOpacity>
+                <Text style={styles.dateRangeText}>{getWeekRangeLabel(weekOffset)}</Text>
+                <TouchableOpacity
+                  onPress={handleNextWeek}
+                  disabled={!canGoNext}
+                  style={[styles.navArrow, !canGoNext && { opacity: 0.3 }]}
+                >
+                  <Ionicons name="chevron-forward" size={20} color={colors.textPrimary} />
+                </TouchableOpacity>
               </View>
-            </View>
-            
-            {/* Detailed Nutrients List */}
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Giá trị dinh dưỡng</Text>
-              <NutrientRow label="Đường bột (carb)" current={`${carbG} g`} target={`${targetCarbG} g`} />
-              <NutrientRow label="Chất xơ" current="-" target="-" />
-              <NutrientRow label="Đường" current="-" target="-" />
-              <NutrientRow label="Chất béo (fat)" current={`${fatG} g`} target={`${targetFatG} g`} />
-              <NutrientRow label="Chất đạm (protein)" current={`${proteinG} g`} target={`${targetProteinG} g`} />
-              
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Khoáng chất</Text>
-              <NutrientRow label="Canxi" current="-" target="-" />
-              <NutrientRow label="Kali" current="-" target="-" />
-              <NutrientRow label="Sắt" current="-" target="-" isLast />
-            </View>
-          </>
-        ) : null}
-      </View>
-    </ScrollView>
+
+              {/* Chart Area */}
+              {isLoadingWeek ? (
+                <View style={[styles.card, { paddingVertical: 40, alignItems: "center" }]}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              ) : barChartData.length === 0 ? (
+                <View style={[styles.card, { paddingVertical: 40, alignItems: "center" }]}>
+                  <Ionicons name="nutrition-outline" size={40} color={colors.borderSoft} />
+                  <Text style={[styles.greyValue, { marginTop: 12 }]}>Chưa có dữ liệu dinh dưỡng</Text>
+                </View>
+              ) : (
+                <View style={styles.chartSection}>
+                  <BarChart
+                    data={barChartData}
+                    averageValue={targetCalories}
+                    barColor="#A78BFA"
+                    showYAxis={true}
+                    showAveragePill={true}
+                    width={screenWidth - 32}
+                    height={190}
+                  />
+                  {/* Chart Legends */}
+                  <View style={styles.chartLegend}>
+                    <View style={styles.legendItem}>
+                      <Text style={styles.legendDash}>- - -</Text>
+                      <Text style={styles.legendItemLabel}>Calo mục tiêu</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendBar, { backgroundColor: "#A78BFA" }]} />
+                      <Text style={styles.legendItemLabel}>Calo nạp vào</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Weekly Summary Card */}
+              {!isLoadingWeek && (
+                <View style={styles.card}>
+                  <View style={styles.cardHeaderRow}>
+                    <Ionicons name="bar-chart-outline" size={20} color="#A78BFA" />
+                    <Text style={[styles.cardTitle, { marginLeft: 8 }]}>Tổng kết tuần</Text>
+                  </View>
+
+                  <View style={styles.gridMetrics}>
+                    <View style={styles.metricBox}>
+                      <Text style={styles.metricValue}>{weeklyAvgCalories.toLocaleString("vi-VN")}</Text>
+                      <Text style={styles.metricUnit}>kcal/ngày</Text>
+                      <Text style={styles.metricLabel}>Trung bình calo</Text>
+                    </View>
+                    <View style={styles.metricBox}>
+                      <Text style={styles.metricValue}>{targetCalories > 0 ? targetCalories : "—"}</Text>
+                      <Text style={styles.metricUnit}>kcal/ngày</Text>
+                      <Text style={styles.metricLabel}>Mục tiêu calo</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.divider} />
+
+                  <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Trung bình macro</Text>
+                  <View style={styles.macroRow}>
+                    <MacroChip label="Chất đạm" value={`${weeklyAvgProtein}g`} color={colors.danger} />
+                    <MacroChip label="Đường bột" value={`${weeklyAvgCarbs}g`} color={colors.info} />
+                    <MacroChip label="Chất béo" value={`${weeklyAvgFat}g`} color="#F59E0B" />
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      </ScrollView>
     </ScreenBackground>
   );
 }
+
+// ---- Sub-components ----
 
 const NutrientRow = ({ label, current, target, isLast = false }: any) => {
   const colors = useAppColors();
@@ -145,6 +248,18 @@ const NutrientRow = ({ label, current, target, isLast = false }: any) => {
   );
 };
 
+const MacroChip = ({ label, value, color }: { label: string; value: string; color: string }) => {
+  const colors = useAppColors();
+  return (
+    <View style={{ flex: 1, alignItems: "center", backgroundColor: color + "22", borderRadius: 12, paddingVertical: 10, marginHorizontal: 4 }}>
+      <Text style={{ color, fontWeight: "700", fontSize: 16 }}>{value}</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>{label}</Text>
+    </View>
+  );
+};
+
+// ---- Styles ----
+
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: "transparent" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, paddingTop: 60 },
@@ -153,6 +268,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   content: { padding: 16 },
   card: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
   cardTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "600", marginBottom: 16 },
+  cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   row: { flexDirection: "row", justifyContent: "space-between", marginVertical: 8 },
   rowLabel: { color: colors.textSecondary, fontSize: 16 },
   targetValue: { color: "#A78BFA", fontSize: 16, fontWeight: "bold" },
@@ -166,4 +282,27 @@ const getStyles = (colors: any) => StyleSheet.create({
   nutrientLabel: { flex: 2, color: colors.textPrimary },
   nutrientCurrent: { flex: 1, color: colors.textSecondary, textAlign: "center" },
   nutrientTarget: { flex: 1, color: "#A78BFA", textAlign: "right" },
+
+  // Date Navigator (đồng bộ với steps.tsx)
+  dateNavigator: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12, paddingHorizontal: 4 },
+  navArrow: { padding: 8 },
+  dateRangeText: { color: colors.textPrimary, fontSize: 15, fontWeight: "600" },
+
+  // Chart Section
+  chartSection: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
+  chartLegend: { flexDirection: "row", justifyContent: "center", gap: 20, marginTop: 8 },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendDash: { color: "rgba(255,255,255,0.4)", fontSize: 14 },
+  legendItemLabel: { color: colors.textSecondary, fontSize: 12 },
+  legendBar: { width: 12, height: 12, borderRadius: 3 },
+
+  // Metrics Grid
+  gridMetrics: { flexDirection: "row", gap: 12, marginVertical: 12 },
+  metricBox: { flex: 1, backgroundColor: colors.bgBase, borderRadius: 12, padding: 12, alignItems: "center" },
+  metricValue: { color: colors.textPrimary, fontSize: 22, fontWeight: "700" },
+  metricUnit: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+  metricLabel: { color: colors.textSecondary, fontSize: 12, marginTop: 4, textAlign: "center" },
+
+  // Macro row
+  macroRow: { flexDirection: "row", marginTop: 4 },
 });

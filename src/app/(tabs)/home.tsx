@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
@@ -20,7 +20,7 @@ import { getTodayDateISO } from "@/utils/date";
 
 export default function HomeScreen() {
   const t = useTranslation();
-  const { summary, rawLogs, exercises, fetchDiary, selectedDate } = useDiaryStore();
+  const { summary, rawLogs, exercises, fetchDiary, selectedDate, setDate } = useDiaryStore();
   const { todaySteps, isConnected, stepRecords } = useStepsStore();
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
@@ -52,7 +52,32 @@ export default function HomeScreen() {
 
   const slotMap: Record<number, any[]> = {};
   for (const log of rawLogs) {
-    const hour = mealHourMap[log.mealTypeId] ?? 12;
+    let hour = mealHourMap[log.mealTypeId] ?? 12;
+    
+    // Ưu tiên đọc giờ từ logDate (vì ta đã lưu kèm giờ)
+    if (log.logDate && log.logDate.includes("T")) {
+      // Loại bỏ 'Z' để Date hiểu đây là giờ local, tránh bị lệch múi giờ (+7)
+      const dateStr = log.logDate.endsWith("Z") ? log.logDate.slice(0, -1) : log.logDate;
+      const dateObj = new Date(dateStr);
+      if (!isNaN(dateObj.getTime())) {
+        const h = dateObj.getHours();
+        if (h === 0 && log.logDate.includes("T00:00:00")) {
+          // Fallback cho dữ liệu cũ (chỉ lưu ngày, giờ là 00:00:00)
+          if (log.createdAt) {
+            const createdObj = new Date(log.createdAt);
+            if (!isNaN(createdObj.getTime())) hour = createdObj.getHours();
+          }
+        } else {
+          hour = h;
+        }
+      }
+    } else if (log.createdAt) {
+      const dateObj = new Date(log.createdAt);
+      if (!isNaN(dateObj.getTime())) {
+        hour = dateObj.getHours();
+      }
+    }
+
     if (!slotMap[hour]) slotMap[hour] = [];
     slotMap[hour].push({
       id: String(log.id),
@@ -70,8 +95,11 @@ export default function HomeScreen() {
     .map(Number)
     .sort((a, b) => a - b);
 
+  const isToday = selectedDate === todayStr;
+
   return (
-    <SafeScreen scrollable>
+    <View style={{ flex: 1 }}>
+      <SafeScreen scrollable>
       <View style={styles.screen}>
         <HomeHeader />
         <DateScroller />
@@ -93,10 +121,6 @@ export default function HomeScreen() {
             fat={summary?.consumedFatGram ?? 0}
             targetFat={summary?.targetFatGram ?? 67}
           />
-          <View style={styles.paginationDots}>
-            <View style={[styles.dot, styles.dotActive]} />
-            <View style={styles.dot} />
-          </View>
         </SurfaceCard>
 
         <View style={styles.section}>
@@ -202,14 +226,28 @@ export default function HomeScreen() {
         <WeightChartCard />
       </View>
     </SafeScreen>
+
+    {!isToday && (
+      <TouchableOpacity 
+        style={styles.floatingBtn}
+        onPress={() => {
+          setTimeout(() => {
+            setDate(todayStr);
+          }, 50);
+        }}
+      >
+        <Text style={styles.floatingBtnText}>Quay lại hôm nay</Text>
+      </TouchableOpacity>
+    )}
+    </View>
   );
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     gap: spacing.lg,
-    paddingVertical: spacing.lg,
-    paddingBottom: spacing.xxl * 2,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm, // Giảm padding xuống sát nhất có thể
   },
   macroCard: {
     padding: spacing.md,
@@ -338,5 +376,24 @@ const getStyles = (colors: any) => StyleSheet.create({
     ...typography.caption,
     fontSize: 11,
     fontWeight: "600",
+  },
+  floatingBtn: {
+    position: "absolute",
+    bottom: spacing.xl,
+    alignSelf: "center",
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 30,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  floatingBtnText: {
+    ...typography.bodyStrong,
+    color: "#FFFFFF",
+    fontSize: 15,
   },
 });
