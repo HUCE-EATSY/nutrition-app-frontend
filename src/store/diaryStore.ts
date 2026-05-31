@@ -76,8 +76,25 @@ function mapSummaryToUI(
   const slotMap: Record<number, DiaryEntry[]> = {};
   for (const log of logs) {
     let hour = mealHourMap[log.mealTypeId] ?? 12;
-    if (log.createdAt) {
-      // Backend returns UTC datetime ending with 'Z' usually, but just in case, parse it
+    
+    // Ưu tiên đọc giờ từ logDate (vì ta đã lưu kèm giờ)
+    if (log.logDate && log.logDate.includes("T")) {
+      // Loại bỏ 'Z' để Date hiểu đây là giờ local, tránh bị lệch múi giờ (+7)
+      const dateStr = log.logDate.endsWith("Z") ? log.logDate.slice(0, -1) : log.logDate;
+      const dateObj = new Date(dateStr);
+      if (!isNaN(dateObj.getTime())) {
+        const h = dateObj.getHours();
+        if (h === 0 && log.logDate.includes("T00:00:00")) {
+          // Fallback cho dữ liệu cũ (chỉ lưu ngày, giờ là 00:00:00)
+          if (log.createdAt) {
+            const createdObj = new Date(log.createdAt);
+            if (!isNaN(createdObj.getTime())) hour = createdObj.getHours();
+          }
+        } else {
+          hour = h;
+        }
+      }
+    } else if (log.createdAt) {
       const dateObj = new Date(log.createdAt);
       if (!isNaN(dateObj.getTime())) {
         hour = dateObj.getHours();
@@ -263,8 +280,8 @@ export const useDiaryStore = create<DiaryState>((set, get) => ({
       note: payload.note,
     };
     await foodLogService.createFoodLog(req);
-    // Refresh diary sau khi thêm
-    await get().fetchDiary(payload.dateISO);
+    // Refresh diary sau khi thêm (chỉ lấy phần YYYY-MM-DD)
+    await get().fetchDiary(payload.dateISO.split("T")[0]);
   },
 
   deleteFoodLog: async (logId) => {

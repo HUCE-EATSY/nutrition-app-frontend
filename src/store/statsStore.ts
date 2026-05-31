@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { ActivityPeriod, NutritionPeriod, StepsPeriod, WeightPeriod } from "@/constants/stats";
 import { DailySummaryResponse, WeightLogEntry, StepLogEntry } from "@/types/contracts";
-import { getDailySummary } from "@/services/nutritionLogService";
+import { getDailySummary, getNutritionTimeline } from "@/services/nutritionLogService";
 import { getWeightTimeline, getUserGoal } from "@/services/weightLogService";
 import { getTodayDateISO, getDateRangeForPeriod, formatLocalDate } from "@/utils/date";
 import { AppState, Platform } from "react-native";
@@ -40,6 +40,14 @@ interface NutritionState {
 
   setSelectedDate: (date: string) => void;
   fetchSummary: (date: string) => Promise<void>;
+
+  // === WEEK ===
+  weekOffset: number;
+  weeklyTimeline: DailySummaryResponse[];
+  isLoadingWeek: boolean;
+
+  setWeekOffset: (offset: number) => void;
+  fetchWeeklyTimeline: (offset?: number) => Promise<void>;
 }
 
 export const useNutritionStore = create<NutritionState>((set, get) => ({
@@ -75,6 +83,37 @@ export const useNutritionStore = create<NutritionState>((set, get) => ({
         error: error.message || "Không thể tải dữ liệu",
         isLoading: false
       });
+    }
+  },
+
+  // === WEEK ===
+  weekOffset: 0,
+  weeklyTimeline: [],
+  isLoadingWeek: false,
+
+  setWeekOffset: (offset) => set({ weekOffset: offset }),
+
+  fetchWeeklyTimeline: async (offset = 0) => {
+    set({ isLoadingWeek: true, error: null });
+    try {
+      // Tính từ Thứ 2 của tuần — đồng bộ với getPeriodRange(StepsPeriod.WEEK)
+      const now = new Date();
+      const day = now.getDay();
+      const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(now.getFullYear(), now.getMonth(), diffToMonday);
+      monday.setDate(monday.getDate() + offset * 7);
+      const sunday = new Date(monday);
+      sunday.setDate(sunday.getDate() + 6);
+
+      const from = formatLocalDate(monday);
+      const to   = formatLocalDate(sunday);
+
+      const data = await getNutritionTimeline(from, to);
+      set({ weeklyTimeline: data, weekOffset: offset });
+    } catch (err: any) {
+      set({ error: err.message || "Lỗi tải dữ liệu dinh dưỡng theo tuần" });
+    } finally {
+      set({ isLoadingWeek: false });
     }
   },
 }));

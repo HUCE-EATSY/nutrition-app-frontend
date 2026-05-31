@@ -155,7 +155,7 @@ export default function DiaryTimelineScreen() {
 
     try {
       if (editingLogId !== null) {
-        setToastMessage(t.mealEntry.updateSuccess(selectedFood.name, gramNum));
+        // Cập nhật (logic gọi API tuỳ bạn thêm sau)
       } else {
         // Chuyển giờ → mealTypeId: 1=Sáng, 2=Trưa, 3=Tối, 4=Phụ
         const mealTypeId =
@@ -163,18 +163,15 @@ export default function DiaryTimelineScreen() {
             selectedHourForMeal >= 11 && selectedHourForMeal <= 14 ? 2 :
               selectedHourForMeal >= 18 && selectedHourForMeal <= 22 ? 3 : 4;
 
+        const combinedDateISO = `${selectedDate}T${selectedHourForMeal.toString().padStart(2, "0")}:00:00`;
+
         await addMealEntry({
           foodItemId: selectedFood.id,   // UUID string
           mealTypeId,
-          dateISO: selectedDate,
+          dateISO: combinedDateISO,
           quantityG: gramNum,
         });
-
-        setToastMessage(t.mealEntry.saveSuccess(selectedFood.name, gramNum));
       }
-
-      setToastType("success");
-      setShowToast(true);
 
       // Reset state
       setSelectedFood(null);
@@ -200,258 +197,258 @@ export default function DiaryTimelineScreen() {
       setShowToast(true);
     }
   }
-    const formattedHour = `${selectedHourForMeal.toString().padStart(2, "0")}:00`;
-    const isToday = selectedDate === getTodayDateISO();
-    const dateStr = isToday ? t.common.today : formatShortDate(selectedDate);
-    const detailHeaderTitle = `${dateStr} • ${formattedHour}`;
+  const formattedHour = `${selectedHourForMeal.toString().padStart(2, "0")}:00`;
+  const isToday = selectedDate === getTodayDateISO();
+  const dateStr = isToday ? t.common.today : formatShortDate(selectedDate);
+  const detailHeaderTitle = `${dateStr} • ${formattedHour}`;
 
   return (
     <ScreenBackground withGlow={true}>
       <SafeAreaView edges={["top"]} style={styles.safeArea}>
 
-      {/* ── Header ── */}
-      <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
-        <Pressable hitSlop={12}>
-          <Ionicons color={colors.textPrimary} name="menu-outline" size={26} />
-        </Pressable>
+        {/* ── Header ── */}
+        <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
+          <Pressable hitSlop={12}>
+            <Ionicons color={colors.textPrimary} name="menu-outline" size={26} />
+          </Pressable>
 
-        <View style={styles.dateSelector}>
-          <Pressable hitSlop={12} onPress={goToPrevDay}>
-            <Ionicons color={colors.textPrimary} name="chevron-back" size={20} />
-          </Pressable>
-          <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
-            <Text style={styles.dateText}>{formatShortDate(selectedDate)}</Text>
-          </Pressable>
-          <Pressable hitSlop={12} onPress={goToNextDay}>
-            <Ionicons color={colors.textPrimary} name="chevron-forward" size={20} />
-          </Pressable>
+          <View style={styles.dateSelector}>
+            <Pressable hitSlop={12} onPress={goToPrevDay}>
+              <Ionicons color={colors.textPrimary} name="chevron-back" size={20} />
+            </Pressable>
+            <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
+              <Text style={styles.dateText}>{formatShortDate(selectedDate)}</Text>
+            </Pressable>
+            <Pressable hitSlop={12} onPress={goToNextDay}>
+              <Ionicons color={colors.textPrimary} name="chevron-forward" size={20} />
+            </Pressable>
+          </View>
+
+          <View style={{ width: 26 }} />
         </View>
 
-        <View style={{ width: 26 }} />
-      </View>
-
-      {/* ── Macro bars ── */}
-      <View style={[styles.macrosRow, { paddingHorizontal: horizontalPadding }]}>
-        {macros.map((macro) => {
-          const progress = Math.min((macro.value / macro.target) * 100, 100);
-          return (
-            <View key={macro.label} style={styles.macroItem}>
-              <View style={styles.macroTop}>
-                <Ionicons color={macro.color} name={macro.icon} size={14} />
-                <Text style={styles.macroValue}>
-                  {macro.value} / {macro.target}
-                </Text>
-              </View>
-              <View style={styles.progressBarBackground}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { backgroundColor: macro.color, width: `${progress}%` },
-                  ]}
-                />
-              </View>
-            </View>
-          );
-        })}
-      </View>
-
-      {/* ── Calo đốt từ bài tập ── */}
-      {totalBurned > 0 && (
-        <View style={[styles.burnedRow, { paddingHorizontal: horizontalPadding }]}>
-          <Ionicons color={colors.success} name="flame" size={14} />
-          <Text style={styles.burnedText}>{t.diary.burnedFromWorkout(totalBurned)}</Text>
-        </View>
-      )}
-
-      {/* ── Loading ── */}
-      {isLoading && (
-        <ActivityIndicator
-          color={colors.primary}
-          size="small"
-          style={{ marginVertical: spacing.md }}
-        />
-      )}
-
-      {/* ── Timeline ── */}
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingHorizontal: horizontalPadding, paddingBottom: spacing.xxxl },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.timelineContainer}>
-          {hours.map((hour) => {
-            const isCurrentHour = hour === currentHour;
-            const timeString = `${hour.toString().padStart(2, "0")}:00`;
-            const slot = summary?.slots?.find((s) => s.hour === hour);
-            const hasEntries = !!(slot && slot.entries && slot.entries.length > 0);
-
-            // Bài tập trong giờ này
-            const hourExercises = exercises.filter((ex) => ex.hour === hour);
-
-            const slotTotals = hasEntries ? {
-              calories: slot!.entries.reduce((sum, e) => sum + e.calories, 0),
-              protein: Math.round(slot!.entries.reduce((sum, e) => sum + e.proteinGram, 0) * 10) / 10,
-              carbs: Math.round(slot!.entries.reduce((sum, e) => sum + e.carbGram, 0) * 10) / 10,
-              fat: Math.round(slot!.entries.reduce((sum, e) => sum + e.fatGram, 0) * 10) / 10,
-            } : { calories: 0, protein: 0, carbs: 0, fat: 0 };
-
+        {/* ── Macro bars ── */}
+        <View style={[styles.macrosRow, { paddingHorizontal: horizontalPadding }]}>
+          {macros.map((macro) => {
+            const progress = Math.min((macro.value / macro.target) * 100, 100);
             return (
-              <View key={hour} style={styles.hourGroup}>
-                {/* Header row of the hour */}
-                <View style={styles.hourHeaderRow}>
-                  <Text style={[styles.hourText, isCurrentHour && styles.hourTextActive]}>
-                    {timeString}
+              <View key={macro.label} style={styles.macroItem}>
+                <View style={styles.macroTop}>
+                  <Ionicons color={macro.color} name={macro.icon} size={14} />
+                  <Text style={styles.macroValue}>
+                    {macro.value} / {macro.target}
                   </Text>
-                  
-                  {hasEntries && (
-                    <View style={styles.hourMacrosRow}>
-                      <Ionicons color={colors.primary} name="flame" size={11} />
-                      <Text style={styles.hourMacroText}>{Math.round(slotTotals.calories)} cal</Text>
-                      
-                      <Ionicons color={colors.protein} name="flash" size={11} />
-                      <Text style={styles.hourMacroText}>{slotTotals.protein}g</Text>
-                      
-                      <Ionicons color={colors.carbs} name="leaf" size={11} />
-                      <Text style={styles.hourMacroText}>{slotTotals.carbs}g</Text>
-                      
-                      <Ionicons color={colors.fat} name="water" size={11} />
-                      <Text style={styles.hourMacroText}>{slotTotals.fat}g</Text>
-                    </View>
-                  )}
-                  
-                  <View style={styles.hourLineDivider} />
-                  
-                  <Pressable
-                    hitSlop={8}
-                    onPress={() => handleAddMeal(hour)}
-                    style={styles.hourAddBtn}
-                  >
-                    <Ionicons color={colors.textMuted} name="add" size={20} />
-                  </Pressable>
                 </View>
-
-                {/* Detailed Cards for Entries */}
-                {(hasEntries || hourExercises.length > 0) && (
-                  <View style={styles.hourContentList}>
-                    {/* Meal Entries */}
-                    {hasEntries && slot!.entries.map((entry) => {
-                      const servings = Math.round(((entry.quantityG ?? 100) / 100) * 100) / 100;
-                      return (
-                        <Pressable
-                          key={entry.id}
-                          onPress={() => handleEditLog(entry)}
-                          onLongPress={() => {
-                            const numId = Number(entry.id);
-                            if (!isNaN(numId)) {
-                              handleDeleteLog(numId);
-                            }
-                          }}
-                          style={styles.foodCard}
-                        >
-                          {entry.imageUrl ? (
-                            <Image source={{ uri: entry.imageUrl }} style={styles.foodCardImg} />
-                          ) : (
-                            <View style={styles.foodCardImgPlaceholder}>
-                              <Ionicons color={colors.textMuted} name="restaurant-outline" size={22} />
-                            </View>
-                          )}
-                          
-                          <View style={styles.foodCardInfo}>
-                            <Text style={styles.foodCardName} numberOfLines={1}>
-                              {entry.title}
-                            </Text>
-                            <Text style={styles.foodCardSub}>
-                              {servings} {t.common.servings} • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
-                            </Text>
-                            <View style={styles.foodCardMacros}>
-                              <Ionicons color={colors.protein} name="flash" size={11} />
-                              <Text style={[styles.foodCardMacroVal, { color: colors.protein }]}>
-                                {entry.proteinGram}g
-                              </Text>
-                              
-                              <Ionicons color={colors.carbs} name="leaf" size={11} />
-                              <Text style={[styles.foodCardMacroVal, { color: colors.carbs }]}>
-                                {entry.carbGram}g
-                              </Text>
-                              
-                              <Ionicons color={colors.fat} name="water" size={11} />
-                              <Text style={[styles.foodCardMacroVal, { color: colors.fat }]}>
-                                {entry.fatGram}g
-                              </Text>
-                            </View>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-
-                    {/* Exercise Entries */}
-                    {hourExercises.map((ex) => (
-                      <Pressable
-                        key={ex.id}
-                        style={styles.exerciseCard}
-                        onPress={() => router.push("/exercise-diary")}
-                      >
-                        <View style={styles.exerciseCardIconBg}>
-                          <Ionicons color={colors.success} name="barbell-outline" size={16} />
-                        </View>
-                        <View style={styles.exerciseCardInfo}>
-                          <Text style={styles.exerciseCardName} numberOfLines={1}>
-                            {ex.activityLabel}
-                          </Text>
-                          <Text style={styles.exerciseCardSub}>
-                            {t.exercise.burnSummary(ex.durationMinutes, ex.caloriesBurned)}
-                          </Text>
-                        </View>
-                        <Ionicons color={colors.textMuted} name="chevron-forward" size={16} />
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
+                <View style={styles.progressBarBackground}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      { backgroundColor: macro.color, width: `${progress}%` },
+                    ]}
+                  />
+                </View>
               </View>
             );
           })}
         </View>
 
-        {/* ── Nút ghi bài tập ── */}
-        <Pressable
-          style={styles.exerciseButton}
-          onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
+        {/* ── Calo đốt từ bài tập ── */}
+        {totalBurned > 0 && (
+          <View style={[styles.burnedRow, { paddingHorizontal: horizontalPadding }]}>
+            <Ionicons color={colors.success} name="flame" size={14} />
+            <Text style={styles.burnedText}>{t.diary.burnedFromWorkout(totalBurned)}</Text>
+          </View>
+        )}
+
+        {/* ── Loading ── */}
+        {isLoading && (
+          <ActivityIndicator
+            color={colors.primary}
+            size="small"
+            style={{ marginVertical: spacing.md }}
+          />
+        )}
+
+        {/* ── Timeline ── */}
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingHorizontal: horizontalPadding, paddingBottom: spacing.xxxl },
+          ]}
+          showsVerticalScrollIndicator={false}
         >
-          <Ionicons color={colors.success} name="barbell-outline" size={20} />
-          <Text style={styles.exerciseButtonText}>{t.diary.logWorkout}</Text>
-        </Pressable>
-      </ScrollView>
+          <View style={styles.timelineContainer}>
+            {hours.map((hour) => {
+              const isCurrentHour = hour === currentHour;
+              const timeString = `${hour.toString().padStart(2, "0")}:00`;
+              const slot = summary?.slots?.find((s) => s.hour === hour);
+              const hasEntries = !!(slot && slot.entries && slot.entries.length > 0);
 
-      {/* Food Selector Modal */}
-      <FoodSelectorModal
-        visible={showFoodSelector}
-        onClose={() => setShowFoodSelector(false)}
-        onSelectFood={handleSelectFood}
-      />
+              // Bài tập trong giờ này
+              const hourExercises = exercises.filter((ex) => ex.hour === hour);
 
-      {/* Food Detail Modal - Tái sử dụng để xem chi tiết / nhập khẩu phần */}
-      <FoodDetailModal
-        visible={!!selectedFood}
-        food={selectedFood}
-        onClose={handleCancelMeal}
-        onAdd={(food, adjustedGrams) => {
-          handleSaveMeal(adjustedGrams);
-        }}
-        initialGrams={editingLogId !== null ? parseFloat(grams) : undefined}
-        submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
-        headerTitle={detailHeaderTitle}
-      />
+              const slotTotals = hasEntries ? {
+                calories: slot!.entries.reduce((sum, e) => sum + e.calories, 0),
+                protein: Math.round(slot!.entries.reduce((sum, e) => sum + e.proteinGram, 0) * 10) / 10,
+                carbs: Math.round(slot!.entries.reduce((sum, e) => sum + e.carbGram, 0) * 10) / 10,
+                fat: Math.round(slot!.entries.reduce((sum, e) => sum + e.fatGram, 0) * 10) / 10,
+              } : { calories: 0, protein: 0, carbs: 0, fat: 0 };
 
-      {/* Toast Notification */}
-      <Toast
-        visible={showToast}
-        message={toastMessage}
-        type={toastType}
-        duration={2000}
-        onHide={() => setShowToast(false)}
-      />
+              return (
+                <View key={hour} style={styles.hourGroup}>
+                  {/* Header row of the hour */}
+                  <View style={styles.hourHeaderRow}>
+                    <Text style={[styles.hourText, isCurrentHour && styles.hourTextActive]}>
+                      {timeString}
+                    </Text>
+
+                    {hasEntries && (
+                      <View style={styles.hourMacrosRow}>
+                        <Ionicons color={colors.primary} name="flame" size={11} />
+                        <Text style={styles.hourMacroText}>{Math.round(slotTotals.calories)} cal</Text>
+
+                        <Ionicons color={colors.protein} name="flash" size={11} />
+                        <Text style={styles.hourMacroText}>{slotTotals.protein}g</Text>
+
+                        <Ionicons color={colors.carbs} name="leaf" size={11} />
+                        <Text style={styles.hourMacroText}>{slotTotals.carbs}g</Text>
+
+                        <Ionicons color={colors.fat} name="water" size={11} />
+                        <Text style={styles.hourMacroText}>{slotTotals.fat}g</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.hourLineDivider} />
+
+                    <Pressable
+                      hitSlop={8}
+                      onPress={() => handleAddMeal(hour)}
+                      style={styles.hourAddBtn}
+                    >
+                      <Ionicons color={colors.textMuted} name="add" size={20} />
+                    </Pressable>
+                  </View>
+
+                  {/* Detailed Cards for Entries */}
+                  {(hasEntries || hourExercises.length > 0) && (
+                    <View style={styles.hourContentList}>
+                      {/* Meal Entries */}
+                      {hasEntries && slot!.entries.map((entry) => {
+                        const servings = Math.round(((entry.quantityG ?? 100) / 100) * 100) / 100;
+                        return (
+                          <Pressable
+                            key={entry.id}
+                            onPress={() => handleEditLog(entry)}
+                            onLongPress={() => {
+                              const numId = Number(entry.id);
+                              if (!isNaN(numId)) {
+                                handleDeleteLog(numId);
+                              }
+                            }}
+                            style={styles.foodCard}
+                          >
+                            {entry.imageUrl ? (
+                              <Image source={{ uri: entry.imageUrl }} style={styles.foodCardImg} />
+                            ) : (
+                              <View style={styles.foodCardImgPlaceholder}>
+                                <Ionicons color={colors.textMuted} name="restaurant-outline" size={22} />
+                              </View>
+                            )}
+
+                            <View style={styles.foodCardInfo}>
+                              <Text style={styles.foodCardName} numberOfLines={1}>
+                                {entry.title}
+                              </Text>
+                              <Text style={styles.foodCardSub}>
+                                {servings} {t.common.servings} • {entry.quantityG ?? 100}g • {Math.round(entry.calories)} cal
+                              </Text>
+                              <View style={styles.foodCardMacros}>
+                                <Ionicons color={colors.protein} name="flash" size={11} />
+                                <Text style={[styles.foodCardMacroVal, { color: colors.protein }]}>
+                                  {entry.proteinGram}g
+                                </Text>
+
+                                <Ionicons color={colors.carbs} name="leaf" size={11} />
+                                <Text style={[styles.foodCardMacroVal, { color: colors.carbs }]}>
+                                  {entry.carbGram}g
+                                </Text>
+
+                                <Ionicons color={colors.fat} name="water" size={11} />
+                                <Text style={[styles.foodCardMacroVal, { color: colors.fat }]}>
+                                  {entry.fatGram}g
+                                </Text>
+                              </View>
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+
+                      {/* Exercise Entries */}
+                      {hourExercises.map((ex) => (
+                        <Pressable
+                          key={ex.id}
+                          style={styles.exerciseCard}
+                          onPress={() => router.push("/exercise-diary")}
+                        >
+                          <View style={styles.exerciseCardIconBg}>
+                            <Ionicons color={colors.success} name="barbell-outline" size={16} />
+                          </View>
+                          <View style={styles.exerciseCardInfo}>
+                            <Text style={styles.exerciseCardName} numberOfLines={1}>
+                              {ex.activityLabel}
+                            </Text>
+                            <Text style={styles.exerciseCardSub}>
+                              {t.exercise.burnSummary(ex.durationMinutes, ex.caloriesBurned)}
+                            </Text>
+                          </View>
+                          <Ionicons color={colors.textMuted} name="chevron-forward" size={16} />
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+
+          {/* ── Nút ghi bài tập ── */}
+          <Pressable
+            style={styles.exerciseButton}
+            onPress={() => router.push(`/add-exercise?date=${selectedDate}`)}
+          >
+            <Ionicons color={colors.success} name="barbell-outline" size={20} />
+            <Text style={styles.exerciseButtonText}>{t.diary.logWorkout}</Text>
+          </Pressable>
+        </ScrollView>
+
+        {/* Food Selector Modal */}
+        <FoodSelectorModal
+          visible={showFoodSelector}
+          onClose={() => setShowFoodSelector(false)}
+          onSelectFood={handleSelectFood}
+        />
+
+        {/* Food Detail Modal - Tái sử dụng để xem chi tiết / nhập khẩu phần */}
+        <FoodDetailModal
+          visible={!!selectedFood}
+          food={selectedFood}
+          onClose={handleCancelMeal}
+          onAdd={(food, adjustedGrams) => {
+            handleSaveMeal(adjustedGrams);
+          }}
+          initialGrams={editingLogId !== null ? parseFloat(grams) : undefined}
+          submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
+          headerTitle={detailHeaderTitle}
+        />
+
+        {/* Toast Notification */}
+        <Toast
+          visible={showToast}
+          message={toastMessage}
+          type={toastType}
+          duration={2000}
+          onHide={() => setShowToast(false)}
+        />
       </SafeAreaView>
     </ScreenBackground>
   );

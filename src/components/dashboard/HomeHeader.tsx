@@ -7,6 +7,7 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useDiaryStore } from "@/store/diaryStore";
 import { useGetUnreadCount } from "@/hooks/queries/useNotificationQueries";
 
 export function HomeHeader() {
@@ -16,27 +17,39 @@ export function HomeHeader() {
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
   
+  const { selectedDate, setDate } = useDiaryStore();
   const { data: unreadCount = 0 } = useGetUnreadCount();
   
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isToday = selectedDate === todayStr;
+  
   const getFormattedDate = () => {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
+    const dateObj = new Date(selectedDate);
+    const day = dateObj.getDate();
+    const month = dateObj.getMonth() + 1;
+    
     if (language === "en") {
       const months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
       ];
-      return `Today, ${months[today.getMonth()]} ${day}`;
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const prefix = isToday ? "Today" : days[dateObj.getDay()];
+      return `${prefix}, ${months[dateObj.getMonth()]} ${day}`;
     }
-    return `Hôm nay, ${day} tháng ${month.toString().padStart(2, '0')}`;
+    
+    const daysVi = ["Chủ Nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    const prefixVi = isToday ? "Hôm nay" : daysVi[dateObj.getDay()];
+    return `${prefixVi}, ${day} tháng ${month.toString().padStart(2, '0')}`;
   };
   const formattedDate = getFormattedDate();
 
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Text style={styles.dateText}>{formattedDate}</Text>
+        <View style={styles.dateRow}>
+          <Text style={styles.dateText}>{formattedDate}</Text>
+        </View>
         <View style={styles.iconRow}>
           <Pressable hitSlop={10} onPress={() => router.push("/streaks")} style={({ pressed }) => [styles.badge, pressed && styles.badgePressed]}>
             <MaterialCommunityIcons name="fire" size={14} color={colors.warning} />
@@ -60,12 +73,25 @@ const DAYS_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 const DAYS_EN = ["M", "T", "W", "T", "F", "S", "S"];
 
 export function DateScroller() {
-  const today = new Date();
+  const { selectedDate, setDate } = useDiaryStore();
+  const dateObj = new Date(selectedDate);
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
   const daysList = language === "en" ? DAYS_EN : DAYS_VI;
-  const currentDayIndex = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const currentDayIndex = dateObj.getDay() === 0 ? 6 : dateObj.getDay() - 1;
+
+  const handleDayPress = (targetIndex: number) => {
+    const diff = targetIndex - currentDayIndex;
+    const targetDateObj = new Date(selectedDate);
+    targetDateObj.setDate(targetDateObj.getDate() + diff);
+    const targetDateStr = targetDateObj.toISOString().split('T')[0];
+    
+    // Sử dụng setTimeout để Touch animation chạy mượt trước khi render lại trang nặng
+    setTimeout(() => {
+      setDate(targetDateStr);
+    }, 50);
+  };
 
   return (
     <View style={styles.scrollerWrap}>
@@ -73,7 +99,11 @@ export function DateScroller() {
         {daysList.map((day, index) => {
           const isActive = index === currentDayIndex;
           return (
-            <TouchableOpacity key={`${day}-${index}`} style={[styles.dayCircle, isActive && styles.dayActive]}>
+            <TouchableOpacity 
+              key={`${day}-${index}`} 
+              style={[styles.dayCircle, isActive && styles.dayActive]}
+              onPress={() => handleDayPress(index)}
+            >
               <Text style={[styles.dayText, isActive && styles.dayTextActive]}>{day}</Text>
               {isActive && <View style={styles.activeDot} />}
             </TouchableOpacity>
@@ -143,13 +173,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginVertical: spacing.md,
   },
   scrollContent: {
-    gap: spacing.md,
-    paddingRight: spacing.xl,
+    flexGrow: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 2,
   },
   dayCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -173,5 +204,10 @@ const getStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.primary,
     position: "absolute",
     bottom: 6,
+  },
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
 });
