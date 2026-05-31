@@ -15,7 +15,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { gradients, radius, spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { t, useTranslation } from "@/constants/i18n";
@@ -63,11 +65,10 @@ export default function PhysicalProfileScreen() {
   // States for basic info form
   const [editName, setEditName] = useState("");
   const [editGender, setEditGender] = useState<1 | 2>(1);
-  const [editHeight, setEditHeight] = useState("");
-  const [editWeight, setEditWeight] = useState("");
-  const [editBirthDay, setEditBirthDay] = useState("");
-  const [editBirthMonth, setEditBirthMonth] = useState("");
-  const [editBirthYear, setEditBirthYear] = useState("");
+  const [editHeight, setEditHeight] = useState<number>(170);
+  const [editWeight, setEditWeight] = useState<number>(60);
+  const [editBirthDate, setEditBirthDate] = useState<Date>(new Date("2000-08-15"));
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // State for activity level form
   const [editActivityLevel, setEditActivityLevel] = useState<number>(1);
@@ -86,8 +87,8 @@ export default function PhysicalProfileScreen() {
   const age = profileInfo?.dateOfBirth
     ? getAgeFromBirthDate(profileInfo.dateOfBirth)
     : draft.birthDateISO
-    ? getAgeFromBirthDate(draft.birthDateISO)
-    : "—";
+      ? getAgeFromBirthDate(draft.birthDateISO)
+      : "—";
 
   const GENDER_LABEL: Record<string | number, string> = {
     1: t.physicalProfile.genders.male,
@@ -140,15 +141,15 @@ export default function PhysicalProfileScreen() {
     goalType === 1 || draft.goalType === "lose_weight"
       ? t.physicalProfile.weeklyGoalLabel.lose(String(displayedWeeklyGoal), unit)
       : goalType === 2 || draft.goalType === "gain_weight"
-      ? t.physicalProfile.weeklyGoalLabel.gain(String(displayedWeeklyGoal), unit)
-      : t.physicalProfile.weeklyGoalLabel.maintain;
+        ? t.physicalProfile.weeklyGoalLabel.gain(String(displayedWeeklyGoal), unit)
+        : t.physicalProfile.weeklyGoalLabel.maintain;
 
   const openEditBasicModal = () => {
     const curName = profileInfo?.displayName ?? draft.nickname ?? "USER";
     const curGender = profileInfo?.gender ?? (draft.gender === "male" ? 1 : 2);
     const curHeight = profileInfo?.heightCm ?? draft.heightCm ?? DEFAULT_HEIGHT_CM;
     const curWeight = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
-    
+
     const displayedWeightVal = convertWeight(Number(curWeight));
 
     const dobISO = profileInfo?.dateOfBirth ? String(profileInfo.dateOfBirth) : (draft.birthDateISO ? String(draft.birthDateISO) : "2000-08-15");
@@ -156,11 +157,9 @@ export default function PhysicalProfileScreen() {
 
     setEditName(curName);
     setEditGender(curGender === 1 || String(curGender).toLowerCase() === "male" ? 1 : 2);
-    setEditHeight(String(curHeight));
-    setEditWeight(String(displayedWeightVal));
-    setEditBirthDay(String(dobParts.day));
-    setEditBirthMonth(String(dobParts.month));
-    setEditBirthYear(String(dobParts.year));
+    setEditHeight(Number(curHeight));
+    setEditWeight(Number(displayedWeightVal));
+    setEditBirthDate(new Date(dobISO));
 
     setEditBasicVisible(true);
   };
@@ -177,13 +176,13 @@ export default function PhysicalProfileScreen() {
       return;
     }
 
-    const h = parseFloat(editHeight);
+    const h = editHeight;
     if (isNaN(h) || h < 50 || h > 300) {
       Alert.alert(t.common.error, "Chiều cao không hợp lệ (50 - 300 cm)");
       return;
     }
 
-    const w = parseFloat(editWeight);
+    const w = editWeight;
     if (isNaN(w) || w < 20 || w > 300) {
       Alert.alert(t.common.error, isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)");
       return;
@@ -192,15 +191,7 @@ export default function PhysicalProfileScreen() {
     // Convert weight to kg if it was input in lbs
     const weightKgVal = isLbs ? parseFloat((w / 2.20462).toFixed(1)) : w;
 
-    const d = parseInt(editBirthDay, 10);
-    const m = parseInt(editBirthMonth, 10);
-    const y = parseInt(editBirthYear, 10);
-    if (isNaN(d) || isNaN(m) || isNaN(y) || d < 1 || d > 31 || m < 1 || m > 12 || y < 1900 || y > new Date().getFullYear()) {
-      Alert.alert(t.common.error, t.validators.invalidBirthDate);
-      return;
-    }
-
-    const birthDateISO = createBirthDateISO(d, m, y);
+    const birthDateISO = editBirthDate.toISOString().split("T")[0];
     const ageVal = getAgeFromBirthDate(birthDateISO);
     if (ageVal < 18) {
       Alert.alert(t.common.error, t.validators.adultOnly);
@@ -209,7 +200,7 @@ export default function PhysicalProfileScreen() {
 
     try {
       setIsSaving(true);
-      
+
       const payload = {
         displayName: editName,
         avatarUrl: profileInfo?.avatarUrl ?? null,
@@ -435,7 +426,7 @@ export default function PhysicalProfileScreen() {
                   setResetModalVisible(false);
                   if (profileInfo) {
                     const genderVal = (profileInfo.gender === 1 || String(profileInfo.gender).toLowerCase() === "male") ? "male" : "female";
-                    
+
                     const activityLevelMapInverse: Record<number | string, any> = {
                       1: "sedentary",
                       2: "light",
@@ -443,7 +434,7 @@ export default function PhysicalProfileScreen() {
                       4: "active",
                       5: "very_active",
                     };
-                    
+
                     const goalTypeMapInverse: Record<number | string, any> = {
                       1: "lose_weight",
                       2: "gain_weight",
@@ -492,7 +483,7 @@ export default function PhysicalProfileScreen() {
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Cập nhật thông tin cơ bản</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 350 }}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
               {/* Display Name / Nickname */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>BIỆT DANH</Text>
@@ -529,72 +520,46 @@ export default function PhysicalProfileScreen() {
                 </View>
               </View>
 
-              {/* Height & Weight */}
-              <View style={styles.inputRow}>
-                <View style={[styles.inputGroup, styles.inputCol]}>
-                  <Text style={styles.inputLabel}>CHIỀU CAO (CM)</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editHeight}
-                    onChangeText={setEditHeight}
-                    placeholder="170"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    editable={!isSaving}
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.inputCol]}>
-                  <Text style={styles.inputLabel}>CÂN NẶNG ({unit.toUpperCase()})</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editWeight}
-                    onChangeText={setEditWeight}
-                    placeholder={unit === "lbs" ? "132" : "60"}
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    editable={!isSaving}
-                  />
-                </View>
-              </View>
+              <View style={{ gap: spacing.lg, marginTop: spacing.sm }}>
+                {/* Height */}
+                <QuantityStepper
+                  label="CHIỀU CAO (CM)"
+                  value={editHeight}
+                  unit="cm"
+                  step={1}
+                  onChange={(text) => {
+                    const val = parseFloat(text.replace(/[^0-9.]/g, ""));
+                    if (!isNaN(val)) setEditHeight(val);
+                  }}
+                  onAdd={(amount) => setEditHeight(prev => prev + amount)}
+                  onSubtract={(amount) => setEditHeight(prev => Math.max(0, prev - amount))}
+                />
 
-              {/* Birthdate day/month/year */}
-              <Text style={styles.inputLabel}>NGÀY SINH (NGÀY / THÁNG / NĂM)</Text>
-              <View style={styles.inputRow}>
-                <View style={[styles.inputGroup, styles.inputCol]}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editBirthDay}
-                    onChangeText={setEditBirthDay}
-                    placeholder="DD"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    editable={!isSaving}
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.inputCol]}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editBirthMonth}
-                    onChangeText={setEditBirthMonth}
-                    placeholder="MM"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    editable={!isSaving}
-                  />
-                </View>
-                <View style={[styles.inputGroup, styles.inputCol]}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editBirthYear}
-                    onChangeText={setEditBirthYear}
-                    placeholder="YYYY"
-                    placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    editable={!isSaving}
-                  />
+                {/* Birthdate */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>NGÀY SINH</Text>
+                  <Pressable
+                    style={[styles.textInput, { justifyContent: "center" }]}
+                    onPress={() => !isSaving && setShowDatePicker(true)}
+                  >
+                    <Text style={{ color: colors.textPrimary, ...typography.body }}>
+                      {editBirthDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
+                    </Text>
+                  </Pressable>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={editBirthDate}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      onChange={(event, selectedDate) => {
+                        setShowDatePicker(false);
+                        if (selectedDate) {
+                          setEditBirthDate(selectedDate);
+                        }
+                      }}
+                    />
+                  )}
                 </View>
               </View>
             </ScrollView>

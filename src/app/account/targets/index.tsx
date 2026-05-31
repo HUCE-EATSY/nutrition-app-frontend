@@ -104,7 +104,7 @@ export default function TargetCustomizationScreen() {
             icon="footsteps-outline"
             iconColor="#FFB067"
             title={t.targets.stepTarget}
-            onPress={() => router.push('/account/targets/steps')}
+            onPress={() => router.push({ pathname: '/stats/steps', params: { openGoal: 'true' } })}
             showDivider={false}
           />
         </View>

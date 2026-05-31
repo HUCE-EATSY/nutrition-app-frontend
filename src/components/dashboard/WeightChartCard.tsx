@@ -52,7 +52,8 @@ export function WeightChartCard() {
   const hasData = actualChartData.length > 0;
 
   return (
-    <SurfaceCard style={styles.container}>
+    <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/stats/weight')}>
+      <SurfaceCard style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <MaterialCommunityIcons name="scale" size={20} color={colors.warning} />
@@ -67,7 +68,13 @@ export function WeightChartCard() {
           </Text>
           <Text style={styles.date}>{dateStr}</Text>
         </View>
-        <TouchableOpacity style={styles.updateBtn} onPress={() => router.push('/log-weight')}>
+        <TouchableOpacity 
+          style={styles.updateBtn} 
+          onPress={(e) => {
+            e.stopPropagation();
+            router.push('/log-weight');
+          }}
+        >
           <Text style={styles.updateText}>{t.home.update}</Text>
         </TouchableOpacity>
       </View>
@@ -89,6 +96,7 @@ export function WeightChartCard() {
          )}
       </View>
     </SurfaceCard>
+    </TouchableOpacity>
   );
 }
 

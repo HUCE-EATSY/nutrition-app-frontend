@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, View, Pressable, Platform, Alert } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
@@ -10,6 +10,8 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
+import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
+import { FoodItem } from "@/hooks/queries/useFoodQueries";
 
 export default function QuickAddModal() {
   const t = useTranslation();
@@ -20,6 +22,8 @@ export default function QuickAddModal() {
   const theme = useSettingsStore((state) => state.theme);
   // Tính toán chiều cao Tab Bar để Faux Tab Bar che khít vị trí thực
   const tabBarHeight = (isCompactWidth ? 72 : 84) + Math.max(insets.bottom, 8);
+
+  const [showFoodSelector, setShowFoodSelector] = useState(false);
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -53,7 +57,7 @@ export default function QuickAddModal() {
         
         {/* Row 1: Primary Actions (4-Col Grid) */}
         <View style={styles.primaryGrid}>
-          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/(tabs)/diary")}>
+          <Pressable style={styles.primaryItem} onPress={() => setShowFoodSelector(true)}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.warning }]}>
               <Ionicons name="search" size={24} color="#FFF" />
             </View>
@@ -143,6 +147,15 @@ export default function QuickAddModal() {
           <Text style={[styles.fauxTabLabel, isCompactWidth && styles.fauxTabLabelCompact]}>{t.navigation.account}</Text>
         </Pressable>
       </View>
+
+      <FoodSelectorModal
+        visible={showFoodSelector}
+        onClose={() => setShowFoodSelector(false)}
+        onSelectFood={(food: FoodItem) => {
+          setShowFoodSelector(false);
+          router.replace({ pathname: "/add-entry", params: { foodId: food.id } });
+        }}
+      />
     </Container>
   );
 }

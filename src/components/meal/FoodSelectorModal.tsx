@@ -9,8 +9,10 @@ import {
   Image,
   Modal,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { colors, spacing, typography, radius } from "@/constants";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { FoodDetailModal } from "./FoodDetailModal";
@@ -194,7 +196,13 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
               {/* Premium Quick Action Cards */}
               <View style={styles.quickActionsRow}>
                 {/* Barcode scan */}
-                <Pressable style={styles.quickActionCard}>
+                <Pressable 
+                  style={styles.quickActionCard}
+                  onPress={() => {
+                    handleClose();
+                    router.push('/scan-barcode');
+                  }}
+                >
                   <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(59, 130, 246, 0.15)" }]}>
                     <Ionicons color="#3b82f6" name="barcode-outline" size={22} />
                   </View>
@@ -202,7 +210,13 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                 </Pressable>
 
                 {/* AI Dishes Recognition */}
-                <Pressable style={styles.quickActionCard}>
+                <Pressable 
+                  style={styles.quickActionCard}
+                  onPress={() => {
+                    handleClose();
+                    router.push('/detect-food');
+                  }}
+                >
                   <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
                     <Ionicons color="#10b981" name="sparkles-outline" size={22} />
                   </View>
@@ -210,7 +224,10 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                 </Pressable>
 
                 {/* Voice Record */}
-                <Pressable style={styles.quickActionCard}>
+                <Pressable 
+                  style={styles.quickActionCard}
+                  onPress={() => Alert.alert("Tính năng đang phát triển", "Tính năng nhập bằng giọng nói sẽ sớm ra mắt!")}
+                >
                   <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(239, 68, 68, 0.15)" }]}>
                     <Ionicons color="#ef4444" name="mic-outline" size={22} />
                   </View>
@@ -281,10 +298,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
                         {displayedFoods.map((item) => (
                           <Pressable
                             key={item.id}
-                            onPress={() => {
-                              setDetailFood(item);
-                              setDetailVisible(true);
-                            }}
+                            onPress={() => handleSelectFood(item)}
                             style={styles.foodCard}
                           >
                             {/* Food image */}
@@ -506,6 +520,10 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textPrimary,
     fontSize: 15,
+    padding: 0,
+    margin: 0,
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
   categoryRow: {
     flexDirection: "row",

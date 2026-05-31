@@ -1,6 +1,8 @@
-import React from "react";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { StyleSheet, Text, View, Pressable, Animated, Easing } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 import { useRouter } from "expo-router";
 
 import { useTranslation } from "@/constants/i18n";
@@ -24,6 +26,18 @@ export function CalorieOverview({ remaining, goal, consumed, burned, percentage 
   const circleRadius = 70;
   const circumference = 2 * Math.PI * circleRadius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const animatedOffset = useRef(new Animated.Value(circumference)).current;
+
+  // Force useNativeDriver false to ensure compatibility with SVG strokeDashoffset
+  useEffect(() => {
+    Animated.timing(animatedOffset, {
+      toValue: strokeDashoffset,
+      duration: 800,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [strokeDashoffset]);
 
   const bgCircleStroke = colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
 
@@ -52,14 +66,14 @@ export function CalorieOverview({ remaining, goal, consumed, burned, percentage 
               fill="none"
             />
             {/* Progress Circle */}
-            <Circle
+            <AnimatedCircle
               cx="90"
               cy="90"
               r={circleRadius}
               stroke={colors.primary}
               strokeWidth="10"
               strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
+              strokeDashoffset={animatedOffset}
               strokeLinecap="round"
               fill="none"
             />

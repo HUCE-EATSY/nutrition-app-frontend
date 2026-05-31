@@ -5,6 +5,7 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
@@ -37,6 +38,7 @@ export default function LogWeightScreen() {
   // Trạng thái ảnh chụp cơ thể chọn từ thư viện
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoMimeType, setPhotoMimeType] = useState<string>("image/jpeg");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Set initial weight when currentWeight is fetched
   useEffect(() => {
@@ -98,6 +100,25 @@ export default function LogWeightScreen() {
       Alert.alert(t.common.error, error.message || t.stats.logWeightError);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    // Only close if it's Android (iOS usually is inline, but in this case standard behavior is to close if confirmed)
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    
+    if (selectedDate) {
+      if (Platform.OS === "ios" && event.type === "set") {
+        setShowDatePicker(false);
+      }
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      setLogDateStr(`${year}-${month}-${day}`);
+    } else {
+      setShowDatePicker(false); // dismissed
     }
   };
 
@@ -181,19 +202,21 @@ export default function LogWeightScreen() {
         <View style={styles.formSection}>
           <View style={styles.dateRow}>
             <Text style={styles.dateLabel}>{t.stats.logDate}</Text>
-            <View style={styles.dateRight}>
-              <TextInput
-                style={styles.dateInput}
-                value={logDateStr}
-                onChangeText={setLogDateStr}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textMuted}
-                autoCorrect={false}
-                autoCapitalize="none"
-              />
+            <Pressable style={styles.dateRight} onPress={() => setShowDatePicker(true)}>
+              <Text style={styles.dateInput}>{logDateStr}</Text>
               <Ionicons name="calendar-outline" size={20} color={colors.textPrimary} />
-            </View>
+            </Pressable>
           </View>
+          
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date(logDateStr)}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={onDateChange}
+              maximumDate={new Date()}
+            />
+          )}
         </View>
 
       </KeyboardAvoidingView>

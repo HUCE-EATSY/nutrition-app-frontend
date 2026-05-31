@@ -13,7 +13,7 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useStepsStats } from "@/hooks/stats/useStepsStats";
 import { BarChart } from "@/components/charts/BarChart";
@@ -61,6 +61,7 @@ export default function StepsStatsScreen() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
+  const params = useLocalSearchParams();
   const {
     activeTabLabel,
     tabs,
@@ -95,6 +96,13 @@ export default function StepsStatsScreen() {
   useEffect(() => {
     setGoalInput(stepGoal.toString());
   }, [stepGoal]);
+
+  // Tự động mở modal nếu được điều hướng từ trang tùy chỉnh mục tiêu
+  useEffect(() => {
+    if (params.openGoal === 'true') {
+      setGoalModalVisible(true);
+    }
+  }, [params.openGoal]);
 
   // Load lịch sử 30 ngày cho Modal nhật ký
   const loadHistoryList = async () => {
@@ -1447,7 +1455,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: "bold",
   },
   headerSaveTextActive: {
-    color: "#8E57F5",
+    color: "#FFFFFF",
   },
   headerSaveTextInactive: {
     color: "rgba(255, 255, 255, 0.3)",
