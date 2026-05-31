@@ -21,9 +21,16 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { getTodayDateISO } from "@/utils/date";
 import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useAuthStore } from "@/store/authStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { WaterPresetsGrid } from "@/components/water/WaterPresetsGrid";
+
+const DEFAULT_WATER_DATA = {
+  waterLogs: {} as Record<string, number>,
+  waterGoal: 2000,
+  defaultStep: 250,
+};
 
 export default function LogWaterScreen() {
   const colors = useAppColors();
@@ -31,19 +38,22 @@ export default function LogWaterScreen() {
   const insets = useSafeAreaInsets();
   
   const selectedDate = useDiaryStore((state) => state.selectedDate);
-  const { waterLogs, waterGoal, setWater, setWaterGoal } = useWaterStore();
+  const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
+  
+  const userWater = useWaterStore((state) => state.userWaterData[userId] || DEFAULT_WATER_DATA);
+  const { setWater, setWaterGoal } = useWaterStore();
   
   // Set date state based on diary selectedDate or today
   const [logDateStr, setLogDateStr] = useState(selectedDate || getTodayDateISO());
   
   // Get initial values from the store
   const [intake, setIntake] = useState(0);
-  const [goal, setGoal] = useState(waterGoal);
+  const [goal, setGoal] = useState(userWater.waterGoal);
   
   // When date or store changes, update locally
   useEffect(() => {
-    setIntake(waterLogs[logDateStr] || 0);
-  }, [logDateStr, waterLogs]);
+    setIntake(userWater.waterLogs[logDateStr] || 0);
+  }, [logDateStr, userWater.waterLogs]);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -56,8 +66,8 @@ export default function LogWaterScreen() {
   };
 
   useEffect(() => {
-    setGoal(waterGoal);
-  }, [waterGoal]);
+    setGoal(userWater.waterGoal);
+  }, [userWater.waterGoal]);
 
   const handleSave = () => {
     // Validate date format YYYY-MM-DD
@@ -78,8 +88,8 @@ export default function LogWaterScreen() {
     }
 
     // Save to store
-    setWater(logDateStr, intake);
-    setWaterGoal(goal);
+    setWater(userId, logDateStr, intake);
+    setWaterGoal(userId, goal);
 
     // Alert success or go back
     router.back();
