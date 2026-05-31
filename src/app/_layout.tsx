@@ -14,10 +14,16 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useAppColors } from "@/hooks/useAppColors";
+
+// Import global CSS for web
+if (Platform.OS === 'web') {
+  require('../global.css');
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +68,8 @@ export default function RootLayout() {
   const authHydrated = useAuthStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  usePushNotifications(isAuthenticated);
+
   const segments = useSegments();
   const router = useRouter();
 
@@ -77,23 +85,26 @@ export default function RootLayout() {
     }
   }, [bgBase]);
 
-  // Auth protection logic
+  const userInfo = useAuthStore((state) => state.userInfo);
+
+  // Auth protection logic — role-based routing (includes admin group support from nam branch)
   useEffect(() => {
     if (!loaded || !hydrated || !authHydrated || !settingsHydrated) return;
 
-    const [firstSegment, secondSegment] = segments as string[];
-    const inPublicGroup = firstSegment === "(public)";
-    const isMascotIntro = secondSegment === "mascot-intro";
+    const [firstSegment] = segments as string[];
+    const inPublicGroup = firstSegment === '(public)';
+    const inOnboardingGroup = firstSegment === '(onboarding)';
 
-    if (!isAuthenticated && !inPublicGroup) {
-      // Redirect to the welcome page if not authenticated and not in public group
-      router.replace("/(public)/welcome");
-    } else if (isAuthenticated && inPublicGroup && !isMascotIntro) {
-      // If we are authenticated but in a public screen (like welcome or social-login), 
-      // go back to the index to let it decide where to go (home or onboarding)
-      router.replace("/");
+    if (!isAuthenticated && !inPublicGroup && !inOnboardingGroup) {
+      router.replace('/(public)/welcome');
+    } else if (isAuthenticated && inPublicGroup) {
+      const [, secondSegment] = segments as string[];
+      if (secondSegment !== 'mascot-intro') {
+        router.replace('/');
+      }
     }
-  }, [isAuthenticated, segments, loaded, hydrated, authHydrated, settingsHydrated, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, segments, userInfo, loaded, hydrated, authHydrated, settingsHydrated]);
 
   if (!loaded && !error) {
     return (
