@@ -17,8 +17,8 @@ import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useWaterStore } from "@/store/waterStore";
+import { useAuthStore } from "@/store/authStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
-import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { WaterPresetsGrid } from "@/components/water/WaterPresetsGrid";
 
 export default function WaterTargetScreen() {
@@ -26,7 +26,11 @@ export default function WaterTargetScreen() {
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   
-  const { waterGoal, setWaterGoal } = useWaterStore();
+  const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
+  const userWaterData = useWaterStore((state) => state.userWaterData);
+  const waterGoal = userWaterData[userId]?.waterGoal ?? 2000;
+  const { setWaterGoal } = useWaterStore();
+  
   const [goal, setGoal] = useState(waterGoal);
 
   const handleSave = () => {
@@ -34,7 +38,7 @@ export default function WaterTargetScreen() {
       Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống phải lớn hơn 0.");
       return;
     }
-    setWaterGoal(goal);
+    setWaterGoal(userId, goal);
     router.back();
   };
 
@@ -72,18 +76,36 @@ export default function WaterTargetScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Stepper controls for Goal */}
-          <QuantityStepper
-            label="Mục tiêu ngày"
-            value={goal}
-            unit="ml"
-            step={250}
-            onChange={handleGoalChange}
-            onAdd={handleQuickAdd}
-            onSubtract={handleQuickSubtract}
-          />
+          <View style={styles.stepperSection}>
+            <Text style={styles.sectionLabel}>Mục tiêu ngày</Text>
+            <View style={styles.stepperRow}>
+              <Pressable
+                style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.7 }]}
+                onPress={() => handleQuickSubtract(250)}
+              >
+                <MaterialCommunityIcons name="minus" size={22} color={colors.textPrimary} />
+              </Pressable>
+              <View style={styles.stepperValueContainer}>
+                <TextInput
+                  style={styles.intakeInput}
+                  value={String(goal)}
+                  onChangeText={handleGoalChange}
+                  keyboardType="numeric"
+                  maxLength={5}
+                />
+                <Text style={styles.mlLabel}>ml</Text>
+              </View>
+              <Pressable
+                style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.7 }]}
+                onPress={() => handleQuickAdd(250)}
+              >
+                <MaterialCommunityIcons name="plus" size={22} color={colors.textPrimary} />
+              </Pressable>
+            </View>
+          </View>
 
           {/* Presets Grid */}
-          <WaterPresetsGrid onAdd={handleQuickAdd} />
+          <WaterPresetsGrid onSelect={handleQuickAdd} showPlus />
         </ScrollView>
 
         {/* Footer Save Button */}
@@ -130,5 +152,50 @@ const getStyles = (colors: any) => StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+  },
+  stepperSection: {
+    gap: spacing.sm,
+  },
+  sectionLabel: {
+    ...typography.bodyStrong,
+    color: colors.textSecondary,
+    fontSize: 13,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  stepperRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+  },
+  stepperBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepperValueContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 4,
+  },
+  intakeInput: {
+    ...typography.h2,
+    lineHeight: undefined,
+    color: colors.textPrimary,
+    textAlign: "center",
+    minWidth: 80,
+    padding: 0,
+    margin: 0,
+  },
+  mlLabel: {
+    ...typography.bodyStrong,
+    color: colors.textSecondary,
   },
 });

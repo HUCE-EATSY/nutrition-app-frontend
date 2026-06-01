@@ -21,17 +21,14 @@ export default function PlanResultScreen() {
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Dữ liệu từ server trả về trong OnboardUserAsync
-  // { targetCalories, targetProteinG, targetCarbsG, targetFatG, bmrKcal, tdeeKcal, ... }
-  const rawPlan = (serverPlan || {}) as any;
-  const plan = {
-    targetCalories: Number(rawPlan.targetCalories ?? rawPlan.TargetCalories ?? 0),
-    bmrKcal: Number(rawPlan.bmrKcal ?? rawPlan.BmrKcal ?? 0),
-    tdeeKcal: Number(rawPlan.tdeeKcal ?? rawPlan.TdeeKcal ?? 0),
-    targetProteinG: Number(rawPlan.targetProteinG ?? rawPlan.TargetProteinG ?? 0),
-    targetCarbsG: Number(rawPlan.targetCarbsG ?? rawPlan.TargetCarbsG ?? 0),
-    targetFatG: Number(rawPlan.targetFatG ?? rawPlan.TargetFatG ?? 0),
-    targetDateISO: String(rawPlan.targetDate ?? rawPlan.TargetDate ?? rawPlan.targetDateISO ?? rawPlan.TargetDateISO ?? ""),
+  const plan = serverPlan || {
+    targetCalories: 0,
+    bmrKcal: 0,
+    tdeeKcal: 0,
+    targetProteinG: 0,
+    targetCarbsG: 0,
+    targetFatG: 0,
+    targetDateISO: "",
   };
 
   const targetDateISO = plan.targetDateISO || "";

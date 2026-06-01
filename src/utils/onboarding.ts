@@ -153,7 +153,7 @@ export function validateTargetWeight(goalType: GoalType | null, currentWeightKg:
 
 export function getWeeklyGoalBounds(goalType: GoalType | null) {
   if (goalType === "maintain_weight") return { min: 0, max: 0.2, recommended: 0 };
-  return { min: 0.1, max: 1, recommended: goalType === "gain_weight" ? 0.3 : 0.4 };
+  return { min: 0.1, max: 2, recommended: goalType === "gain_weight" ? 0.3 : 0.4 };
 }
 
 export function sanitizeWeeklyGoal(goalType: GoalType | null, value: number) {

@@ -21,7 +21,6 @@ import * as ImagePicker from "expo-image-picker";
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { foodService } from "@/services/foodService";
-import { Toast } from "@/components/common/Toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/constants/i18n";
 
@@ -55,14 +54,10 @@ export default function CreateFoodScreen() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Toast state
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-
+      
   const showToastMsg = (msg: string, type: "success" | "error" = "success") => {
-    setToastMessage(msg);
-    setToastType(type);
-    setToastVisible(true);
+    const typeStr = typeof type !== "undefined" ? type : "success";
+    Alert.alert(typeStr === "error" ? "Lỗi" : "Thông báo", msg);
   };
 
   const handlePickImage = async () => {
@@ -346,13 +341,7 @@ export default function CreateFoodScreen() {
       </Modal>
 
       {/* Toast Alert */}
-      <Toast
-        message={toastMessage}
-        onHide={() => setToastVisible(false)}
-        type={toastType}
-        visible={toastVisible}
-      />
-    </SafeAreaView>
+          </SafeAreaView>
   );
 }
 
