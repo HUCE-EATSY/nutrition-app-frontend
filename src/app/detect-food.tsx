@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
+import { StyleSheet,
   Text,
   View,
   Pressable,
   ActivityIndicator,
   Image,
-  ScrollView,
-} from "react-native";
+  ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -16,7 +14,6 @@ import * as ImagePicker from "expo-image-picker";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
-import { Toast } from "@/components/common/Toast";
 import { useDiaryStore } from "@/store/diaryStore";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -36,14 +33,10 @@ export default function DetectFoodScreen() {
   const { addMealEntry, selectedDate } = useDiaryStore();
 
   // Toast state
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error" | "info">("success");
-
+      
   const showToastMsg = (msg: string, type: "success" | "error" | "info" = "success") => {
-    setToastMessage(msg);
-    setToastType(type);
-    setToastVisible(true);
+    const typeStr = typeof type !== "undefined" ? type : "success";
+    Alert.alert(typeStr === "error" ? "Lỗi" : "Thông báo", msg);
   };
 
   // ── Pick image from gallery ──────────────────────────────────────────────
@@ -294,13 +287,7 @@ export default function DetectFoodScreen() {
         headerTitle="Kết quả nhận diện"
       />
 
-      <Toast
-        message={toastMessage}
-        onHide={() => setToastVisible(false)}
-        type={toastType}
-        visible={toastVisible}
-      />
-    </SafeAreaView>
+          </SafeAreaView>
   );
 }
 

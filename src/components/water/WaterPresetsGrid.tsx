@@ -1,80 +1,94 @@
-import React, { useMemo } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAppColors } from "@/hooks/useAppColors";
-import { spacing, typography, radius } from "@/constants";
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAppColors } from '@/hooks/useAppColors';
+import { spacing, typography, radius } from '@/constants';
 
 interface WaterPresetsGridProps {
-  onAdd: (amount: number) => void;
+  onSelect: (amount: number) => void;
+  activePreset?: number;
+  showPlus?: boolean;
 }
 
-export const WaterPresetsGrid: React.FC<WaterPresetsGridProps> = ({ onAdd }) => {
+export const WaterPresetsGrid: React.FC<WaterPresetsGridProps> = ({ 
+  onSelect, 
+  activePreset,
+  showPlus = false,
+}) => {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
+  const renderVal = (val: number) => showPlus ? `+${val} ml` : `${val} ml`;
+
   return (
-    <View style={styles.presetsSection}>
-      <Text style={styles.sectionLabel}>Thêm nhanh theo cốc/chai</Text>
-      <View style={styles.presetsGrid}>
-        <Pressable style={styles.presetItem} onPress={() => onAdd(150)}>
-          <MaterialCommunityIcons name="cup-water" size={24} color={colors.carbs} />
-          <Text style={styles.presetName}>Cốc nhỏ</Text>
-          <Text style={styles.presetVal}>+150 ml</Text>
-        </Pressable>
-        
-        <Pressable style={styles.presetItem} onPress={() => onAdd(250)}>
-          <MaterialCommunityIcons name="cup" size={24} color={colors.carbs} />
-          <Text style={styles.presetName}>Cốc tiêu chuẩn</Text>
-          <Text style={styles.presetVal}>+250 ml</Text>
-        </Pressable>
+    <View style={styles.stepGrid}>
+      <TouchableOpacity 
+        style={[styles.stepItem, activePreset === 150 && styles.stepItemActive]} 
+        onPress={() => onSelect(150)}
+      >
+        <MaterialCommunityIcons name="cup-water" size={24} color={activePreset === 150 ? colors.primary : colors.carbs} />
+        <Text style={styles.stepName}>Cốc nhỏ</Text>
+        <Text style={styles.stepVal}>{renderVal(150)}</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={[styles.stepItem, activePreset === 250 && styles.stepItemActive]} 
+        onPress={() => onSelect(250)}
+      >
+        <MaterialCommunityIcons name="cup" size={24} color={activePreset === 250 ? colors.primary : colors.carbs} />
+        <Text style={styles.stepName}>Cốc tiêu chuẩn</Text>
+        <Text style={styles.stepVal}>{renderVal(250)}</Text>
+      </TouchableOpacity>
 
-        <Pressable style={styles.presetItem} onPress={() => onAdd(500)}>
-          <MaterialCommunityIcons name="bottle-wine-outline" size={24} color={colors.carbs} />
-          <Text style={styles.presetName}>Chai vừa</Text>
-          <Text style={styles.presetVal}>+500 ml</Text>
-        </Pressable>
+      <TouchableOpacity 
+        style={[styles.stepItem, activePreset === 500 && styles.stepItemActive]} 
+        onPress={() => onSelect(500)}
+      >
+        <MaterialCommunityIcons name="bottle-wine-outline" size={24} color={activePreset === 500 ? colors.primary : colors.carbs} />
+        <Text style={styles.stepName}>Chai vừa</Text>
+        <Text style={styles.stepVal}>{renderVal(500)}</Text>
+      </TouchableOpacity>
 
-        <Pressable style={styles.presetItem} onPress={() => onAdd(750)}>
-          <MaterialCommunityIcons name="bottle-wine" size={24} color={colors.carbs} />
-          <Text style={styles.presetName}>Chai lớn</Text>
-          <Text style={styles.presetVal}>+750 ml</Text>
-        </Pressable>
-      </View>
+      <TouchableOpacity 
+        style={[styles.stepItem, activePreset === 750 && styles.stepItemActive]} 
+        onPress={() => onSelect(750)}
+      >
+        <MaterialCommunityIcons name="bottle-wine" size={24} color={activePreset === 750 ? colors.primary : colors.carbs} />
+        <Text style={styles.stepName}>Chai lớn</Text>
+        <Text style={styles.stepVal}>{renderVal(750)}</Text>
+      </TouchableOpacity>
     </View>
   );
-};
+}
 
 const getStyles = (colors: any) => StyleSheet.create({
-  presetsSection: {
-    gap: spacing.md,
-  },
-  sectionLabel: {
-    ...typography.bodyStrong,
-    color: colors.textSecondary,
-    fontSize: 14,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  presetsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+  stepGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: spacing.sm,
+    marginTop: spacing.sm,
   },
-  presetItem: {
-    width: "48%",
-    backgroundColor: colors.surface,
+  stepItem: {
+    width: '48%',
+    backgroundColor: colors.surfaceAlt,
     padding: spacing.md,
     borderRadius: radius.sm,
-    alignItems: "center",
+    alignItems: 'center',
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  presetName: {
+  stepItemActive: {
+    borderColor: colors.primary,
+  },
+  stepName: {
     ...typography.caption,
     color: colors.textSecondary,
-    fontWeight: "600",
+    fontWeight: '600',
+    marginTop: 4,
   },
-  presetVal: {
+  stepVal: {
     ...typography.bodyStrong,
     color: colors.carbs,
   },

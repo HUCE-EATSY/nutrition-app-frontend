@@ -1,18 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState, useMemo } from "react";
-import {
-  ActivityIndicator,
+import { ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
-  View,
-} from "react-native";
+  View, Alert } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Toast } from "@/components/common/Toast";
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
@@ -63,9 +60,7 @@ export default function AddEntryScreen() {
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-
+    
 
 
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────
@@ -215,14 +210,7 @@ export default function AddEntryScreen() {
       )}
 
       {/* Toast Notification */}
-      <Toast
-        visible={showToast}
-        message={toastMessage}
-        type={toastType}
-        duration={2000}
-        onHide={() => setShowToast(false)}
-      />
-    </SafeAreaView>
+          </SafeAreaView>
   );
 }
 
