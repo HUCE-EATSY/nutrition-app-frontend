@@ -1,6 +1,5 @@
-import React from "react";
-import { useAppColors } from "@/hooks/useAppColors";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useActivityStats } from "@/hooks/stats/useActivityStats";
@@ -10,46 +9,86 @@ import { ActivityChartCard } from "@/components/stats/activity/ActivityChartCard
 import { HealthConnectBanner } from "@/components/stats/activity/HealthConnectBanner";
 import { CalorieStatsCard } from "@/components/stats/activity/CalorieStatsCard";
 import { InsightBox } from "@/components/stats/InsightBox";
-import { ScreenBackground } from "@/components/layout/ScreenBackground";
+import { exerciseService } from "@/services/exerciseService";
+import { getTodayDateISO } from "@/utils/date";
 
 export default function ActivityStatsScreen() {
-  const colors = useAppColors();
-  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
   const { activeTabLabel, tabs, handleTabChange } = useActivityStats();
+  const [loading, setLoading] = useState(true);
+  const [weekData, setWeekData] = useState<{ label: string; value: number }[]>([]);
+  const [weeklyAverage, setWeeklyAverage] = useState(0);
+  const [daysStatus, setDaysStatus] = useState<{ day: string; hasData: boolean }[]>([]);
 
-  const barData = [
-    { label: "T2", value: 0 },
-    { label: "T3", value: 0 },
-    { label: "T4", value: 0 },
-    { label: "T5", value: 0 },
-    { label: "T6", value: 0 },
-    { label: "T7", value: 0 },
-    { label: "CN", value: 0 },
-  ];
+  useEffect(() => {
+    loadWeeklyData();
+  }, []);
 
-  const daysStatus = [
-    { day: "T2", hasData: false },
-    { day: "T3", hasData: false },
-    { day: "T4", hasData: false },
-    { day: "T5", hasData: false },
-    { day: "T6", hasData: false },
-    { day: "T7", hasData: false },
-    { day: "CN", hasData: false },
-  ];
+  async function loadWeeklyData() {
+    try {
+      setLoading(true);
+      const today = new Date();
+      const endDate = getTodayDateISO();
+      
+      // Lấy 7 ngày gần nhất
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 6);
+      const startDateISO = startDate.toISOString().split('T')[0];
+
+      const logs = await exerciseService.getLogs(startDateISO, endDate);
+
+      // Tạo map thời gian tập (phút) theo ngày
+      const durationByDate: Record<string, number> = {};
+      logs.forEach(log => {
+        if (!durationByDate[log.logDate]) {
+          durationByDate[log.logDate] = 0;
+        }
+        durationByDate[log.logDate] += log.durationMinutes;
+      });
+
+      // Tạo data cho 7 ngày
+      const dayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+      const chartData: { label: string; value: number }[] = [];
+      const statusData: { day: string; hasData: boolean }[] = [];
+      let totalDuration = 0;
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        const dateISO = date.toISOString().split('T')[0];
+        const dayOfWeek = date.getDay();
+        const label = dayLabels[dayOfWeek === 0 ? 6 : dayOfWeek - 1];
+        
+        const duration = Math.round(durationByDate[dateISO] || 0);
+        chartData.push({ label, value: duration });
+        statusData.push({ day: label, hasData: duration > 0 });
+        totalDuration += duration;
+      }
+
+      setWeekData(chartData);
+      setDaysStatus(statusData);
+      setWeeklyAverage(Math.round(totalDuration / 7));
+    } catch (error) {
+      console.error("Failed to load weekly exercise data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <ScreenBackground withGlow={false}>
-      <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thống kê hoạt động</Text>
-        <TouchableOpacity style={styles.backBtn}>
-          <Ionicons name="add" size={24} color={colors.textPrimary} />
+        <TouchableOpacity 
+          style={styles.backBtn}
+          onPress={() => router.push("/add-exercise")}
+        >
+          <Ionicons name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
@@ -60,29 +99,51 @@ export default function ActivityStatsScreen() {
           onChange={handleTabChange} 
         />
         
-        <DateNavigator label="04/05 - 10/05" />
+        <DateNavigator label="7 ngày gần nhất" />
 
-        <ActivityChartCard data={barData} averageValue={200} />
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#A56CFF" />
+            <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+          </View>
+        ) : (
+          <>
+            <ActivityChartCard data={weekData} averageValue={weeklyAverage} />
 
-        <HealthConnectBanner />
+            <HealthConnectBanner />
 
-        <CalorieStatsCard 
-          targetCalories={763} 
-          consumedCalories={0} 
-          daysStatus={daysStatus} 
-        />
-        
-        <InsightBox message="Hãy bắt đầu ghi nhận các bài tập để theo dõi tiến độ của bạn nhé!" />
+            <CalorieStatsCard 
+              targetCalories={weeklyAverage} 
+              consumedCalories={weekData.reduce((sum, d) => sum + d.value, 0)} 
+              daysStatus={daysStatus} 
+            />
+            
+            {weekData.every(d => d.value === 0) ? (
+              <InsightBox message="Hãy bắt đầu ghi nhận các bài tập để theo dõi tiến độ của bạn nhé!" />
+            ) : (
+              <InsightBox message={`Bạn đã tập luyện trung bình ${weeklyAverage} phút/ngày trong tuần này!`} />
+            )}
+          </>
+        )}
       </View>
     </ScrollView>
-    </ScreenBackground>
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: "transparent" },
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#12101F" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, paddingTop: 60 },
   backBtn: { padding: 8 },
-  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: "bold" },
+  headerTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
   content: { padding: 16 },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    gap: 12,
+  },
+  loadingText: {
+    color: "#8E8E93",
+    fontSize: 14,
+  },
 });
