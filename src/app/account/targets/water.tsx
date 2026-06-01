@@ -17,7 +17,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppColors } from '@/hooks/useAppColors';
 import { spacing, typography, radius } from '@/constants';
 import { useWaterStore } from '@/store/waterStore';
-import { useAuthStore } from '@/store/authStore';
 import { GradientButton } from '@/components/buttons/GradientButton';
 import { WaterPresetsGrid } from '@/components/water/WaterPresetsGrid';
 
@@ -27,40 +26,24 @@ export default function WaterTargetScreen() {
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
 
-  const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
-  const userWater = useWaterStore((state) => state.userWaterData[userId]);
-  const { setWaterGoal, setDefaultStep } = useWaterStore();
+  const { waterGoal, setWaterGoal } = useWaterStore();
 
-  const currentGoal = userWater?.waterGoal ?? 2000;
-  const currentStep = userWater?.defaultStep ?? 250;
-
-  const [goal, setGoal] = useState(String(currentGoal));
-  const [defaultStep, setDefaultStepLocal] = useState(String(currentStep));
+  const [goal, setGoal] = useState(String(waterGoal));
 
   const handleSave = () => {
     const goalVal = parseInt(goal, 10);
-    const stepVal = parseInt(defaultStep, 10);
 
     if (isNaN(goalVal) || goalVal <= 0) {
       Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống không hợp lệ.");
       return;
     }
-    if (isNaN(stepVal) || stepVal <= 0) {
-      Alert.alert("Lỗi nhập liệu", "Dung tích cốc không hợp lệ.");
-      return;
-    }
 
-    setWaterGoal(userId, goalVal);
-    setDefaultStep(userId, stepVal);
+    setWaterGoal(goalVal);
     router.back();
   };
 
   const setPresetGoal = (val: number) => {
     setGoal(String(val));
-  };
-
-  const setPresetStep = (val: number) => {
-    setDefaultStepLocal(String(val));
   };
 
   return (
@@ -98,8 +81,7 @@ export default function WaterTargetScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Thêm nhanh theo cốc</Text>
           <WaterPresetsGrid 
-            onSelect={setPresetStep} 
-            activePreset={parseInt(defaultStep, 10)} 
+            onSelect={setPresetGoal} 
           />
         </View>
 
