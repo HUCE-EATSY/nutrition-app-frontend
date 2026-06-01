@@ -23,11 +23,11 @@ export const useStepsStats = () => {
     const init = async () => {
       const connected = await checkConnection();
       if (connected) {
-        fetchHistory(period);
+        fetchHistory(useStepsStore.getState().period);
       }
     };
     init();
-  }, [period, checkConnection, fetchHistory]);
+  }, [checkConnection, fetchHistory]);
 
   const getPeriodLabel = (p: StepsPeriod) => {
     if (language === "en") {

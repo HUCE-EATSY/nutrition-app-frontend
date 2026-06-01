@@ -67,8 +67,8 @@ export default function PhysicalProfileScreen() {
   // States for basic info form
   const [editName, setEditName] = useState("");
   const [editGender, setEditGender] = useState<1 | 2>(1);
-  const [editHeight, setEditHeight] = useState<number>(170);
-  const [editWeight, setEditWeight] = useState<number>(60);
+  const [editHeight, setEditHeight] = useState<string>("170");
+  const [editWeight, setEditWeight] = useState<string>("60");
   const [editBirthDate, setEditBirthDate] = useState<Date>(new Date("2000-08-15"));
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -159,8 +159,8 @@ export default function PhysicalProfileScreen() {
 
     setEditName(curName);
     setEditGender(curGender === 1 || String(curGender).toLowerCase() === "male" ? 1 : 2);
-    setEditHeight(Number(curHeight));
-    setEditWeight(Number(displayedWeightVal));
+    setEditHeight(String(curHeight));
+    setEditWeight(String(displayedWeightVal));
     setEditBirthDate(new Date(dobISO));
 
     setEditBasicVisible(true);
@@ -178,14 +178,16 @@ export default function PhysicalProfileScreen() {
       return;
     }
 
-    const h = editHeight;
+    const h = parseFloat(editHeight);
     if (isNaN(h) || h < 50 || h > 300) {
       showToast("Chiều cao không hợp lệ (50 - 300 cm)", "error");
       return;
     }
 
-    const w = editWeight;
-    if (isNaN(w) || w < 20 || w > 300) {
+    const w = parseFloat(editWeight);
+    const minWeight = isLbs ? 44 : 20;
+    const maxWeight = isLbs ? 660 : 300;
+    if (isNaN(w) || w < minWeight || w > maxWeight) {
       showToast(isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)", "error");
       return;
     }
@@ -536,12 +538,24 @@ export default function PhysicalProfileScreen() {
                 <Text style={styles.infoRowLabel}>Chiều cao (cm)</Text>
                 <TextInput
                   style={styles.infoRowInput}
-                  value={String(editHeight)}
-                  onChangeText={(text) => {
-                    const val = parseFloat(text.replace(/[^0-9.]/g, ""));
-                    setEditHeight(isNaN(val) ? 0 : val);
-                  }}
+                  value={editHeight}
+                  onChangeText={(text) => setEditHeight(text.replace(/[^0-9.]/g, ""))}
                   placeholder="170"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  editable={!isSaving}
+                  returnKeyType="next"
+                />
+              </View>
+
+              {/* Cân nặng */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoRowLabel}>{`Cân nặng (${unit === "lbs" ? "lbs" : "kg"})`}</Text>
+                <TextInput
+                  style={styles.infoRowInput}
+                  value={editWeight}
+                  onChangeText={(text) => setEditWeight(text.replace(/[^0-9.]/g, ""))}
+                  placeholder={isLbs ? "150" : "60"}
                   placeholderTextColor={colors.textMuted}
                   keyboardType="numeric"
                   editable={!isSaving}

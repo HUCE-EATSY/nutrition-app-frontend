@@ -1,13 +1,10 @@
 import { Pedometer } from "expo-sensors";
+import { PermissionResponse } from "expo-modules-core";
 import { Platform } from "react-native";
 
 const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === "true";
 
-function getMockStepsForDate(dateStr: string): number {
-  const hash = dateStr.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return 3000 + (hash % 8) * 1250; // Từ 3000 đến 11750 bước
-}
-
+// Helper to get local date string YYYY-MM-DD
 function getLocalDateString(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -15,13 +12,89 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+// Health Connect Helpers
+let isHealthConnectInitialized = false;
+
+async function checkHealthConnectAvailable(): Promise<boolean> {
+  if (Platform.OS !== "android") return false;
+  try {
+    const { getSdkStatus, SdkAvailabilityStatus } = require("react-native-health-connect");
+    const status = await getSdkStatus();
+    return status === SdkAvailabilityStatus.SDK_AVAILABLE;
+  } catch (error) {
+    console.warn("Lỗi khi kiểm tra tính khả dụng của Health Connect:", error);
+    return false;
+  }
+}
+
+async function initHealthConnect(): Promise<boolean> {
+  if (Platform.OS !== "android") return false;
+  if (isHealthConnectInitialized) return true;
+  try {
+    const isAvailable = await checkHealthConnectAvailable();
+    if (!isAvailable) return false;
+
+    const { initialize } = require("react-native-health-connect");
+    isHealthConnectInitialized = await initialize();
+    return isHealthConnectInitialized;
+  } catch (error) {
+    console.warn("Lỗi khi khởi tạo Health Connect:", error);
+    return false;
+  }
+}
+
+async function checkHealthConnectPermission(): Promise<boolean> {
+  if (Platform.OS !== "android") return false;
+  try {
+    const initialized = await initHealthConnect();
+    if (!initialized) return false;
+
+    const { getGrantedPermissions } = require("react-native-health-connect");
+    const grantedPermissions = await getGrantedPermissions();
+    return grantedPermissions.some(
+      (p: any) => p.recordType === "Steps" && p.accessType === "read"
+    );
+  } catch (error) {
+    console.warn("Lỗi khi kiểm tra quyền Health Connect:", error);
+    return false;
+  }
+}
+
+async function requestHealthConnectPermission(): Promise<boolean> {
+  if (Platform.OS !== "android") return false;
+  try {
+    const initialized = await initHealthConnect();
+    if (!initialized) return false;
+
+    const { requestPermission } = require("react-native-health-connect");
+    const result = await requestPermission([
+      { accessType: "read", recordType: "Steps" },
+    ]);
+    return result.some(
+      (p: any) => p.recordType === "Steps" && p.accessType === "read"
+    );
+  } catch (error) {
+    console.warn("Lỗi khi yêu cầu quyền Health Connect:", error);
+    return false;
+  }
+}
+
+function getMockStepsForDate(dateStr: string): number {
+  const hash = dateStr.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return 3000 + (hash % 8) * 1250; // Từ 3000 đến 11750 bước
+}
+
 export const pedometerService = {
   /**
-   * Kiểm tra xem Pedometer có khả dụng trên thiết bị hay không
+   * Kiểm tra xem Pedometer/Health Connect có khả dụng trên thiết bị hay không
    */
   async isAvailable(): Promise<boolean> {
     if (USE_MOCK) {
       return true;
+    }
+    if (Platform.OS === "android") {
+      const hcAvailable = await checkHealthConnectAvailable();
+      if (hcAvailable) return true;
     }
     try {
       return await Pedometer.isAvailableAsync();
@@ -34,32 +107,86 @@ export const pedometerService = {
   /**
    * Kiểm tra xem đã được cấp quyền đọc bước chân chưa
    */
-  async checkStepsPermission(): Promise<boolean> {
+  async checkStepsPermission(): Promise<PermissionResponse> {
     if (USE_MOCK) {
-      return true;
+      return {
+        granted: true,
+        status: "granted" as any,
+        canAskAgain: true,
+        expires: "never",
+      };
     }
+
+    if (Platform.OS === "android") {
+      const hcAvailable = await checkHealthConnectAvailable();
+      if (hcAvailable) {
+        const hcGranted = await checkHealthConnectPermission();
+        if (hcGranted) {
+          return {
+            granted: true,
+            status: "granted" as any,
+            canAskAgain: true,
+            expires: "never",
+          };
+        }
+      }
+    }
+
     try {
-      const response = await Pedometer.getPermissionsAsync();
-      return response.granted;
+      return await Pedometer.getPermissionsAsync();
     } catch (error) {
       console.error("Lỗi kiểm tra quyền Pedometer:", error);
-      return false;
+      return {
+        granted: false,
+        status: "undetermined" as any,
+        canAskAgain: true,
+        expires: "never",
+      };
     }
   },
 
   /**
    * Yêu cầu cấp quyền đọc bước chân
    */
-  async requestStepsPermission(): Promise<boolean> {
+  async requestStepsPermission(): Promise<PermissionResponse> {
     if (USE_MOCK) {
-      return true;
+      return {
+        granted: true,
+        status: "granted" as any,
+        canAskAgain: true,
+        expires: "never",
+      };
     }
+
+    if (Platform.OS === "android") {
+      const hcAvailable = await checkHealthConnectAvailable();
+      if (hcAvailable) {
+        try {
+          const hcGranted = await requestHealthConnectPermission();
+          if (hcGranted) {
+            return {
+              granted: true,
+              status: "granted" as any,
+              canAskAgain: true,
+              expires: "never",
+            };
+          }
+        } catch (error) {
+          console.warn("Lỗi khi yêu cầu quyền Health Connect:", error);
+        }
+      }
+    }
+
     try {
-      const response = await Pedometer.requestPermissionsAsync();
-      return response.granted;
+      return await Pedometer.requestPermissionsAsync();
     } catch (error) {
       console.error("Lỗi khi yêu cầu quyền Pedometer:", error);
-      return false;
+      return {
+        granted: false,
+        status: "undetermined" as any,
+        canAskAgain: true,
+        expires: "never",
+      };
     }
   },
 
@@ -71,6 +198,34 @@ export const pedometerService = {
       const now = new Date();
       const hours = now.getHours();
       return Math.round(5500 * (hours / 24) + 1200);
+    }
+
+    if (Platform.OS === "android") {
+      const hcAvailable = await checkHealthConnectAvailable();
+      if (hcAvailable) {
+        const hcGranted = await checkHealthConnectPermission();
+        if (hcGranted) {
+          try {
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            const now = new Date();
+
+            const { readRecords } = require("react-native-health-connect");
+            const result = await readRecords("Steps", {
+              timeRangeFilter: {
+                operator: "between",
+                startTime: startOfToday.toISOString(),
+                endTime: now.toISOString(),
+              },
+            });
+            const records = result.records || [];
+            const total = records.reduce((sum: number, r: any) => sum + (r.count || 0), 0);
+            return total;
+          } catch (error) {
+            console.error("Lỗi khi lấy bước chân hôm nay từ Health Connect:", error);
+          }
+        }
+      }
     }
 
     try {
@@ -85,14 +240,11 @@ export const pedometerService = {
         realPermission = response.granted;
       } catch {}
 
-      // Nếu không khả dụng thực tế hoặc không có quyền thực tế, trả về 0 (dùng dữ liệu thật)
       if (!realAvailable || !realPermission) {
         return 0;
       }
 
       if (Platform.OS === "android") {
-        // Pedometer.getStepCountAsync không khả dụng trên Android 
-        // Khi không dùng mock, trả về 0 để store dùng dữ liệu cộng dồn thời gian thực
         return 0;
       }
 
@@ -115,13 +267,13 @@ export const pedometerService = {
     startDate: Date,
     endDate: Date
   ): Promise<{ dateISO: string; steps: number }[]> {
-    const history: { dateISO: string; steps: number }[] = [];
     const cur = new Date(startDate);
     cur.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
 
     if (USE_MOCK) {
+      const history: { dateISO: string; steps: number }[] = [];
       const temp = new Date(cur);
       while (temp <= end) {
         const dateStr = getLocalDateString(temp);
@@ -132,6 +284,47 @@ export const pedometerService = {
         temp.setDate(temp.getDate() + 1);
       }
       return history;
+    }
+
+    if (Platform.OS === "android") {
+      const hcAvailable = await checkHealthConnectAvailable();
+      if (hcAvailable) {
+        const hcGranted = await checkHealthConnectPermission();
+        if (hcGranted) {
+          try {
+            const { readRecords } = require("react-native-health-connect");
+            const result = await readRecords("Steps", {
+              timeRangeFilter: {
+                operator: "between",
+                startTime: cur.toISOString(),
+                endTime: end.toISOString(),
+              },
+            });
+            const records = result.records || [];
+
+            const stepsMap: Record<string, number> = {};
+            records.forEach((record: any) => {
+              const recordDate = new Date(record.startTime);
+              const dateStr = getLocalDateString(recordDate);
+              stepsMap[dateStr] = (stepsMap[dateStr] || 0) + (record.count || 0);
+            });
+
+            const history: { dateISO: string; steps: number }[] = [];
+            const temp = new Date(cur);
+            while (temp <= end) {
+              const dateStr = getLocalDateString(temp);
+              history.push({
+                dateISO: dateStr,
+                steps: stepsMap[dateStr] || 0,
+              });
+              temp.setDate(temp.getDate() + 1);
+            }
+            return history;
+          } catch (error) {
+            console.error("Lỗi khi lấy lịch sử bước chân từ Health Connect:", error);
+          }
+        }
+      }
     }
 
     let realAvailable = false;
@@ -145,8 +338,8 @@ export const pedometerService = {
       realPermission = response.granted;
     } catch {}
 
-    // Nếu không khả dụng thực tế hoặc không có quyền thực tế, trả về 0
     if (!realAvailable || !realPermission) {
+      const history: { dateISO: string; steps: number }[] = [];
       const temp = new Date(cur);
       while (temp <= end) {
         const dateStr = getLocalDateString(temp);
@@ -160,7 +353,7 @@ export const pedometerService = {
     }
 
     if (Platform.OS === "android") {
-      // Trên Android, không lấy được lịch sử từ sensor nên trả về 0, store sẽ tự merge từ stepRecords
+      const history: { dateISO: string; steps: number }[] = [];
       const temp = new Date(cur);
       while (temp <= end) {
         const dateStr = getLocalDateString(temp);
@@ -228,9 +421,9 @@ export const pedometerService = {
     if (USE_MOCK) {
       let currentSteps = 0;
       const interval = setInterval(() => {
-        currentSteps += Math.floor(Math.random() * 5) + 1; // Tăng ngẫu nhiên từ 1 đến 5 bước
+        currentSteps += Math.floor(Math.random() * 5) + 1;
         callback(currentSteps);
-      }, 5000); // 5 giây một lần
+      }, 5000);
       return {
         remove: () => clearInterval(interval),
       };

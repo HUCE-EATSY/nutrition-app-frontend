@@ -5,26 +5,31 @@ import * as z from "zod";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { WheelDatePicker } from "@/components/onboarding/WheelDatePicker";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
-import { t, useTranslation } from "@/constants/i18n";
+import { useTranslation } from "@/constants/i18n";
 import { createBirthDateISO, getDateParts, getAgeFromBirthDate } from "@/utils/date";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const fallbackDate = { day: 15, month: 8, year: 2000 };
 const fallbackISO = createBirthDateISO(fallbackDate.day, fallbackDate.month, fallbackDate.year);
 
-const birthDateSchema = z.object({
-  birthDateISO: z.string().refine(
-    (iso) => {
-      const age = getAgeFromBirthDate(iso);
-      return age >= 18;
-    },
-    {
-      message: t.validators.adultOnly,
-    }
-  ),
-});
-
 export default function BirthDateScreen() {
   const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
+
+  const birthDateSchema = useMemo(() => {
+    return z.object({
+      birthDateISO: z.string().refine(
+        (iso) => {
+          const age = getAgeFromBirthDate(iso);
+          return age >= 18;
+        },
+        {
+          message: t.validators.adultOnly,
+        }
+      ),
+    });
+  }, [language, t]);
+
   const { control, error, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
     "BirthDate",
     "birthDateISO",
@@ -65,4 +70,3 @@ export default function BirthDateScreen() {
     </OnboardingStepScaffold>
   );
 }
-

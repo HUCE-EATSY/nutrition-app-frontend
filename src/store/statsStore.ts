@@ -5,8 +5,9 @@ import { DailySummaryResponse, WeightLogEntry, StepLogEntry } from "@/types/cont
 import { getDailySummary, getNutritionTimeline } from "@/services/nutritionLogService";
 import { getWeightTimeline, getUserGoal } from "@/services/weightLogService";
 import { getTodayDateISO, getDateRangeForPeriod, formatLocalDate } from "@/utils/date";
-import { AppState, Platform } from "react-native";
+import { AppState, Platform, Alert, Linking } from "react-native";
 import { pedometerService } from "@/services/pedometerService";
+import { useSettingsStore } from "./settingsStore";
 import { secureStorage } from "./secureStorage";
 import { getStepsTimeline, saveStepLog } from "@/services/stepLogService";
 
@@ -205,11 +206,11 @@ export const useStepsStore = create<StepsState>()(
       period: StepsPeriod.WEEK,
       offset: 0,
       setPeriod: (period) => {
-        set({ period, offset: 0 });
+        set({ period, offset: 0, historyData: [] });
         get().fetchHistory(period, 0);
       },
       setOffset: (offset) => {
-        set({ offset });
+        set({ offset, historyData: [] });
         get().fetchHistory(get().period, offset);
       },
 
@@ -233,7 +234,8 @@ export const useStepsStore = create<StepsState>()(
         const isSupported = await pedometerService.isAvailable();
         let isConnected = false;
         if (isSupported) {
-          isConnected = await pedometerService.checkStepsPermission();
+          const response = await pedometerService.checkStepsPermission();
+          isConnected = response.granted;
         }
         set({ isSupported, isConnected });
         return isConnected;
@@ -253,14 +255,28 @@ export const useStepsStore = create<StepsState>()(
             return;
           }
 
-          const granted = await pedometerService.requestStepsPermission();
-          if (granted) {
+          const response = await pedometerService.requestStepsPermission();
+          if (response.granted) {
             set({ isSupported: true, isConnected: true });
             await get().fetchTodaySteps();
             get().startStepTracking();
             await get().fetchHistory(get().period, get().offset);
           } else {
             set({ isConnected: false, error: "Quyền truy cập bước chân bị từ chối" });
+            if (response.status === "denied" && response.canAskAgain === false) {
+              const lang = useSettingsStore.getState().language;
+              const title = lang === "vi" ? "Quyền truy cập bị từ chối" : "Permission Denied";
+              const message = lang === "vi" 
+                ? "Ứng dụng cần quyền truy cập cảm biến để đếm bước chân. Vui lòng bật quyền này trong Cài đặt của thiết bị."
+                : "The app needs step counting sensor permission. Please enable it in your device settings.";
+              const cancelText = lang === "vi" ? "Hủy" : "Cancel";
+              const settingsText = lang === "vi" ? "Cài đặt" : "Settings";
+              
+              Alert.alert(title, message, [
+                { text: cancelText, style: "cancel" },
+                { text: settingsText, onPress: () => Linking.openSettings() },
+              ]);
+            }
           }
         } catch (err: any) {
           set({ error: err.message || "Lỗi kết nối cảm biến bước chân" });

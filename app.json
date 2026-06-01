@@ -26,7 +26,9 @@
       "package": "com.k7625.nutritionappfrontend",
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.WRITE_STEPS"
       ]
     },
     "plugins": [

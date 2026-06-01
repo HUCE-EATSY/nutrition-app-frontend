@@ -416,18 +416,6 @@ export default function AccountScreen() {
         </View>
       </View>
 
-      {/* Support Center */}
-      <Pressable
-        onPress={() => router.push("/account/support")}
-        style={styles.supportButton}
-      >
-        <View style={styles.supportLeft}>
-          <Ionicons color={colors.textSecondary} name="help-buoy-outline" size={24} />
-          <Text style={styles.supportText}>{t.account.supportLabel}</Text>
-        </View>
-        <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
-      </Pressable>
-
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerLogo}></Text>

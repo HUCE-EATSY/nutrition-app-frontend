@@ -6,7 +6,6 @@ import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { LoadingStepRow } from "@/components/onboarding/LoadingStepRow";
 import { useTranslation } from "@/constants/i18n";
-import { testimonials } from "@/constants/mocks/data";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { colors, spacing, typography } from "@/constants";
 import { trackEvent } from "@/utils/analytics";
@@ -59,7 +58,13 @@ export default function CalculatingPlanScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitOnboarding, draft]);
 
-  const testimonial = testimonials[stage % testimonials.length];
+  const testimonials = t.onboarding.calculating.testimonials || [];
+  const testimonial = testimonials[stage % testimonials.length] || {
+    title: "",
+    content: "",
+    authorName: "",
+    rating: 5,
+  };
 
   return (
     <SafeScreen scrollable>

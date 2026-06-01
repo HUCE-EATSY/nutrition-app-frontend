@@ -9,7 +9,10 @@ import {
   KeyboardAvoidingView,
   TextInput,
   ScrollView,
+  LayoutAnimation,
 } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -68,7 +71,13 @@ export default function LogWaterScreen() {
 
   const handleDefaultStepChange = (text: string) => {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    setDefaultStep(isNaN(val) ? 0 : val);
+    const parsed = isNaN(val) ? 0 : val;
+    if (parsed > 2000) {
+      Alert.alert("Lỗi giới hạn", "Lượng nước thêm mặc định không được vượt quá 2,000 ml.");
+      setDefaultStep(2000);
+    } else {
+      setDefaultStep(parsed);
+    }
   };
   
   // When date or store changes, update locally
@@ -96,9 +105,26 @@ export default function LogWaterScreen() {
       Alert.alert("Lỗi nhập liệu", "Lượng nước uống không hợp lệ.");
       return;
     }
+    if (intake > 10000) {
+      Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+      return;
+    }
 
-    if (isNaN(goal) || goal <= 0) {
-      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống phải lớn hơn 0.");
+    if (isNaN(goal) || goal < 500) {
+      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống tối thiểu phải từ 500 ml trở lên.");
+      return;
+    }
+    if (goal > 10000) {
+      Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
+      return;
+    }
+
+    if (isNaN(defaultStep) || defaultStep < 50) {
+      Alert.alert("Lỗi nhập liệu", "Dung tích thêm mặc định tối thiểu phải từ 50 ml trở lên.");
+      return;
+    }
+    if (defaultStep > 2000) {
+      Alert.alert("Lỗi giới hạn", "Dung tích thêm mặc định không được vượt quá 2,000 ml.");
       return;
     }
 
@@ -112,17 +138,34 @@ export default function LogWaterScreen() {
   };
 
   const handleQuickAdd = (amount: number) => {
-    setIntake((prev) => prev + amount);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIntake((prev) => {
+      if (prev + amount > 10000) {
+        Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+        return 10000;
+      }
+      return prev + amount;
+    });
   };
 
   const handleQuickSubtract = (amount: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIntake((prev) => Math.max(0, prev - amount));
   };
 
   const handleCustomAdd = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const val = parseInt(customAmount.replace(/[^0-9]/g, ""), 10);
     if (isNaN(val) || val <= 0) {
       Alert.alert("Lỗi nhập liệu", "Vui lòng nhập lượng nước hợp lệ.");
+      return;
+    }
+    if (val > 5000) {
+      Alert.alert("Lỗi giới hạn", "Lượng nước thêm mỗi lần không được vượt quá 5,000 ml.");
+      return;
+    }
+    if (intake + val > 10000) {
+      Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
       return;
     }
     setIntake((prev) => prev + val);
@@ -131,15 +174,46 @@ export default function LogWaterScreen() {
 
   const handleTextChange = (text: string) => {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    setIntake(isNaN(val) ? 0 : val);
+    const parsed = isNaN(val) ? 0 : val;
+    if (parsed > 10000) {
+      Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+      setIntake(10000);
+    } else {
+      setIntake(parsed);
+    }
   };
 
   const handleGoalChange = (text: string) => {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    setGoal(isNaN(val) ? 0 : val);
+    const parsed = isNaN(val) ? 0 : val;
+    if (parsed > 10000) {
+      Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
+      setGoal(10000);
+    } else {
+      setGoal(parsed);
+    }
   };
 
   const progressPercentage = goal > 0 ? Math.round((intake / goal) * 100) : 0;
+
+  const animatedProgress = useSharedValue(0);
+
+  useEffect(() => {
+    animatedProgress.value = withSpring(Math.min(100, progressPercentage), {
+      damping: 18,
+      stiffness: 90
+    });
+  }, [progressPercentage, animatedProgress]);
+
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [intake, goal]);
+
+  const animatedDropStyle = useAnimatedStyle(() => {
+    return {
+      height: `${animatedProgress.value}%`
+    };
+  });
 
   return (
     <SafeScreen contentContainerStyle={styles.container}>
@@ -160,7 +234,7 @@ export default function LogWaterScreen() {
           {/* Wave/Droplet Progress Card */}
           <View style={styles.progressCard}>
             <View style={styles.waterDropOuter}>
-              <View style={[styles.waterDropInner, { height: `${Math.min(100, progressPercentage)}%` }]} />
+              <Animated.View style={[styles.waterDropInner, animatedDropStyle]} />
               <MaterialCommunityIcons
                 name={progressPercentage >= 100 ? "trophy-outline" : "water"}
                 size={36}

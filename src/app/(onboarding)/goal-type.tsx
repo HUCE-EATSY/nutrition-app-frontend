@@ -1,15 +1,19 @@
+import { useMemo } from "react";
 import * as z from "zod";
 
 import { OnboardingOptionSelection } from "@/components/onboarding/OnboardingOptionSelection";
 import { useTranslation } from "@/constants/i18n";
 import { goalOptions } from "@/constants/onboarding";
 
-const goalTypeSchema = z.object({
-  goalType: z.enum(["lose_weight", "maintain_weight", "gain_weight"]),
-});
-
 export default function GoalTypeScreen() {
   const t = useTranslation();
+
+  const goalTypeSchema = useMemo(() => {
+    return z.object({
+      goalType: z.enum(["lose_weight", "maintain_weight", "gain_weight"]),
+    });
+  }, []);
+
   return (
     <OnboardingOptionSelection
       stepName="GoalType"

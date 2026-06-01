@@ -292,6 +292,29 @@ export const en = {
       testimonialKicker: "Beta Tester",
       testimonialMeta: (author: string, rating: number) => `${author} • ${rating}/5`,
       error: "Could not connect to the server for calculations. Please try again.",
+      testimonials: [
+        {
+          id: "1",
+          authorName: "Ha Anh",
+          rating: 5,
+          title: "Easy to track goals",
+          content: "The onboarding flow is very smooth, I immediately understood the calories and macros to focus on.",
+        },
+        {
+          id: "2",
+          authorName: "Minh Quan",
+          rating: 5,
+          title: "Feels like having a personal coach",
+          content: "Beautiful dashboard, quick indicator checks, and not overly medical.",
+        },
+        {
+          id: "3",
+          authorName: "Bao Ngoc",
+          rating: 4,
+          title: "One-handed usage is great",
+          content: "Clear CTA, easy operations, perfect for quick checks during the day.",
+        },
+      ],
     },
     planResult: {
       title: "Your calorie and macro targets are ready to use today.",

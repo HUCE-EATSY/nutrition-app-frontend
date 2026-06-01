@@ -54,8 +54,6 @@ export default function SocialLoginScreen() {
             <SocialAuthButton label={t.auth.social.google} onPress={handleGooglePress} provider="google" />
           )}
         </View>
-
-        <Text style={styles.legal}>{t.auth.social.legal}</Text>
       </View>
     </SafeScreen>
   );

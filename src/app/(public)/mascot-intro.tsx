@@ -1,6 +1,17 @@
 import { router } from "expo-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  Easing,
+  FadeInDown,
+  FadeInUp,
+} from "react-native-reanimated";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -11,6 +22,45 @@ import { useAuthStore } from "@/store/authStore";
 import { colors, radius, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { trackEvent } from "@/utils/analytics";
+
+// Helper component for floating animation
+function FloatingBadge({
+  children,
+  delay = 0,
+  duration = 2000,
+  style,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  duration?: number;
+  style?: any;
+}) {
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    translateY.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(-8, { duration: duration, easing: Easing.inOut(Easing.ease) }),
+          withTiming(8, { duration: duration, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      )
+    );
+  }, [delay, duration, translateY]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.View style={[style, animatedStyle]}>
+      {children}
+    </Animated.View>
+  );
+}
 
 // 1. Tối ưu: Đưa mảng vị trí tĩnh ra ngoài component để tránh việc khởi tạo lại liên tục
 const FLOATING_POSITIONS: ViewStyle[] = [
@@ -60,21 +110,25 @@ export default function MascotIntroScreen() {
   return (
     <SafeScreen>
       <View style={[styles.screen, isCompactLayout && styles.screenCompact]}>
-        <Pressable onPress={handleClose} style={styles.closeButton}>
-          <Text style={styles.closeText}>×</Text>
-        </Pressable>
+        <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.closeButton}>
+          <Pressable onPress={handleClose} style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}>
+            <Text style={styles.closeText}>×</Text>
+          </Pressable>
+        </Animated.View>
 
-        <View style={[styles.bubble, isCompactLayout && styles.bubbleCompact]}>
+        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={[styles.bubble, isCompactLayout && styles.bubbleCompact]}>
           <Text style={[styles.bubbleText, isNarrowWidth && styles.bubbleTextCompact]}>
             {t.auth.mascot.bubble}
           </Text>
-        </View>
+        </Animated.View>
 
         <View style={[styles.heroArea, isCompactLayout && styles.heroAreaCompact, { minHeight: heroBounds }]}>
-          <View style={[styles.heroOrbit, { width: heroBounds, height: heroBounds }]}>
+          <Animated.View entering={FadeInUp.delay(300).duration(600).springify().damping(15)} style={[styles.heroOrbit, { width: heroBounds, height: heroBounds }]}>
             
             {/* Main Badge 1 */}
-            <View 
+            <FloatingBadge
+              delay={0}
+              duration={2200}
               style={[
                 styles.iconChipTop, 
                 { 
@@ -86,10 +140,12 @@ export default function MascotIntroScreen() {
               ]}
             >
               <Text style={styles.iconText}>{t.auth.mascot.topBadge}</Text>
-            </View>
+            </FloatingBadge>
 
             {/* Main Badge 2 */}
-            <View 
+            <FloatingBadge
+              delay={400}
+              duration={2500}
               style={[
                 styles.iconChipBottom, 
                 { 
@@ -101,15 +157,17 @@ export default function MascotIntroScreen() {
               ]}
             >
               <Text style={styles.iconText}>{t.auth.mascot.bottomBadge}</Text>
-            </View>
+            </FloatingBadge>
 
             {/* Additional floating badges */}
             {t.auth.mascot.badges.map((emoji, index) => {
               const pos = FLOATING_POSITIONS[index % FLOATING_POSITIONS.length];
 
               return (
-                <View
+                <FloatingBadge
                   key={index}
+                  delay={(index + 2) * 300}
+                  duration={2000 + (index * 150)}
                   style={[
                     styles.secondaryChip,
                     pos,
@@ -120,22 +178,24 @@ export default function MascotIntroScreen() {
                   ]}
                 >
                   <Text style={{ fontSize: secondaryChipSize * 0.5 }}>{emoji}</Text>
-                </View>
+                </FloatingBadge>
               );
             })}
 
             <WelcomeHeroIllustration size={heroBounds * 0.8} />
-          </View>
+          </Animated.View>
         </View>
 
-        <View style={[styles.copy, isCompactLayout && styles.copyCompact]}>
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={[styles.copy, isCompactLayout && styles.copyCompact]}>
           <Text style={[styles.title, isNarrowWidth && styles.titleCompact]}>
             {t.auth.mascot.title}
           </Text>
           <Text style={styles.description}>{t.auth.mascot.description}</Text>
-        </View>
+        </Animated.View>
 
-        <GradientButton label={t.auth.mascot.cta} onPress={handleContinue} />
+        <Animated.View entering={FadeInDown.delay(500).duration(500)}>
+          <GradientButton label={t.auth.mascot.cta} onPress={handleContinue} />
+        </Animated.View>
       </View>
     </SafeScreen>
   );

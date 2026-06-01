@@ -12,6 +12,7 @@ import {
   FlatList,
   Dimensions,
   Platform,
+  LayoutAnimation,
 } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -103,6 +104,11 @@ export default function StepsStatsScreen() {
       setGoalModalVisible(true);
     }
   }, [params.openGoal]);
+
+  // Smoothly animate transitions when switching tabs, paging dates, or updates loading
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [period, offset, isLoading]);
 
   // Load lịch sử 30 ngày cho Modal nhật ký
   const loadHistoryList = async () => {

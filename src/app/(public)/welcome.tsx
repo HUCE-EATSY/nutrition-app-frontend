@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -32,18 +33,22 @@ export default function WelcomeScreen() {
     <SafeScreen withBackgroundGlow={false}>
       <View style={styles.root}>
         <View style={[styles.screen, isCompactLayout && styles.screenCompact]}>
-          <Text style={[styles.logo, isNarrowWidth && styles.logoCompact]}>{BRAND}</Text>
+          <Animated.Text entering={FadeInDown.delay(100).duration(500)} style={[styles.logo, isNarrowWidth && styles.logoCompact]}>
+            {BRAND}
+          </Animated.Text>
 
-          <View style={[styles.heroWrap, isCompactLayout && styles.heroWrapCompact]}>
+          <Animated.View entering={FadeInUp.delay(200).duration(600).springify().damping(15)} style={[styles.heroWrap, isCompactLayout && styles.heroWrapCompact]}>
             <WelcomeHeroIllustration size={heroSize} />
-          </View>
+          </Animated.View>
 
-          <View style={styles.copyWrap}>
+          <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.copyWrap}>
             <Text style={[styles.title, isNarrowWidth && styles.titleCompact]}>{t.auth.welcome.title}</Text>
             <Text style={[styles.description, isNarrowWidth && styles.descriptionCompact]}>{t.auth.welcome.description}</Text>
-          </View>
+          </Animated.View>
 
-          <GradientButton label={t.auth.welcome.cta} onPress={handleStart} style={styles.button} />
+          <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.button}>
+            <GradientButton label={t.auth.welcome.cta} onPress={handleStart} />
+          </Animated.View>
         </View>
       </View>
     </SafeScreen>

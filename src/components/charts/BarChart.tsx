@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { View } from "react-native";
 import Svg, { Rect, Line as SvgLine, G, Text as SvgText, Circle } from "react-native-svg";
 
@@ -19,7 +19,7 @@ interface BarChartProps {
   showAveragePill?: boolean;
 }
 
-export const BarChart: React.FC<BarChartProps> = ({
+export const BarChart: React.FC<BarChartProps> = memo(({
   data,
   height = 200,
   width = 300,
@@ -194,4 +194,4 @@ export const BarChart: React.FC<BarChartProps> = ({
       </Svg>
     </View>
   );
-};
+});
