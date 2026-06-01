@@ -73,14 +73,18 @@ export default function SettingsScreen() {
     }
   };
 
+  const performPostAuthCleanup = () => {
+    setConfirmVisible(false);
+    setConfirmType(null);
+    resetOnboarding();
+    useOnboardingStore.getState().setPublicFlowStep("social-login");
+    router.replace("/(public)/social-login");
+  };
+
   const handleLogout = async () => {
     try {
-      setConfirmVisible(false);
-      setConfirmType(null);
       await logout();
-      resetOnboarding();
-      useOnboardingStore.getState().setPublicFlowStep("social-login");
-      router.replace("/(public)/social-login");
+      performPostAuthCleanup();
     } catch (error) {
       console.error("Logout failed:", error);
       Alert.alert(t.common.error, t.settings.logoutError);
@@ -89,12 +93,8 @@ export default function SettingsScreen() {
 
   const handleDeleteData = async () => {
     try {
-      setConfirmVisible(false);
-      setConfirmType(null);
       await deleteAccount();
-      resetOnboarding();
-      useOnboardingStore.getState().setPublicFlowStep("social-login");
-      router.replace("/(public)/social-login");
+      performPostAuthCleanup();
     } catch (error) {
       console.error("Delete data failed:", error);
       Alert.alert(t.common.error, t.settings.deleteDataError);

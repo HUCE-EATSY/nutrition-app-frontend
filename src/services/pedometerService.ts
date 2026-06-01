@@ -12,6 +12,30 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+// Helper to get standard granted permission response
+function grantedPermissionResponse(): PermissionResponse {
+  return {
+    granted: true,
+    status: "granted" as any,
+    canAskAgain: true,
+    expires: "never",
+  };
+}
+
+// Helper to generate a date range of 0 steps
+function getEmptyHistory(startDate: Date, endDate: Date): { dateISO: string; steps: number }[] {
+  const history: { dateISO: string; steps: number }[] = [];
+  const temp = new Date(startDate);
+  while (temp <= endDate) {
+    history.push({
+      dateISO: getLocalDateString(temp),
+      steps: 0,
+    });
+    temp.setDate(temp.getDate() + 1);
+  }
+  return history;
+}
+
 // Health Connect Helpers
 let isHealthConnectInitialized = false;
 
@@ -109,26 +133,13 @@ export const pedometerService = {
    */
   async checkStepsPermission(): Promise<PermissionResponse> {
     if (USE_MOCK) {
-      return {
-        granted: true,
-        status: "granted" as any,
-        canAskAgain: true,
-        expires: "never",
-      };
+      return grantedPermissionResponse();
     }
 
     if (Platform.OS === "android") {
       const hcAvailable = await checkHealthConnectAvailable();
-      if (hcAvailable) {
-        const hcGranted = await checkHealthConnectPermission();
-        if (hcGranted) {
-          return {
-            granted: true,
-            status: "granted" as any,
-            canAskAgain: true,
-            expires: "never",
-          };
-        }
+      if (hcAvailable && (await checkHealthConnectPermission())) {
+        return grantedPermissionResponse();
       }
     }
 
@@ -150,12 +161,7 @@ export const pedometerService = {
    */
   async requestStepsPermission(): Promise<PermissionResponse> {
     if (USE_MOCK) {
-      return {
-        granted: true,
-        status: "granted" as any,
-        canAskAgain: true,
-        expires: "never",
-      };
+      return grantedPermissionResponse();
     }
 
     if (Platform.OS === "android") {
@@ -164,12 +170,7 @@ export const pedometerService = {
         try {
           const hcGranted = await requestHealthConnectPermission();
           if (hcGranted) {
-            return {
-              granted: true,
-              status: "granted" as any,
-              canAskAgain: true,
-              expires: "never",
-            };
+            return grantedPermissionResponse();
           }
         } catch (error) {
           console.warn("Lỗi khi yêu cầu quyền Health Connect:", error);
@@ -339,31 +340,11 @@ export const pedometerService = {
     } catch {}
 
     if (!realAvailable || !realPermission) {
-      const history: { dateISO: string; steps: number }[] = [];
-      const temp = new Date(cur);
-      while (temp <= end) {
-        const dateStr = getLocalDateString(temp);
-        history.push({
-          dateISO: dateStr,
-          steps: 0,
-        });
-        temp.setDate(temp.getDate() + 1);
-      }
-      return history;
+      return getEmptyHistory(cur, end);
     }
 
     if (Platform.OS === "android") {
-      const history: { dateISO: string; steps: number }[] = [];
-      const temp = new Date(cur);
-      while (temp <= end) {
-        const dateStr = getLocalDateString(temp);
-        history.push({
-          dateISO: dateStr,
-          steps: 0,
-        });
-        temp.setDate(temp.getDate() + 1);
-      }
-      return history;
+      return getEmptyHistory(cur, end);
     }
 
     try {
@@ -400,17 +381,7 @@ export const pedometerService = {
       return await Promise.all(promises);
     } catch (error) {
       console.error("Lỗi khi lấy lịch sử bước chân từ Pedometer:", error);
-      const fallbackHistory: { dateISO: string; steps: number }[] = [];
-      const temp = new Date(cur);
-      while (temp <= end) {
-        const dateStr = getLocalDateString(temp);
-        fallbackHistory.push({
-          dateISO: dateStr,
-          steps: 0,
-        });
-        temp.setDate(temp.getDate() + 1);
-      }
-      return fallbackHistory;
+      return getEmptyHistory(cur, end);
     }
   },
 

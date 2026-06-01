@@ -36,17 +36,17 @@ export default function LogWaterScreen() {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  
+
   const selectedDate = useDiaryStore((state) => state.selectedDate);
   const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
-  
+
   const userWater = useWaterStore((state) => state.userWaterData[userId] || DEFAULT_WATER_DATA);
 
   const { setWater, setWaterGoal, setDefaultStep: setStoreDefaultStep } = useWaterStore();
-  
+
   // Set date state based on diary selectedDate or today
   const [logDateStr] = useState(selectedDate || getTodayDateISO());
-  
+
   // Get initial values from the store
   const [intake, setIntake] = useState(0);
   const [goal, setGoal] = useState(userWater.waterGoal);
@@ -79,7 +79,7 @@ export default function LogWaterScreen() {
       setDefaultStep(parsed);
     }
   };
-  
+
   // When date or store changes, update locally
   useEffect(() => {
     setIntake(userWater.waterLogs[logDateStr] || 0);
@@ -274,7 +274,7 @@ export default function LogWaterScreen() {
           {/* Stepper controls */}
           <View style={styles.inputSection}>
             <Text style={styles.sectionLabel}>Lượng nước đã uống</Text>
-            
+
             <View style={styles.stepperCard}>
               {/* Main Stepper Row */}
               <View style={styles.mainStepperRow}>
@@ -365,7 +365,7 @@ export default function LogWaterScreen() {
                 <Text style={styles.presetName}>Cốc nhỏ</Text>
                 <Text style={styles.presetVal}>+150 ml</Text>
               </Pressable>
-              
+
               <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(250)}>
                 <MaterialCommunityIcons name="cup" size={24} color={colors.carbs} />
                 <Text style={styles.presetName}>Cốc tiêu chuẩn</Text>

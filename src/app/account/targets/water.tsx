@@ -25,12 +25,12 @@ export default function WaterTargetScreen() {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  
+
   const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
   const userWaterData = useWaterStore((state) => state.userWaterData);
   const waterGoal = userWaterData[userId]?.waterGoal ?? 2000;
   const { setWaterGoal } = useWaterStore();
-  
+
   const [goal, setGoal] = useState(waterGoal);
 
   const handleSave = () => {
@@ -87,8 +87,8 @@ export default function WaterTargetScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           {/* Stepper controls for Goal */}
