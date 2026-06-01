@@ -18,7 +18,7 @@ export function SmallStatRow() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const { exercises } = useDiaryStore();
-  const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
+  const burned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
 
   const {
     hydrated,
