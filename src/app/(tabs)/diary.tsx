@@ -9,7 +9,6 @@ import { ActivityIndicator,
   Text,
   View, Alert } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
@@ -435,9 +434,7 @@ export default function DiaryTimelineScreen() {
           submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
           headerTitle={detailHeaderTitle}
         />
-
-        {/* Toast Notification */}
-              </SafeAreaView>
+      </SafeAreaView>
     </ScreenBackground>
   );
 }
