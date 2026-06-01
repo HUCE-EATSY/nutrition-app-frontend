@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Modal,
+import {
+  Alert,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,11 +12,12 @@ import { Modal,
   View,
   TextInput,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform, Alert } from 'react-native';
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import DateTimePicker from "@react-native-community/datetimepicker";
+
+import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { gradients, radius, spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { t, useTranslation } from "@/constants/i18n";
@@ -58,11 +61,6 @@ export default function PhysicalProfileScreen() {
   const [editBasicVisible, setEditBasicVisible] = useState(false);
   const [editActivityVisible, setEditActivityVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-      
-  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
-    const typeStr = typeof type !== "undefined" ? type : "success";
-    Alert.alert(typeStr === "error" ? "Lỗi" : "Thông báo", msg);
-  };
 
   // States for basic info form
   const [editName, setEditName] = useState("");
@@ -174,19 +172,19 @@ export default function PhysicalProfileScreen() {
 
   const handleSaveBasicInfo = async () => {
     if (!editName.trim()) {
-      showToast(t.validators.nicknameMin, "error");
+      Alert.alert(t.common.error, t.validators.nicknameMin);
       return;
     }
 
     const h = editHeight;
     if (isNaN(h) || h < 50 || h > 300) {
-      showToast("Chiều cao không hợp lệ (50 - 300 cm)", "error");
+      Alert.alert(t.common.error, "Chiều cao không hợp lệ (50 - 300 cm)");
       return;
     }
 
     const w = editWeight;
     if (isNaN(w) || w < 20 || w > 300) {
-      showToast(isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)", "error");
+      Alert.alert(t.common.error, isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)");
       return;
     }
 
@@ -196,7 +194,7 @@ export default function PhysicalProfileScreen() {
     const birthDateISO = editBirthDate.toISOString().split("T")[0];
     const ageVal = getAgeFromBirthDate(birthDateISO);
     if (ageVal < 18) {
-      showToast(t.validators.adultOnly, "error");
+      Alert.alert(t.common.error, t.validators.adultOnly);
       return;
     }
 
@@ -216,10 +214,10 @@ export default function PhysicalProfileScreen() {
       await userService.updateProfile(payload);
       queryClient.invalidateQueries({ queryKey: ["user"] });
       setEditBasicVisible(false);
-      showToast("Cập nhật hồ sơ thành công!", "success");
+      Alert.alert(t.common.success, "Cập nhật hồ sơ thành công!");
     } catch (err: any) {
       console.error("Save basic profile error:", err);
-      showToast(err?.message || "Không thể cập nhật hồ sơ", "error");
+      Alert.alert(t.common.error, err?.message || "Không thể cập nhật hồ sơ");
     } finally {
       setIsSaving(false);
     }
@@ -248,10 +246,10 @@ export default function PhysicalProfileScreen() {
       await userService.updateProfile(payload);
       queryClient.invalidateQueries({ queryKey: ["user"] });
       setEditActivityVisible(false);
-      showToast("Cập nhật mức vận động thành công!", "success");
+      Alert.alert(t.common.success, "Cập nhật mức vận động thành công!");
     } catch (err: any) {
       console.error("Save activity level error:", err);
-      showToast(err?.message || "Không thể cập nhật mức vận động", "error");
+      Alert.alert(t.common.error, err?.message || "Không thể cập nhật mức vận động");
     } finally {
       setIsSaving(false);
     }
@@ -340,24 +338,14 @@ export default function PhysicalProfileScreen() {
           <GoalRow
             label={t.physicalProfile.weeklyGoal}
             value={weeklyGoalLabel}
-<<<<<<< HEAD
-            clickable={goalType !== 3}
-            onPress={goalType !== 3 ? () => showToast("Để thay đổi tiến trình, vui lòng chọn 'Thiết lập mục tiêu mới' ở dưới.", "info") : undefined}
-=======
             clickable
             onPress={() => setResetModalVisible(true)}
->>>>>>> feature/update-frontend
           />
           <GoalRow
             label={t.physicalProfile.activityLevel}
             value={activityLabel ?? "—"}
-<<<<<<< HEAD
-            clickable={goalType !== 3}
-            onPress={goalType !== 3 ? openEditActivityModal : undefined}
-=======
             clickable
             onPress={() => setResetModalVisible(true)}
->>>>>>> feature/update-frontend
             truncate
           />
           <GoalRow
@@ -399,7 +387,6 @@ export default function PhysicalProfileScreen() {
         </Pressable>
       </View>
 
-      
       {/* ── Reset Confirmation Modal ── */}
       <Modal
         transparent
@@ -494,94 +481,89 @@ export default function PhysicalProfileScreen() {
           if (!isSaving) setEditBasicVisible(false);
         }}
       >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior="padding"
-        >
-          <Pressable
-            style={{ flex: 1 }}
-            onPress={() => !isSaving && setEditBasicVisible(false)}
-          />
+        <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.xl }]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Cập nhật thông tin cơ bản</Text>
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              bounces={false}
-            >
-              {/* Biệt danh */}
-              <View style={styles.infoRow}>
-                <Text style={styles.infoRowLabel}>Biệt danh</Text>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
+              {/* Display Name / Nickname */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>BIỆT DANH</Text>
                 <TextInput
-                  style={styles.infoRowInput}
+                  style={styles.textInput}
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="Nhập biệt danh..."
                   placeholderTextColor={colors.textMuted}
                   editable={!isSaving}
-                  returnKeyType="next"
                 />
               </View>
 
-              {/* Giới tính */}
-              <View style={styles.infoRow}>
-                <Text style={styles.infoRowLabel}>Giới tính</Text>
-                <View style={styles.genderToggle}>
+              {/* Gender selection */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>GIỚI TÍNH</Text>
+                <View style={styles.genderContainer}>
                   <Pressable
-                    style={[styles.genderChip, editGender === 1 && styles.genderChipActive]}
+                    style={[styles.genderBtn, editGender === 1 && styles.genderBtnActive]}
                     onPress={() => !isSaving && setEditGender(1)}
                   >
-                    <Text style={[styles.genderChipText, editGender === 1 && styles.genderChipTextActive]}>Nam</Text>
+                    <Text style={[styles.genderBtnText, editGender === 1 && styles.genderBtnTextActive]}>
+                      Nam
+                    </Text>
                   </Pressable>
                   <Pressable
-                    style={[styles.genderChip, editGender === 2 && styles.genderChipActive]}
+                    style={[styles.genderBtn, editGender === 2 && styles.genderBtnActive]}
                     onPress={() => !isSaving && setEditGender(2)}
                   >
-                    <Text style={[styles.genderChipText, editGender === 2 && styles.genderChipTextActive]}>Nữ</Text>
+                    <Text style={[styles.genderBtnText, editGender === 2 && styles.genderBtnTextActive]}>
+                      Nữ
+                    </Text>
                   </Pressable>
                 </View>
               </View>
 
-              {/* Chiều cao */}
-              <View style={styles.infoRow}>
-                <Text style={styles.infoRowLabel}>Chiều cao (cm)</Text>
-                <TextInput
-                  style={styles.infoRowInput}
-                  value={String(editHeight)}
-                  onChangeText={(text) => {
+              <View style={{ gap: spacing.lg, marginTop: spacing.sm }}>
+                {/* Height */}
+                <QuantityStepper
+                  label="CHIỀU CAO (CM)"
+                  value={editHeight}
+                  unit="cm"
+                  step={1}
+                  onChange={(text) => {
                     const val = parseFloat(text.replace(/[^0-9.]/g, ""));
-                    setEditHeight(isNaN(val) ? 0 : val);
+                    if (!isNaN(val)) setEditHeight(val);
                   }}
-                  placeholder="170"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  editable={!isSaving}
-                  returnKeyType="done"
+                  onAdd={(amount) => setEditHeight(prev => prev + amount)}
+                  onSubtract={(amount) => setEditHeight(prev => Math.max(0, prev - amount))}
                 />
-              </View>
 
-              {/* Ngày sinh */}
-              <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
-                <Text style={styles.infoRowLabel}>Ngày sinh</Text>
-                <Pressable onPress={() => !isSaving && setShowDatePicker(true)}>
-                  <Text style={styles.infoRowDateText}>
-                    {editBirthDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
-                  </Text>
-                </Pressable>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={editBirthDate}
-                    mode="date"
-                    display="default"
-                    maximumDate={new Date()}
-                    onChange={(event, selectedDate) => {
-                      setShowDatePicker(false);
-                      if (selectedDate) setEditBirthDate(selectedDate);
-                    }}
-                  />
-                )}
+                {/* Birthdate */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>NGÀY SINH</Text>
+                  <Pressable
+                    style={[styles.textInput, { justifyContent: "center" }]}
+                    onPress={() => !isSaving && setShowDatePicker(true)}
+                  >
+                    <Text style={{ color: colors.textPrimary, ...typography.body }}>
+                      {editBirthDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
+                    </Text>
+                  </Pressable>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={editBirthDate}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      onChange={(event, selectedDate) => {
+                        setShowDatePicker(false);
+                        if (selectedDate) {
+                          setEditBirthDate(selectedDate);
+                        }
+                      }}
+                    />
+                  )}
+                </View>
               </View>
             </ScrollView>
 
@@ -613,7 +595,7 @@ export default function PhysicalProfileScreen() {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
 
 
@@ -1018,59 +1000,6 @@ const getStyles = (colors: any) => StyleSheet.create({
     color: colors.textSecondary,
   },
   genderBtnTextActive: {
-    color: colors.primary,
-  },
-  // ── Inline row layout for Edit Basic Info ──
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
-  },
-  infoRowLabel: {
-    ...typography.body,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  infoRowInput: {
-    flex: 1,
-    color: colors.textPrimary,
-    fontSize: 15,
-    textAlign: "right",
-    paddingVertical: spacing.xs,
-    paddingHorizontal: 0,
-    backgroundColor: "transparent",
-    borderWidth: 0,
-  },
-  infoRowDateText: {
-    ...typography.body,
-    color: colors.textPrimary,
-    textAlign: "right",
-  },
-  genderToggle: {
-    flexDirection: "row",
-    gap: spacing.xs,
-  },
-  genderChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-  },
-  genderChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(165, 108, 255, 0.15)",
-  },
-  genderChipText: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontWeight: "600",
-  },
-  genderChipTextActive: {
     color: colors.primary,
   },
   activityOption: {

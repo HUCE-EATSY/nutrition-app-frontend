@@ -11,11 +11,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-<<<<<<< HEAD
-=======
 
 import Toast from "@/components/common/Toast";
->>>>>>> feature/update-frontend
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
@@ -442,6 +439,15 @@ export default function DiaryTimelineScreen() {
           initialGrams={editingLogId !== null ? parseFloat(grams) : undefined}
           submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
           headerTitle={detailHeaderTitle}
+        />
+
+        {/* Toast Notification */}
+        <Toast
+          visible={showToast}
+          message={toastMessage}
+          type={toastType}
+          duration={2000}
+          onHide={() => setShowToast(false)}
         />
       </SafeAreaView>
     </ScreenBackground>

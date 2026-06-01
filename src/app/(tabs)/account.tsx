@@ -6,10 +6,6 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, Linking } from "react-
 import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
-<<<<<<< HEAD
-import { ProgressRingChart } from "@/components/charts/ProgressRingChart";
-=======
->>>>>>> feature/update-frontend
 import { MacroRingChart } from "@/components/charts/MacroRingChart";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -304,26 +300,6 @@ export default function AccountScreen() {
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
             <MacroRingChart
-<<<<<<< HEAD
-              data={[
-                { value: proteinPct, color: colors.protein },
-                { value: carbsPct, color: colors.carbs },
-                { value: fatPct, color: colors.fat }
-              ]}
-              size={120}
-              strokeWidth={8}
-            />
-            <View style={styles.chartCenter}>
-              <Ionicons color={colors.warning} name="flame" size={20} />
-              <Text 
-                style={styles.calorieValue} 
-                numberOfLines={1} 
-                adjustsFontSizeToFit
-              >
-                {Math.round(plan.targetCalories).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              </Text>
-            </View>
-=======
               proteinPct={proteinPct}
               carbsPct={carbsPct}
               fatPct={fatPct}
@@ -336,7 +312,6 @@ export default function AccountScreen() {
               iconColor={colors.warning}
               textColor={colors.textPrimary}
             />
->>>>>>> feature/update-frontend
           </View>
 
           <View style={styles.macroList}>
@@ -670,14 +645,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   chartCenter: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
   },
   calorieValue: {
     ...typography.h1,
