@@ -7,13 +7,12 @@ import {
   Platform,
   Alert,
   KeyboardAvoidingView,
-  TextInput,
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { spacing, typography, radius } from "@/constants";
+import { spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useWaterStore } from "@/store/waterStore";
@@ -26,12 +25,23 @@ export default function WaterTargetScreen() {
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   
+<<<<<<< HEAD
   const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
   const userWaterData = useWaterStore((state) => state.userWaterData);
   const waterGoal = userWaterData[userId]?.waterGoal ?? 2000;
   const { setWaterGoal } = useWaterStore();
   
   const [goal, setGoal] = useState(waterGoal);
+=======
+  const userInfo = useAuthStore((state) => state.userInfo);
+  const userId = userInfo?.id?.toString() || "guest";
+
+  const userWaterData = useWaterStore((state) => state.userWaterData);
+  const setWaterGoal = useWaterStore((state) => state.setWaterGoal);
+  
+  const currentGoal = userWaterData[userId]?.waterGoal || 2000;
+  const [goal, setGoal] = useState(currentGoal);
+>>>>>>> feature/update-frontend
 
   const handleSave = () => {
     if (isNaN(goal) || goal <= 0) {

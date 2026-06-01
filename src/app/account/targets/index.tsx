@@ -73,7 +73,10 @@ export default function TargetCustomizationScreen() {
         <EnergyMetricsCard bmr={bmr} tdee={tdee} addedCalories={addedCalories} />
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature/update-frontend
         {/* Section 3: Other Targets */}
         <Text style={styles.sectionTitle}>{t.targets.otherTargets}</Text>
         <View style={styles.card}>

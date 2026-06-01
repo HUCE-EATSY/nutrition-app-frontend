@@ -6,7 +6,10 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, Linking } from "react-
 import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
+<<<<<<< HEAD
 import { ProgressRingChart } from "@/components/charts/ProgressRingChart";
+=======
+>>>>>>> feature/update-frontend
 import { MacroRingChart } from "@/components/charts/MacroRingChart";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
@@ -301,6 +304,7 @@ export default function AccountScreen() {
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
             <MacroRingChart
+<<<<<<< HEAD
               data={[
                 { value: proteinPct, color: colors.protein },
                 { value: carbsPct, color: colors.carbs },
@@ -319,6 +323,20 @@ export default function AccountScreen() {
                 {Math.round(plan.targetCalories).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               </Text>
             </View>
+=======
+              proteinPct={proteinPct}
+              carbsPct={carbsPct}
+              fatPct={fatPct}
+              proteinColor={colors.protein}
+              carbsColor={colors.carbs}
+              fatColor={colors.fat}
+              size={120}
+              strokeWidth={8}
+              calories={plan.targetCalories}
+              iconColor={colors.warning}
+              textColor={colors.textPrimary}
+            />
+>>>>>>> feature/update-frontend
           </View>
 
           <View style={styles.macroList}>

@@ -321,7 +321,10 @@ export default function PhysicalProfileScreen() {
           </View>
 
           {/* Goal type badge */}
-          <View style={styles.goalBadge}>
+          <Pressable
+            style={styles.goalBadge}
+            onPress={() => setResetModalVisible(true)}
+          >
             <LinearGradient
               colors={gradients.button}
               start={{ x: 0, y: 0 }}
@@ -331,20 +334,30 @@ export default function PhysicalProfileScreen() {
               <Ionicons name="flag" size={14} color="#fff" />
               <Text style={styles.goalBadgeText}>{goalLabel ?? "—"}</Text>
             </LinearGradient>
-          </View>
+          </Pressable>
 
           {/* Goal rows */}
           <GoalRow
             label={t.physicalProfile.weeklyGoal}
             value={weeklyGoalLabel}
+<<<<<<< HEAD
             clickable={goalType !== 3}
             onPress={goalType !== 3 ? () => showToast("Để thay đổi tiến trình, vui lòng chọn 'Thiết lập mục tiêu mới' ở dưới.", "info") : undefined}
+=======
+            clickable
+            onPress={() => setResetModalVisible(true)}
+>>>>>>> feature/update-frontend
           />
           <GoalRow
             label={t.physicalProfile.activityLevel}
             value={activityLabel ?? "—"}
+<<<<<<< HEAD
             clickable={goalType !== 3}
             onPress={goalType !== 3 ? openEditActivityModal : undefined}
+=======
+            clickable
+            onPress={() => setResetModalVisible(true)}
+>>>>>>> feature/update-frontend
             truncate
           />
           <GoalRow
@@ -603,72 +616,7 @@ export default function PhysicalProfileScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ── Edit Activity Level Modal ── */}
-      <Modal
-        transparent
-        animationType="slide"
-        visible={editActivityVisible}
-        onRequestClose={() => {
-          if (!isSaving) setEditActivityVisible(false);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.xl }]}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>{t.physicalProfile.activityLevel}</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 380 }}>
-              {Object.keys(t.onboarding.activityOptions).map((key, index) => {
-                const optKey = key as keyof typeof t.onboarding.activityOptions;
-                const opt = t.onboarding.activityOptions[optKey];
-                const optVal = index + 1; // 1 to 5
-                const isActive = editActivityLevel === optVal;
-
-                return (
-                  <Pressable
-                    key={key}
-                    style={[styles.activityOption, isActive && styles.activityOptionActive]}
-                    onPress={() => !isSaving && setEditActivityLevel(optVal)}
-                  >
-                    <Text style={[styles.activityOptionTitle, isActive && styles.activityOptionTitleActive]}>
-                      {opt.title}
-                    </Text>
-                    <Text style={styles.activityOptionSub}>{opt.subtitle}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            <View style={styles.modalActions}>
-              <Pressable
-                style={({ pressed }) => [styles.modalBtnOutline, pressed && { opacity: 0.7 }]}
-                onPress={() => !isSaving && setEditActivityVisible(false)}
-                disabled={isSaving}
-              >
-                <Text style={styles.modalBtnOutlineText}>{t.common.cancel}</Text>
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [styles.modalBtnPrimary, pressed && { opacity: 0.85 }]}
-                onPress={() => handleSaveActivityLevel(editActivityLevel)}
-                disabled={isSaving}
-              >
-                <LinearGradient
-                  colors={gradients.button}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.modalBtnGradient}
-                >
-                  {isSaving ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.modalBtnPrimaryText}>{t.common.save}</Text>
-                  )}
-                </LinearGradient>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

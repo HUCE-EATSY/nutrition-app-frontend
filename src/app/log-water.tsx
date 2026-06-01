@@ -29,6 +29,12 @@ const DEFAULT_WATER_DATA = {
   defaultStep: 250,
 };
 
+const DEFAULT_WATER_DATA = {
+  waterLogs: {} as Record<string, number>,
+  waterGoal: 2000,
+  defaultStep: 250,
+};
+
 export default function LogWaterScreen() {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
@@ -38,8 +44,12 @@ export default function LogWaterScreen() {
   const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
   
   const userWater = useWaterStore((state) => state.userWaterData[userId] || DEFAULT_WATER_DATA);
+<<<<<<< HEAD
 
   const { setWater, setWaterGoal, setDefaultStep: setStoreDefaultStep } = useWaterStore();
+=======
+  const { setWater, setWaterGoal } = useWaterStore();
+>>>>>>> feature/update-frontend
   
   // Set date state based on diary selectedDate or today
   const [logDateStr] = useState(selectedDate || getTodayDateISO());
@@ -47,6 +57,7 @@ export default function LogWaterScreen() {
   // Get initial values from the store
   const [intake, setIntake] = useState(0);
   const [goal, setGoal] = useState(userWater.waterGoal);
+<<<<<<< HEAD
   const [customAmount, setCustomAmount] = useState("");
   const scrollViewRef = React.useRef<ScrollView>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -70,19 +81,37 @@ export default function LogWaterScreen() {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
     setDefaultStep(isNaN(val) ? 0 : val);
   };
+=======
+>>>>>>> feature/update-frontend
   
   // When date or store changes, update locally
   useEffect(() => {
     setIntake(userWater.waterLogs[logDateStr] || 0);
   }, [logDateStr, userWater.waterLogs]);
+<<<<<<< HEAD
+=======
+
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || new Date(logDateStr);
+    setShowDatePicker(Platform.OS === "ios");
+    setLogDateStr(currentDate.toISOString().split('T')[0]);
+  };
+>>>>>>> feature/update-frontend
 
   useEffect(() => {
     setGoal(userWater.waterGoal);
   }, [userWater.waterGoal]);
+<<<<<<< HEAD
 
   useEffect(() => {
     setDefaultStep(userWater.defaultStep ?? 250);
   }, [userWater.defaultStep]);
+=======
+>>>>>>> feature/update-frontend
 
   const handleSave = () => {
     // Validate date format YYYY-MM-DD
@@ -105,7 +134,10 @@ export default function LogWaterScreen() {
     // Save to store
     setWater(userId, logDateStr, intake);
     setWaterGoal(userId, goal);
+<<<<<<< HEAD
     setStoreDefaultStep(userId, defaultStep);
+=======
+>>>>>>> feature/update-frontend
 
     // Alert success or go back
     router.back();
