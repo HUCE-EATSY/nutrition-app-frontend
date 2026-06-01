@@ -73,38 +73,21 @@ export default function TargetCustomizationScreen() {
         <EnergyMetricsCard bmr={bmr} tdee={tdee} addedCalories={addedCalories} />
 
 
-        {/* Section 2: Nutrition Target Customization */}
-        <Text style={styles.sectionTitle}>{t.targets.nutritionCustomize}</Text>
-        <View style={styles.card}>
-          <TargetListItem
-            icon="flame-outline"
-            iconColor="#FF6B6B"
-            title={t.targets.calorieTarget}
-            onPress={() => router.push('/account/targets/calories')}
-          />
-          <TargetListItem
-            icon="pie-chart-outline"
-            iconColor="#4ECDC4"
-            title={t.targets.macroRatio}
-            onPress={() => router.push('/account/targets/macros')}
-            showDivider={false}
-          />
-        </View>
 
         {/* Section 3: Other Targets */}
         <Text style={styles.sectionTitle}>{t.targets.otherTargets}</Text>
         <View style={styles.card}>
           <TargetListItem
-            icon="water-outline"
-            iconColor="#4D96FF"
-            title={t.targets.waterTarget}
-            onPress={() => router.push('/account/targets/water')}
-          />
-          <TargetListItem
             icon="footsteps-outline"
             iconColor="#FFB067"
             title={t.targets.stepTarget}
             onPress={() => router.push({ pathname: '/stats/steps', params: { openGoal: 'true' } })}
+          />
+          <TargetListItem
+            icon="water-outline"
+            iconColor="#4D96FF"
+            title={t.targets.waterTarget}
+            onPress={() => router.push('/account/targets/water')}
             showDivider={false}
           />
         </View>

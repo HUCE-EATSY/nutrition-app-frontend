@@ -10,7 +10,6 @@ export function SectionHeader({ title }: { title: string }) {
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderText}>{title}</Text>
-      <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
     </View>
   );
 }

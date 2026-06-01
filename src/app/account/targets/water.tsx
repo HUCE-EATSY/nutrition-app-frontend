@@ -1,102 +1,114 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from 'react';
 import {
-  StyleSheet,
-  Text,
   View,
-  Pressable,
-  Platform,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
   Alert,
   KeyboardAvoidingView,
-  TextInput,
-  ScrollView,
-} from "react-native";
-import { router } from "expo-router";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { spacing, typography, radius } from "@/constants";
-import { useAppColors } from "@/hooks/useAppColors";
-import { SafeScreen } from "@/components/layout/SafeScreen";
-import { useWaterStore } from "@/store/waterStore";
-import { useAuthStore } from "@/store/authStore";
-import { GradientButton } from "@/components/buttons/GradientButton";
-import { QuantityStepper } from "@/components/ui/QuantityStepper";
-import { WaterPresetsGrid } from "@/components/water/WaterPresetsGrid";
+  Platform,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useAppColors } from '@/hooks/useAppColors';
+import { spacing, typography, radius } from '@/constants';
+import { useWaterStore } from '@/store/waterStore';
+import { useAuthStore } from '@/store/authStore';
+import { GradientButton } from '@/components/buttons/GradientButton';
+import { WaterPresetsGrid } from '@/components/water/WaterPresetsGrid';
 
 export default function WaterTargetScreen() {
+  const router = useRouter();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  
+
   const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
-  const userWaterData = useWaterStore((state) => state.userWaterData);
-  const waterGoal = userWaterData[userId]?.waterGoal ?? 2000;
-  const { setWaterGoal } = useWaterStore();
-  
-  const [goal, setGoal] = useState(waterGoal);
+  const userWater = useWaterStore((state) => state.userWaterData[userId]);
+  const { setWaterGoal, setDefaultStep } = useWaterStore();
+
+  const currentGoal = userWater?.waterGoal ?? 2000;
+  const currentStep = userWater?.defaultStep ?? 250;
+
+  const [goal, setGoal] = useState(String(currentGoal));
+  const [defaultStep, setDefaultStepLocal] = useState(String(currentStep));
 
   const handleSave = () => {
-    if (isNaN(goal) || goal <= 0) {
-      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống phải lớn hơn 0.");
+    const goalVal = parseInt(goal, 10);
+    const stepVal = parseInt(defaultStep, 10);
+
+    if (isNaN(goalVal) || goalVal <= 0) {
+      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống không hợp lệ.");
       return;
     }
-    setWaterGoal(userId, goal);
+    if (isNaN(stepVal) || stepVal <= 0) {
+      Alert.alert("Lỗi nhập liệu", "Dung tích cốc không hợp lệ.");
+      return;
+    }
+
+    setWaterGoal(userId, goalVal);
+    setDefaultStep(userId, stepVal);
     router.back();
   };
 
-  const handleQuickAdd = (amount: number) => {
-    setGoal((prev) => prev + amount);
+  const setPresetGoal = (val: number) => {
+    setGoal(String(val));
   };
 
-  const handleQuickSubtract = (amount: number) => {
-    setGoal((prev) => Math.max(0, prev - amount));
-  };
-
-  const handleGoalChange = (text: string) => {
-    const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    setGoal(isNaN(val) ? 0 : val);
+  const setPresetStep = (val: number) => {
+    setDefaultStepLocal(String(val));
   };
 
   return (
-    <SafeScreen contentContainerStyle={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.flex1}
-        behavior={Platform.OS === "ios" ? "padding" : "padding"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 25}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={15}>
-            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Mục tiêu lượng nước</Text>
-          <View style={styles.headerSpacer} />
+    <KeyboardAvoidingView 
+      style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={15}>
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Mục tiêu nước uống</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        
+        {/* Daily Goal Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Mục tiêu ngày</Text>
+          
+          <View style={[styles.inputContainer, { justifyContent: 'center', position: 'relative' }]}>
+            <TextInput
+              style={[styles.textInput, { textAlign: 'center' }]}
+              value={goal}
+              onChangeText={setGoal}
+              keyboardType="numeric"
+              maxLength={5}
+            />
+            <Text style={[styles.unitText, { position: 'absolute', right: 16 }]}>ml</Text>
+          </View>
         </View>
 
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Stepper controls for Goal */}
-          <QuantityStepper
-            label="Mục tiêu ngày"
-            value={goal}
-            unit="ml"
-            step={250}
-            onChange={handleGoalChange}
-            onAdd={handleQuickAdd}
-            onSubtract={handleQuickSubtract}
+        {/* Quick Add Cup Selection Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Thêm nhanh theo cốc</Text>
+          <WaterPresetsGrid 
+            onSelect={setPresetStep} 
+            activePreset={parseInt(defaultStep, 10)} 
           />
-
-          {/* Presets Grid */}
-          <WaterPresetsGrid onAdd={handleQuickAdd} />
-        </ScrollView>
-
-        {/* Footer Save Button */}
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-          <GradientButton label="Lưu thay đổi" onPress={handleSave} />
         </View>
-      </KeyboardAvoidingView>
-    </SafeScreen>
+
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <GradientButton label="Lưu thay đổi" onPress={handleSave} />
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -105,35 +117,89 @@ const getStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bgBase,
   },
-  flex1: {
-    flex: 1,
-  },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSoft,
   },
-  backBtn: {
+  backButton: {
     padding: 4,
   },
   headerTitle: {
-    ...typography.h3,
     color: colors.textPrimary,
+    ...typography.h3,
   },
-  headerSpacer: {
+  placeholder: {
     width: 32,
   },
   scrollContent: {
+    padding: spacing.md,
+    gap: spacing.lg,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     padding: spacing.lg,
-    gap: spacing.xl,
-    paddingBottom: spacing.xxxl,
+    gap: spacing.md,
+  },
+  cardTitle: {
+    color: colors.textPrimary,
+    ...typography.h3,
+  },
+  cardSubtitle: {
+    color: colors.textSecondary,
+    ...typography.body,
+    marginBottom: spacing.xs,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    height: 56,
+  },
+  textInput: {
+    alignSelf: 'center',
+    color: colors.textPrimary,
+    ...typography.h2,
+    lineHeight: undefined,
+    padding: 0,
+    margin: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+  },
+  unitText: {
+    color: colors.textSecondary,
+    ...typography.bodyStrong,
+    marginLeft: spacing.sm,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+  },
+  presetPill: {
+    backgroundColor: colors.surfaceAlt,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    flex: 1,
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  presetPillText: {
+    color: colors.carbs,
+    ...typography.bodyStrong,
   },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSoft,
+    backgroundColor: colors.bgBase,
   },
 });

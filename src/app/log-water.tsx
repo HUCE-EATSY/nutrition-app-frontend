@@ -22,24 +22,24 @@ import { getTodayDateISO } from "@/utils/date";
 import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
-import { QuantityStepper } from "@/components/ui/QuantityStepper";
+
 import { WaterPresetsGrid } from "@/components/water/WaterPresetsGrid";
 
 export default function LogWaterScreen() {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  
+
   const selectedDate = useDiaryStore((state) => state.selectedDate);
   const { waterLogs, waterGoal, setWater, setWaterGoal } = useWaterStore();
-  
+
   // Set date state based on diary selectedDate or today
   const [logDateStr, setLogDateStr] = useState(selectedDate || getTodayDateISO());
-  
+
   // Get initial values from the store
   const [intake, setIntake] = useState(0);
   const [goal, setGoal] = useState(waterGoal);
-  
+
   // When date or store changes, update locally
   useEffect(() => {
     setIntake(waterLogs[logDateStr] || 0);
@@ -48,7 +48,7 @@ export default function LogWaterScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  
+
   const onDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || new Date(logDateStr);
     setShowDatePicker(Platform.OS === "ios");
@@ -121,9 +121,9 @@ export default function LogWaterScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView 
+        <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={styles.scrollContent} 
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           {/* Wave/Droplet Progress Card */}
@@ -191,7 +191,7 @@ export default function LogWaterScreen() {
               </Pressable>
             </View>
           </View>
-          
+
           {showDatePicker && (
             <DateTimePicker
               value={new Date(logDateStr)}
