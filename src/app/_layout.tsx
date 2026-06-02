@@ -9,7 +9,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import * as SystemUI from "expo-system-ui";
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, Platform } from "react-native";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
@@ -112,7 +113,7 @@ export default function RootLayout() {
     );
   }
 
-  return (
+  const stackContent = (
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={paperTheme}>
         <StatusBar style={themeMode === "light" ? "dark" : "light"} />
@@ -134,4 +135,18 @@ export default function RootLayout() {
       </PaperProvider>
     </QueryClientProvider>
   );
+
+  // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động (chỉ bọc khi có Client ID hợp lệ để tránh crash ứng dụng)
+  if (Platform.OS === "web") {
+    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+    if (webClientId && webClientId.trim() !== "" && !webClientId.startsWith("your_")) {
+      return (
+        <GoogleOAuthProvider clientId={webClientId}>
+          {stackContent}
+        </GoogleOAuthProvider>
+      );
+    }
+  }
+
+  return stackContent;
 }

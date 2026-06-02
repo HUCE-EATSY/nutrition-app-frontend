@@ -17,6 +17,7 @@ import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useWaterStore } from "@/store/waterStore";
+import { useAuthStore } from "@/store/authStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { WaterPresetsGrid } from "@/components/water/WaterPresetsGrid";
@@ -26,25 +27,28 @@ export default function WaterTargetScreen() {
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   
-  const { waterGoal, setWaterGoal } = useWaterStore();
-  const [goal, setGoal] = useState(waterGoal);
+  const userId = useAuthStore((state) => state.userInfo?.id || "guest");
+  const userWater = useWaterStore((state) => state.userWaterData[userId] || { waterGoal: 2000, waterLogs: {}, defaultStep: 250 });
+  const setWaterGoal = useWaterStore((state) => state.setWaterGoal);
+  const [goal, setGoal] = useState(userWater.waterGoal);
 
   const handleSave = () => {
     if (isNaN(goal) || goal <= 0) {
       Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống phải lớn hơn 0.");
       return;
     }
-    setWaterGoal(goal);
+    setWaterGoal(userId, goal);
     router.back();
   };
 
   const handleQuickAdd = (amount: number) => {
-    setGoal((prev) => prev + amount);
+    setGoal((prev: number) => prev + amount);
   };
 
   const handleQuickSubtract = (amount: number) => {
-    setGoal((prev) => Math.max(0, prev - amount));
+    setGoal((prev: number) => Math.max(0, prev - amount));
   };
+
 
   const handleGoalChange = (text: string) => {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);

@@ -63,5 +63,13 @@ export const API_URLS = {
     markAllAsRead: `${API_BASE}/api/notifications/mark-all-as-read`,
     delete: (id: string) => `${API_BASE}/api/notifications/${id}`,
     unreadCount: `${API_BASE}/api/notifications/unread-count`,
+    registerToken: `${API_BASE}/api/notifications/register-token`,
+  },
+  streaks: {
+    me: `${API_BASE}/api/streaks/me`,
+    freeze: `${API_BASE}/api/streaks/freeze`,
+    leaderboard: `${API_BASE}/api/streaks/leaderboard`,
+    simLog: `${API_BASE}/api/streaks/sim-log`,
   },
 };
+
