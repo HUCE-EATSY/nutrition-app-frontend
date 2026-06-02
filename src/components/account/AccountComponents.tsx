@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { spacing, radius, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
+import { useTranslation } from "@/constants/i18n";
 
 export function SectionHeader({ title }: { title: string }) {
   const colors = useAppColors();
@@ -81,6 +82,7 @@ export function SocialButton({
 }) {
   const colors = useAppColors();
   const styles = getStyles(colors);
+  const t = useTranslation();
 
   const handlePress = async () => {
     if (onPress) {
@@ -92,7 +94,7 @@ export function SocialButton({
         await Linking.openURL(url);
       } catch (error) {
         console.error("Error opening URL:", error);
-        Alert.alert("Lỗi", "Không thể mở trang liên kết này");
+        Alert.alert(t.common.error, t.common.cannotOpenLink);
       }
     }
   };

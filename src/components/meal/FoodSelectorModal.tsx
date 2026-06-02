@@ -13,10 +13,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { FoodDetailModal } from "./FoodDetailModal";
 import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
+import React from "react";
 
 interface FoodSelectorModalProps {
   visible: boolean;
@@ -37,6 +39,8 @@ const categories = [
 
 export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelectorModalProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const { data: foods = [], isLoading } = useFoodList();
 
   const getCategoryUiLabel = (dbCategoryName: string) => {
@@ -410,7 +414,7 @@ export function FoodSelectorModal({ visible, onClose, onSelectFood }: FoodSelect
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",

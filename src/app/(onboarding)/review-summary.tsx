@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
@@ -14,9 +15,10 @@ import {
 } from "@/utils/onboarding";
 import { getGoalTypeLabel, useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { getAgeFromBirthDate } from "@/utils/date";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function ReviewSummaryScreen() {
   const t = useTranslation();
@@ -28,6 +30,8 @@ export default function ReviewSummaryScreen() {
   const resolvedTargetWeightKg = draft.targetWeightKg ?? DEFAULT_TARGET_WEIGHT_KG;
   const age = draft.birthDateISO ? getAgeFromBirthDate(draft.birthDateISO) : 24;
   const { isCompact } = useResponsiveLayout();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   return (
     <OnboardingStepScaffold
@@ -48,11 +52,13 @@ export default function ReviewSummaryScreen() {
             compact={isCompact}
             label={t.onboarding.reviewNickname}
             value={draft.nickname ?? t.home.defaultNickname}
+            styles={styles}
           />
           <SummaryMetric
             compact={isCompact}
             label={t.onboarding.reviewAge}
             value={`${age}`}
+            styles={styles}
           />
         </View>
         <View style={[styles.summaryRow, isCompact && styles.summaryRowCompact]}>
@@ -60,11 +66,13 @@ export default function ReviewSummaryScreen() {
             compact={isCompact}
             label={t.onboarding.reviewHeight}
             value={`${resolvedHeightCm} cm`}
+            styles={styles}
           />
           <SummaryMetric
             compact={isCompact}
             label={t.onboarding.reviewCurrent}
             value={`${resolvedCurrentWeightKg} kg`}
+            styles={styles}
           />
         </View>
         <View style={[styles.summaryRow, isCompact && styles.summaryRowCompact]}>
@@ -72,11 +80,13 @@ export default function ReviewSummaryScreen() {
             compact={isCompact}
             label={t.onboarding.reviewGoal}
             value={getGoalTypeLabel(draft.goalType)}
+            styles={styles}
           />
           <SummaryMetric
             compact={isCompact}
             label={t.onboarding.reviewTarget}
             value={`${resolvedTargetWeightKg} kg`}
+            styles={styles}
           />
         </View>
       </SurfaceCard>
@@ -88,10 +98,12 @@ function SummaryMetric({
   label,
   value,
   compact = false,
+  styles,
 }: {
   label: string;
   value: string;
   compact?: boolean;
+  styles: any;
 }) {
   return (
     <View
@@ -108,7 +120,7 @@ function SummaryMetric({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   cardTitle: {
     ...typography.h3,
     color: colors.textPrimary,
@@ -124,7 +136,7 @@ const styles = StyleSheet.create({
   },
   metric: {
     flex: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    backgroundColor: colors.bgBase,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     borderRadius: radius.sm,

@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
 import { WelcomeHeroIllustration } from "@/components/WelcomeHeroIllustration";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type MascotQuestionBubbleProps = {
   text: string;
@@ -10,6 +12,8 @@ type MascotQuestionBubbleProps = {
 
 export function MascotQuestionBubble({ text, size = "lg" }: MascotQuestionBubbleProps) {
   const illustrationSize = size === "sm" ? 28 : size === "md" ? 34 : 40;
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   return (
     <View style={styles.row}>
@@ -26,7 +30,7 @@ export function MascotQuestionBubble({ text, size = "lg" }: MascotQuestionBubble
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "flex-start",

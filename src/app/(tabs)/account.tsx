@@ -6,7 +6,7 @@ import { Alert, Image, Pressable, StyleSheet, Text, View, Linking } from "react-
 import * as ImagePicker from "expo-image-picker";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
-import { ProgressRingChart } from "@/components/charts/ProgressRingChart";
+import { MacroRingChart } from "@/components/charts/MacroRingChart";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
@@ -299,17 +299,19 @@ export default function AccountScreen() {
       <View style={styles.macroCard}>
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
-            <ProgressRingChart
-              percentage={75}
-              color={colors.warning}
+            <MacroRingChart
+              proteinPct={proteinPct}
+              carbsPct={carbsPct}
+              fatPct={fatPct}
+              proteinColor={colors.protein}
+              carbsColor={colors.carbs}
+              fatColor={colors.fat}
               size={120}
               strokeWidth={8}
-              showPercentageText={false}
+              calories={plan.targetCalories}
+              iconColor={colors.warning}
+              textColor={colors.textPrimary}
             />
-            <View style={styles.chartCenter}>
-              <Ionicons color={colors.warning} name="flame" size={20} />
-              <Text style={styles.calorieValue}>{Math.round(plan.targetCalories).toLocaleString()}</Text>
-            </View>
           </View>
 
           <View style={styles.macroList}>
@@ -406,18 +408,6 @@ export default function AccountScreen() {
           />
         </View>
       </View>
-
-      {/* Support Center */}
-      <Pressable
-        onPress={() => router.push("/account/support")}
-        style={styles.supportButton}
-      >
-        <View style={styles.supportLeft}>
-          <Ionicons color={colors.textSecondary} name="help-buoy-outline" size={24} />
-          <Text style={styles.supportText}>{t.account.supportLabel}</Text>
-        </View>
-        <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
-      </Pressable>
 
       {/* Footer */}
       <View style={styles.footer}>

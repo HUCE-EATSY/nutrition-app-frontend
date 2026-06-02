@@ -1,9 +1,11 @@
+import { useMemo } from "react";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useTranslation } from "@/constants/i18n";
 import { AuthProvider } from "@/types/contracts";
-import { colors, radius, typography } from "@/constants";
+import { radius, shadows, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type SocialAuthButtonProps = {
   provider: AuthProvider;
@@ -22,6 +24,9 @@ function SocialIcon({ provider }: { provider: AuthProvider }) {
 
 export function SocialAuthButton({ provider, label, loading = false, onPress }: SocialAuthButtonProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <Pressable disabled={loading} onPress={onPress} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
       <View style={styles.iconWrap}>
@@ -32,25 +37,26 @@ export function SocialAuthButton({ provider, label, loading = false, onPress }: 
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   button: {
     width: "100%",
     minHeight: 58,
     borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    borderColor: colors.border,
+    backgroundColor: colors.bgElevated,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
     gap: 12,
     paddingHorizontal: 20,
+    ...shadows.card,
   },
   iconWrap: {
     width: 36,
     height: 36,
     borderRadius: radius.pill,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: colors.bgBase,
     alignItems: "center",
     justifyContent: "center",
   },

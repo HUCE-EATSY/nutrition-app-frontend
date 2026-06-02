@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { colors } from "@/constants";
 
 interface ProgressRingChartProps {
   percentage: number;
@@ -28,7 +29,7 @@ export function ProgressRingChart({
       <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
         <Svg width={size} height={size} style={styles.svg}>
           <Circle
-            stroke="#2D274E"
+            stroke={colors.surfaceAlt}
             fill="none"
             cx={size / 2}
             cy={size / 2}
@@ -73,15 +74,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   percentageText: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: 14,
     fontWeight: 'bold',
   },
   labelText: {
-    color: '#9E9E9E',
+    color: colors.textMuted,
     fontSize: 11,
     marginTop: 8,
     textAlign: 'center',
     textTransform: 'uppercase',
   },
 });
+

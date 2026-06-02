@@ -17,6 +17,7 @@ import {
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { GoalType } from "@/types/contracts";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: number) => {
   console.log("[Schema Creation]", { goalType, currentWeightKg });
@@ -72,9 +73,11 @@ export default function TargetWeightScreen() {
     fullDraft
   });
 
+  const language = useSettingsStore((state) => state.language);
+
   const targetWeightSchema = useMemo(() => {
     return createTargetWeightSchema(goalType, currentWeightKg);
-  }, [goalType, currentWeightKg]);
+  }, [goalType, currentWeightKg, language]);
 
   const { control, error, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
     "TargetWeight",

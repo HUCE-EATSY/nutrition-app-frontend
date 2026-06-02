@@ -1,7 +1,8 @@
 import React from "react";
-import { colors } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "@/constants/i18n";
 
 interface CalorieStatsCardProps {
   targetCalories: number;
@@ -10,21 +11,25 @@ interface CalorieStatsCardProps {
 }
 
 export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus }: CalorieStatsCardProps) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+  const t = useTranslation();
+
   return (
     <View style={styles.card}>
       <View style={styles.cardHeaderRow}>
         <Ionicons name="flame" size={20} color={colors.danger} />
-        <Text style={styles.cardTitle}> Thống kê calo tập luyện</Text>
+        <Text style={styles.cardTitle}> {t.stats.workoutCalorieStats}</Text>
       </View>
       
       <View style={styles.gridMetrics}>
         <View style={styles.metricBox}>
-          <Text style={styles.metricValue}>{targetCalories} calo</Text>
-          <Text style={styles.metricLabel}>Mục tiêu/tuần</Text>
+          <Text style={styles.metricValue}>{targetCalories}{t.stats.calorieSuffix}</Text>
+          <Text style={styles.metricLabel}>{t.stats.weeklyGoal}</Text>
         </View>
         <View style={styles.metricBox}>
-          <Text style={styles.metricValue}>{consumedCalories} calo</Text>
-          <Text style={styles.metricLabel}>Tổng calo tập luyện</Text>
+          <Text style={styles.metricValue}>{consumedCalories}{t.stats.calorieSuffix}</Text>
+          <Text style={styles.metricLabel}>{t.stats.totalWorkoutCalories}</Text>
         </View>
       </View>
 
@@ -40,7 +45,7 @@ export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus 
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
   cardTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold" },

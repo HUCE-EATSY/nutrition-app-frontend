@@ -11,8 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { Toast } from "@/components/common/Toast";
+import Toast from "@/components/common/Toast";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
@@ -67,6 +66,7 @@ export default function DiaryTimelineScreen() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+
 
   const macros: MacroInfo[] = [
     {
@@ -440,7 +440,6 @@ export default function DiaryTimelineScreen() {
           submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
           headerTitle={detailHeaderTitle}
         />
-
         {/* Toast Notification */}
         <Toast
           visible={showToast}

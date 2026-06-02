@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
@@ -9,9 +9,10 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { colors, spacing, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { formatDateForHero } from "@/utils/date";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function PlanResultScreen() {
   const t = useTranslation();
@@ -20,6 +21,8 @@ export default function PlanResultScreen() {
   const completeOnboarding = useOnboardingStore((state) => state.completeOnboarding);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const plan = serverPlan || {
     targetCalories: 0,
@@ -94,6 +97,7 @@ export default function PlanResultScreen() {
             fatPct={plan.targetCalories > 0 ? Math.round((plan.targetFatG * 900) / plan.targetCalories) : 0}
             proteinGram={Math.round(plan.targetProteinG)}
             proteinPct={plan.targetCalories > 0 ? Math.round((plan.targetProteinG * 400) / plan.targetCalories) : 0}
+            disablePress
           />
         </SurfaceCard>
 
@@ -112,7 +116,7 @@ export default function PlanResultScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     gap: spacing.lg,
     paddingVertical: spacing.lg,
@@ -127,7 +131,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   heroCard: {
-    backgroundColor: "rgba(165,108,255,0.14)",
     alignItems: "center",
   },
   heroKicker: {

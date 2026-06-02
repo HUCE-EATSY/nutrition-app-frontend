@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type LoadingStepRowProps = {
   label: string;
@@ -9,12 +11,15 @@ type LoadingStepRowProps = {
 };
 
 export function LoadingStepRow({ label, progress, status }: LoadingStepRowProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.row}>
       <View style={styles.copy}>
         <Text style={styles.label}>{label}</Text>
         <View style={styles.track}>
-          <View style={[styles.fill, { width: `${Math.max(8, progress * 100)}%` }]} />
+          <View style={[styles.fill, { width: `${Math.max(8, progress * 100)}%`, backgroundColor: colors.primary }]} />
         </View>
       </View>
       {status === "loading" ? <ActivityIndicator color={colors.primary} /> : null}
@@ -23,7 +28,7 @@ export function LoadingStepRow({ label, progress, status }: LoadingStepRowProps)
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   row: {
     padding: spacing.lg,
     borderRadius: radius.xl,
@@ -46,11 +51,10 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: radius.pill,
     overflow: "hidden",
-    backgroundColor: "#3A3453",
+    backgroundColor: colors.surfaceAlt,
   },
   fill: {
     height: "100%",
-    backgroundColor: colors.primary,
   },
   done: {
     ...typography.h3,

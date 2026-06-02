@@ -19,11 +19,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors, spacing, typography, radius } from "@/constants";
 import { exerciseService, Exercise, ExerciseLog } from "@/services/exerciseService";
 import { userService } from "@/services/userService";
-import { useAuthStore } from "@/hooks/store/authStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function EditExerciseLogScreen() {
   const { logId } = useLocalSearchParams<{ logId: string }>();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
   
   const [log, setLog] = useState<ExerciseLog | null>(null);
   const [exercise, setExercise] = useState<Exercise | null>(null);
@@ -184,9 +184,9 @@ export default function EditExerciseLogScreen() {
         <Text style={styles.headerTitle}>Sửa nhật ký</Text>
         <Pressable hitSlop={12} onPress={handleDelete} disabled={isDeleting}>
           {isDeleting ? (
-            <ActivityIndicator size="small" color={colors.error} />
+            <ActivityIndicator size="small" color={colors.danger} />
           ) : (
-            <Ionicons color={colors.error} name="trash-outline" size={24} />
+            <Ionicons color={colors.danger} name="trash-outline" size={24} />
           )}
         </Pressable>
       </View>

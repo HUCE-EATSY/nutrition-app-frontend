@@ -4,9 +4,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useStepsStore } from "@/store/statsStore";
+import { useTranslation } from "@/constants/i18n";
 
 export const HealthConnectBanner = () => {
   const router = useRouter();
+  const t = useTranslation();
   const { isConnected, checkConnection } = useStepsStore();
 
   useEffect(() => {
@@ -21,9 +23,9 @@ export const HealthConnectBanner = () => {
     <View style={styles.integrationCard}>
       <Ionicons name="footsteps" size={24} color={colors.success} />
       <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text style={styles.integrationText}>Kích hoạt cảm biến bước chân để tự động cập nhật</Text>
+        <Text style={styles.integrationText}>{t.home.connectHealth}</Text>
         <TouchableOpacity onPress={() => router.push("/stats/steps")}>
-          <Text style={styles.integrationLink}>Kích hoạt ngay</Text>
+          <Text style={styles.integrationLink}>{t.stats.enableNow}</Text>
         </TouchableOpacity>
       </View>
     </View>

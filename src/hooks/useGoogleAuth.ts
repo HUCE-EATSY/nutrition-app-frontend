@@ -32,6 +32,7 @@ export const useGoogleAuth = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
+  const { setVerifyingProfile } = useAuthStore();
   const { completeOnboarding, reset: resetOnboarding, setPublicFlowStep } = useOnboardingStore();
   const queryClient = useQueryClient();
 
@@ -56,22 +57,40 @@ export const useGoogleAuth = () => {
       });
       return response.data;
     },
-    onSuccess: (json) => {
+    onSuccess: async (json) => {
       const { data } = json;
 
       // Clear query client cache to avoid cross-user/cross-session leaks
       queryClient.clear();
 
-      if (data.isNewUser === false) {
-        completeOnboarding();
-      } else {
-        setPublicFlowStep("mascot-intro");
-      }
-
+      // Set credentials first so subsequent API calls are authorized
       setAuth(data.accessToken, data.refreshToken, {
         id: data.userId,
         email: data.email,
       });
+
+      // Block routing until profile verification completes
+      setVerifyingProfile(true);
+
+      // Verify profile completion on backend
+      try {
+        const userInfo = await userService.getUserInfo();
+        if (userInfo && userInfo.profile) {
+          completeOnboarding();
+        } else {
+          setPublicFlowStep("mascot-intro");
+        }
+      } catch (err) {
+        console.error("Failed to fetch user info on login, falling back to isNewUser:", err);
+        if (data.isNewUser === false) {
+          completeOnboarding();
+        } else {
+          setPublicFlowStep("mascot-intro");
+        }
+      } finally {
+        // Allow routing now that onboarding state is settled
+        setVerifyingProfile(false);
+      }
     },
     onError: (err) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';

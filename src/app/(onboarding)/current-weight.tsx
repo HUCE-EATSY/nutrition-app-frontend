@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Controller } from "react-hook-form";
 import * as z from "zod";
@@ -16,20 +16,15 @@ import {
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 
-const currentWeightSchema = z.object({
-  currentWeightKg: z.number().min(20).max(300),
-});
-
 export default function CurrentWeightScreen() {
   const t = useTranslation();
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
-  const fullDraft = useOnboardingStore((state) => state.draft);
-  
-  console.log("[CurrentWeight] Component mounted:", {
-    heightCm,
-    fullDraft,
-    currentWeightFromStore: fullDraft.currentWeightKg
-  });
+
+  const currentWeightSchema = useMemo(() => {
+    return z.object({
+      currentWeightKg: z.number().min(20).max(300),
+    });
+  }, []);
   
   const { control, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
     "CurrentWeight",
@@ -40,12 +35,6 @@ export default function CurrentWeightScreen() {
 
   const formWeight = watch("currentWeightKg");
   const [localWeight, setLocalWeight] = useState(formWeight || DEFAULT_CURRENT_WEIGHT_KG);
-
-  console.log("[CurrentWeight] Form state:", {
-    formWeight,
-    localWeight,
-    isValid
-  });
 
   useEffect(() => {
     if (formWeight !== undefined && formWeight !== null) {

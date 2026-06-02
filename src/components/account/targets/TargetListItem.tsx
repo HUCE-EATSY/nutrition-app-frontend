@@ -1,7 +1,7 @@
-import React from 'react';
-import { colors } from "@/constants";
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppColors } from '@/hooks/useAppColors';
 
 interface TargetListItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -15,28 +15,34 @@ interface TargetListItemProps {
 
 export function TargetListItem({
   icon,
-  iconColor = colors.textPrimary,
+  iconColor,
   title,
   rightIcon = 'chevron-forward',
-  rightIconColor = colors.textSecondary,
+  rightIconColor,
   onPress,
   showDivider = true,
 }: TargetListItemProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const activeIconColor = iconColor ?? colors.textPrimary;
+  const activeRightIconColor = rightIconColor ?? colors.textSecondary;
+
   return (
     <>
       <TouchableOpacity style={styles.container} onPress={onPress}>
         <View style={styles.leftGroup}>
-          <Ionicons name={icon} size={24} color={iconColor} />
+          <Ionicons name={icon} size={24} color={activeIconColor} />
           <Text style={styles.title}>{title}</Text>
         </View>
-        <Ionicons name={rightIcon} size={20} color={rightIconColor} />
+        <Ionicons name={rightIcon} size={20} color={activeRightIconColor} />
       </TouchableOpacity>
       {showDivider && <View style={styles.divider} />}
     </>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -13,6 +13,7 @@ import {
   ONBOARDING_STEPS,
   PUBLIC_FLOW_PATHS,
 } from "@/constants/onboarding";
+import { colors } from "@/constants";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -183,31 +184,32 @@ export function getBmiStatus(bmiValue: number): BMIStatus {
   return "obese";
 }
 
-export function getBmiStatusColors(status: BMIStatus) {
+export function getBmiStatusColors(status: BMIStatus, activeColors?: any) {
+  const c = activeColors || colors;
   switch (status) {
     case "underweight":
       return {
-        badgeBg: "rgba(61, 139, 255, 0.2)",
-        badgeText: "#3D8BFF",
-        valueColor: "#3D8BFF",
+        badgeBg: `${c.info}1F`,
+        badgeText: c.info,
+        valueColor: c.info,
       };
     case "normal":
       return {
-        badgeBg: "rgba(92, 214, 122, 0.2)",
-        badgeText: "#5CD67A",
-        valueColor: "#5CD67A",
+        badgeBg: `${c.success}1F`,
+        badgeText: c.success,
+        valueColor: c.success,
       };
     case "overweight":
       return {
-        badgeBg: "#F5B323",
-        badgeText: "#111020",
-        valueColor: "#F5B323",
+        badgeBg: `${c.warning}1F`,
+        badgeText: c.warning,
+        valueColor: c.warning,
       };
     case "obese":
       return {
-        badgeBg: "rgba(255, 90, 95, 0.2)",
-        badgeText: "#FF5A5F",
-        valueColor: "#FF5A5F",
+        badgeBg: `${c.danger}1F`,
+        badgeText: c.danger,
+        valueColor: c.danger,
       };
   }
 }

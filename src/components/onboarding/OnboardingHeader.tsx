@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type OnboardingHeaderProps = {
   step: number;
@@ -11,6 +13,9 @@ type OnboardingHeaderProps = {
 };
 
 export function OnboardingHeader({ step, totalSteps, onBack, showDivider = false }: OnboardingHeaderProps) {
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.wrap}>
       <View style={styles.topRow}>
@@ -23,13 +28,13 @@ export function OnboardingHeader({ step, totalSteps, onBack, showDivider = false
       </View>
 
       <View style={[styles.track, showDivider && styles.divider]}>
-        <View style={[styles.fill, { width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }]} />
+        <View style={[styles.fill, { width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%`, backgroundColor: colors.primary }]} />
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrap: {
     paddingTop: spacing.md,
   },
@@ -42,7 +47,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: radius.pill,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    backgroundColor: colors.borderSoft,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -54,7 +59,7 @@ const styles = StyleSheet.create({
     height: 8,
     marginTop: spacing.lg,
     borderRadius: radius.pill,
-    backgroundColor: "#3A3453",
+    backgroundColor: colors.surfaceAlt,
     overflow: "hidden",
   },
   divider: {
@@ -63,6 +68,5 @@ const styles = StyleSheet.create({
   fill: {
     height: "100%",
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
   },
 });

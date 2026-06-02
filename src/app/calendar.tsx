@@ -10,6 +10,7 @@ import { colors, spacing, typography, radius } from '@/constants';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useTranslation } from "@/constants/i18n";
 import { useDiaryStore } from '@/store/diaryStore';
+import { useAppColors } from '@/hooks/useAppColors';
 import { getNutritionTimeline } from '@/services/nutritionLogService';
 import { exerciseService } from '@/services/exerciseService';
 
@@ -55,6 +56,8 @@ export default function CalendarPickerModal() {
   const theme = useSettingsStore((state) => state.theme);
   const selectedDate = useDiaryStore((state) => state.selectedDate);
   const setDate = useDiaryStore((state) => state.setDate);
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   React.useEffect(() => {
     LocaleConfig.defaultLocale = language;
@@ -130,7 +133,7 @@ export default function CalendarPickerModal() {
     };
 
     return result;
-  }, [activeDays, selected]);
+  }, [activeDays, selected, colors]);
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -198,12 +201,12 @@ export default function CalendarPickerModal() {
             calendarBackground: "transparent",
             textSectionTitleColor: colors.textMuted,
             selectedDayBackgroundColor: colors.primary,
-            selectedDayTextColor: colors.textPrimary,
+            selectedDayTextColor: "#FFFFFF",
             todayTextColor: colors.primary,
             dayTextColor: colors.textPrimary,
             textDisabledColor: theme === "light" ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.1)",
             dotColor: colors.primary,
-            selectedDotColor: colors.textPrimary,
+            selectedDotColor: "#FFFFFF",
             arrowColor: colors.textPrimary,
             disabledArrowColor: colors.textMuted,
             monthTextColor: colors.textPrimary,
@@ -256,7 +259,7 @@ export default function CalendarPickerModal() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },

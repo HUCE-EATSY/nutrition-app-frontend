@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Controller } from "react-hook-form";
 import * as z from "zod";
 
@@ -7,12 +8,15 @@ import { useTranslation } from "@/constants/i18n";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { DEFAULT_HEIGHT_CM } from "@/constants/onboarding";
 
-const heightSchema = z.object({
-  heightCm: z.number().min(50).max(300),
-});
-
 export default function HeightScreen() {
   const t = useTranslation();
+
+  const heightSchema = useMemo(() => {
+    return z.object({
+      heightCm: z.number().min(50).max(300),
+    });
+  }, []);
+
   const { control, isValid, meta, onContinue, onBack } = useOnboardingForm(
     "Height",
     "heightCm",

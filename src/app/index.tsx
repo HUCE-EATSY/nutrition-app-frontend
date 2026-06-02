@@ -5,7 +5,8 @@ import { t } from "@/constants/i18n";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
-import { getDraftResumePath, getPublicResumePath } from "@/utils/onboarding";
+import { useSettingsStore } from "@/store/settingsStore";
+import { getDraftResumePath } from "@/utils/onboarding";
 
 export default function IndexScreen() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
@@ -19,7 +20,7 @@ export default function IndexScreen() {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
         <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={{ color: "white", marginTop: 20 }}>{t.app.initializing}</Text>
+        <Text style={{ color: colors.textPrimary, marginTop: 20 }}>{t.app.initializing}</Text>
       </View>
     );
   }
@@ -37,8 +38,8 @@ export default function IndexScreen() {
   // If authenticated but not finished onboarding, resume onboarding
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
-      <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
-      <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
+      <Redirect href={publicFlowStep !== "done" ? "/(public)/mascot-intro" : getDraftResumePath(draft)} />
+      <Text style={{ color: colors.textPrimary, marginBottom: 20 }}>Redirecting...</Text>
       <ActivityIndicator color={colors.primary} />
     </View>
   );

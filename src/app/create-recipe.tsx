@@ -22,7 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { foodService, FoodItemDto } from "@/services/foodService";
-import { Toast } from "@/components/common/Toast";
+import Toast from "@/components/common/Toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/constants/i18n";
 
