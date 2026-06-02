@@ -5,13 +5,13 @@ import { spacing, radius, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { useTranslation } from "@/constants/i18n";
 
-export function SectionHeader({ title }: { title: string }) {
+export function SectionHeader({ title, showChevron = true }: { title: string; showChevron?: boolean }) {
   const colors = useAppColors();
   const styles = getStyles(colors);
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderText}>{title}</Text>
-      <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
+      {showChevron && <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />}
     </View>
   );
 }

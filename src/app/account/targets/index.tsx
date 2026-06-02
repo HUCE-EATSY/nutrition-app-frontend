@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAppColors } from '@/hooks/useAppColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TargetListItem } from '../../../components/account/targets/TargetListItem';
 import { SafeScreen } from '@/components/layout/SafeScreen';
+import StepGoalModal from '@/components/common/StepGoalModal';
 
 import { ProgressRingChart } from '../../../components/charts/ProgressRingChart';
 import { EnergyMetricsCard } from '../../../components/account/targets/EnergyMetricsCard';
@@ -16,6 +17,7 @@ export default function TargetCustomizationScreen() {
   const router = useRouter();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
+  const [stepGoalModalVisible, setStepGoalModalVisible] = useState(false);
 
   const { data: userInfo, isLoading } = useGetUserInfo();
 
@@ -87,11 +89,15 @@ export default function TargetCustomizationScreen() {
             icon="footsteps-outline"
             iconColor="#FFB067"
             title={t.targets.stepTarget}
-            onPress={() => router.push({ pathname: '/stats/steps', params: { openGoal: 'true' } })}
+            onPress={() => setStepGoalModalVisible(true)}
             showDivider={false}
           />
         </View>
       </ScrollView>
+      <StepGoalModal
+        visible={stepGoalModalVisible}
+        onClose={() => setStepGoalModalVisible(false)}
+      />
     </SafeScreen>
   );
 }

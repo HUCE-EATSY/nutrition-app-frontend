@@ -42,7 +42,7 @@ export default function HomeScreen() {
   const stepBurned = isConnected ? Math.round(stepsForSelectedDate * 0.04) : 0;
 
   const burned = exerciseBurned + stepBurned;
-  const remaining = Math.round(Math.max(goal - consumed + burned, 0));
+  const remaining = Math.round(Math.max(goal - consumed, 0));
   const percentage = Math.round(Math.min((consumed / goal) * 100, 100));
 
   // Phân phối logs vào các khung giờ để hiển thị
