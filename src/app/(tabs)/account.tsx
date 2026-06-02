@@ -217,7 +217,7 @@ export default function AccountScreen() {
       </Pressable>
 
       {/* Your Journey Section */}
-      <SectionHeader title={t.account.yourJourney} />
+      <SectionHeader title={t.account.yourJourney} showChevron={false} />
       {(() => {
         const startWeight = activeGoal?.weightKg ?? profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
         const currentWeightVal = profile?.weightKg ?? activeGoal?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
@@ -295,7 +295,7 @@ export default function AccountScreen() {
 
 
       {/* Nutrition Goals Section */}
-      <SectionHeader title={t.account.nutritionGoals} />
+      <SectionHeader title={t.account.nutritionGoals} showChevron={false} />
       <View style={styles.macroCard}>
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
@@ -345,7 +345,7 @@ export default function AccountScreen() {
       </View>
 
       {/* Statistic Reports Section */}
-      <SectionHeader title={t.account.testReports} />
+      <SectionHeader title={t.account.testReports} showChevron={false} />
       <View style={styles.statsIconRow}>
         <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} route="/stats/nutrition" />
         <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} route="/stats/activity" />
@@ -354,7 +354,7 @@ export default function AccountScreen() {
       </View>
 
       {/* Community Section */}
-      <SectionHeader title={t.account.community.title} />
+      <SectionHeader title={t.account.community.title} showChevron={false} />
       <View style={styles.communityCard}>
         <LinearGradient
           colors={themeMode === "light" ? ["#EFE5FD", "#DFCBFA"] : ["#4A1F76", "#2D1B4D"]}
@@ -418,7 +418,6 @@ export default function AccountScreen() {
           <Ionicons color={colors.textSecondary} name="help-buoy-outline" size={24} />
           <Text style={styles.supportText}>{t.account.supportLabel}</Text>
         </View>
-        <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
       </Pressable>
 
       {/* Footer */}

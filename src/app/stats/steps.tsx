@@ -18,6 +18,7 @@ import { Ionicons, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-ico
 import { useStepsStats } from "@/hooks/stats/useStepsStats";
 import { BarChart } from "@/components/charts/BarChart";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
+import StepGoalModal from "@/components/common/StepGoalModal";
 import { useStepsStore } from "@/store/statsStore";
 import { pedometerService } from "@/services/pedometerService";
 import { StepsPeriod } from "@/constants/stats";
@@ -85,24 +86,11 @@ export default function StepsStatsScreen() {
 
   // States cho Modal điều chỉnh mục tiêu
   const [goalModalVisible, setGoalModalVisible] = useState(false);
-  const [goalInput, setGoalInput] = useState(stepGoal.toString());
 
   // States cho Modal nhật ký lịch sử
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
   const [historyList, setHistoryList] = useState<{ dateISO: string; steps: number }[]>([]);
   const [loadingHistoryList, setLoadingHistoryList] = useState(false);
-
-  // Cập nhật giá trị input khi goal thay đổi
-  useEffect(() => {
-    setGoalInput(stepGoal.toString());
-  }, [stepGoal]);
-
-  // Tự động mở modal nếu được điều hướng từ trang tùy chỉnh mục tiêu
-  useEffect(() => {
-    if (params.openGoal === 'true') {
-      setGoalModalVisible(true);
-    }
-  }, [params.openGoal]);
 
   // Load lịch sử 30 ngày cho Modal nhật ký
   const loadHistoryList = async () => {
@@ -185,15 +173,6 @@ export default function StepsStatsScreen() {
     if (tab === "Tuần") return "tuần trước";
     if (tab === "Tháng") return "tháng trước";
     return "6 tháng trước";
-  };
-
-  // Xử lý lưu mục tiêu mới
-  const handleSaveGoal = () => {
-    const newGoal = parseInt(goalInput, 10);
-    if (!isNaN(newGoal) && newGoal > 0) {
-      setStepGoal(newGoal);
-      setGoalModalVisible(false);
-    }
   };
 
   // Trạng thái chưa kết nối cảm biến
@@ -339,10 +318,6 @@ export default function StepsStatsScreen() {
   const maxMonthSteps = isSixMonths && historyData.length > 0
     ? Math.max(...historyData.map((h) => h.value))
     : 0;
-
-  const parsedGoalInput = parseInt(goalInput, 10);
-  const isGoalValid = !isNaN(parsedGoalInput) && parsedGoalInput > 0;
-  const isSaveActive = isGoalValid && parsedGoalInput !== stepGoal;
 
   // Lấy tháng năng động nhất
   const getMostActiveMonthLabel = () => {
@@ -641,108 +616,10 @@ export default function StepsStatsScreen() {
       </ScrollView>
 
       {/* MODAL: ĐIỀU CHỈNH MỤC TIÊU */}
-      <Modal
-        animationType="slide"
-        transparent={false}
+      <StepGoalModal
         visible={goalModalVisible}
-        onRequestClose={() => setGoalModalVisible(false)}
-      >
-        <ScreenBackground withGlow={true}>
-          <View style={styles.fullScreenModalHeader}>
-            <TouchableOpacity onPress={() => setGoalModalVisible(false)} style={styles.headerBackBtn}>
-              <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
-            </TouchableOpacity>
-            <Text style={styles.fullScreenModalTitle}>Điều chỉnh mục tiêu</Text>
-            <TouchableOpacity 
-              onPress={handleSaveGoal} 
-              disabled={!isSaveActive}
-              style={styles.headerSaveBtn}
-            >
-              <Text style={[
-                styles.headerSaveText,
-                isSaveActive ? styles.headerSaveTextActive : styles.headerSaveTextInactive
-              ]}>
-                Lưu
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.fullScreenModalBody}>
-            {/* Input Row */}
-            <View style={styles.inputRow}>
-              <Text style={styles.inputRowLabel}>Mục tiêu bước chân</Text>
-              <View style={styles.inputRowRight}>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.inputRowField}
-                    value={goalInput}
-                    onChangeText={setGoalInput}
-                    keyboardType="number-pad"
-                    placeholder="8000"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
-                <Text style={styles.inputRowUnit}>Bước</Text>
-              </View>
-            </View>
-
-            {/* Info Banner */}
-            <View style={styles.suggestionInfoBanner}>
-              <Ionicons name="information-circle" size={22} color={colors.success} />
-              <Text style={styles.suggestionInfoText}>
-                Dựa vào mức độ vận động bạn đã chọn, Wao gợi ý số bước phù hợp. Bạn vẫn có thể tự điều chỉnh mục tiêu theo nhu cầu.
-              </Text>
-            </View>
-
-            {/* Suggestions Header */}
-            <View style={styles.suggestionsHeader}>
-              <Text style={styles.suggestionsHeaderText}>Gợi ý mục tiêu bước chân</Text>
-              <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} style={{ marginLeft: 6 }} />
-            </View>
-
-            {/* Suggestions List Card */}
-            <View style={styles.suggestionsCard}>
-              <View style={styles.suggestionsTableHeader}>
-                <Text style={styles.suggestionsTableHeaderText}>Mức độ</Text>
-                <Text style={styles.suggestionsTableHeaderText}>Bước chân gợi ý</Text>
-              </View>
-
-              <SuggestionRow
-                label="Ít vận động"
-                value={3000}
-                iconName="chair"
-                onPress={(val) => setGoalInput(val.toString())}
-              />
-              <SuggestionRow
-                label="Nhẹ nhàng"
-                value={5000}
-                iconName="walking"
-                onPress={(val) => setGoalInput(val.toString())}
-              />
-              <SuggestionRow
-                label="Trung bình"
-                value={8000}
-                iconName="walking"
-                onPress={(val) => setGoalInput(val.toString())}
-              />
-              <SuggestionRow
-                label="Rất năng động"
-                value={10000}
-                iconName="running"
-                onPress={(val) => setGoalInput(val.toString())}
-              />
-              <SuggestionRow
-                label="Cực kỳ năng động"
-                value={12000}
-                iconName="run-fast"
-                iconFamily="MaterialCommunityIcons"
-                isLast
-                onPress={(val) => setGoalInput(val.toString())}
-              />
-            </View>
-          </ScrollView>
-        </ScreenBackground>
-      </Modal>
+        onClose={() => setGoalModalVisible(false)}
+      />
 
       {/* MODAL: NHẬT KÝ BƯỚC CHÂN */}
       <Modal
@@ -845,45 +722,6 @@ const ActivityLevelRow = ({
       {/* Range Text */}
       <Text style={styles.levelRangeText}>{range}</Text>
     </View>
-  );
-};
-
-// Hàng gợi ý mục tiêu bước chân
-const SuggestionRow = ({
-  label,
-  value,
-  iconName,
-  iconFamily = "FontAwesome5",
-  isLast = false,
-  onPress,
-}: {
-  label: string;
-  value: number;
-  iconName: string;
-  iconFamily?: "FontAwesome5" | "MaterialCommunityIcons";
-  isLast?: boolean;
-  onPress: (val: number) => void;
-}) => {
-  const IconComponent = iconFamily === "MaterialCommunityIcons" ? MaterialCommunityIcons : FontAwesome5;
-  const colors = useAppColors();
-  const styles = React.useMemo(() => getStyles(colors), [colors]);
-  return (
-    <TouchableOpacity 
-      style={[styles.suggestionRow, isLast && { borderBottomWidth: 0 }]}
-      activeOpacity={0.7}
-      onPress={() => onPress(value)}
-    >
-      <View style={styles.suggestionRowLeft}>
-        <View style={styles.suggestionIconWrapper}>
-          <IconComponent name={iconName as any} size={14} color={colors.textSecondary} />
-        </View>
-        <Text style={styles.suggestionRowLabel}>{label}</Text>
-      </View>
-      <Text style={styles.suggestionRowValue}>
-        {value.toLocaleString("vi-VN")}{" "}
-        <Text style={styles.suggestionRowUnit}>bước/ngày</Text>
-      </Text>
-    </TouchableOpacity>
   );
 };
 

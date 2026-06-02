@@ -4,13 +4,13 @@ import { router } from "expo-router";
 import { spacing, radius, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 
-export function SectionHeader({ title }: { title: string }) {
+export function SectionHeader({ title, showChevron = true }: { title: string; showChevron?: boolean }) {
   const colors = useAppColors();
   const styles = getStyles(colors);
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderText}>{title}</Text>
-      <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />
+      {showChevron && <Ionicons color={colors.textMuted} name="chevron-forward" size={20} />}
     </View>
   );
 }
