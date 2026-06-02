@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { GradientButton } from "@/components/buttons/GradientButton";
-import { colors, spacing, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
 import { showBmiReferencesAlert } from "@/utils/onboarding";
+import { useAppColors } from "@/hooks/useAppColors";
 
 interface OnboardingWeightCtaProps {
   isValid: boolean;
@@ -13,6 +14,8 @@ interface OnboardingWeightCtaProps {
 
 export function OnboardingWeightCta({ isValid, onContinue }: OnboardingWeightCtaProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   return (
     <View style={styles.bottomSection}>
@@ -30,7 +33,7 @@ export function OnboardingWeightCta({ isValid, onContinue }: OnboardingWeightCta
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   bottomSection: {
     width: "100%",
     alignItems: "center",

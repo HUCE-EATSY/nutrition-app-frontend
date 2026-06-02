@@ -393,11 +393,11 @@ export default function StepsStatsScreen() {
 
           {/* Icon Circle or Circular progress indicator */}
           <View style={styles.todayCardRight}>
-            <View style={[styles.glowCircle, { borderColor: todaySteps >= stepGoal ? colors.success : "#A56CFF" }]}>
+            <View style={[styles.glowCircle, { borderColor: todaySteps >= stepGoal ? colors.success : colors.primary }]}>
               <Ionicons 
                 name={todaySteps >= stepGoal ? "trophy" : "footsteps"} 
                 size={32} 
-                color={todaySteps >= stepGoal ? colors.success : "#A56CFF"} 
+                color={todaySteps >= stepGoal ? colors.success : colors.primary} 
               />
             </View>
           </View>
@@ -605,11 +605,11 @@ export default function StepsStatsScreen() {
             <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} style={{ marginLeft: 8 }} />
           </View>
           
-          <ActivityLevelRow label="ÍT VẬN ĐỘNG" range="< 3,000" color={colors.danger} bgColor="#7F1D1D" iconName="chair" />
-          <ActivityLevelRow label="NHẸ NHÀNG" range="3.000 - 6.499" color="#F59E0B" bgColor="#78350F" iconName="walking" />
-          <ActivityLevelRow label="TRUNG BÌNH" range="6,500 - 9,999" color={colors.info} bgColor="#1E3A8A" iconName="walking" />
-          <ActivityLevelRow label="RẤT NĂNG ĐỘNG" range="10,000 - 12,499" color={colors.success} bgColor="#14532D" iconName="running" />
-          <ActivityLevelRow label="CỰC KỲ NĂNG ĐỘNG" range="> 12,500" color={colors.primary} bgColor="#581C87" iconName="run-fast" iconFamily="MaterialCommunityIcons" />
+          <ActivityLevelRow label="ÍT VẬN ĐỘNG" range="< 3,000" color={colors.danger} iconName="chair" />
+          <ActivityLevelRow label="NHẸ NHÀNG" range="3.000 - 6.499" color={colors.primary === "#A56CFF" ? "#F59E0B" : "#D97706"} iconName="walking" />
+          <ActivityLevelRow label="TRUNG BÌNH" range="6,500 - 9,999" color={colors.info} iconName="walking" />
+          <ActivityLevelRow label="RẤT NĂNG ĐỘNG" range="10,000 - 12,499" color={colors.success} iconName="running" />
+          <ActivityLevelRow label="CỰC KỲ NĂNG ĐỘNG" range="> 12,500" color={colors.primary} iconName="run-fast" iconFamily="MaterialCommunityIcons" />
 
           <Text style={styles.activityDisclaimer}>
             *** Bảng này giúp bạn hiểu bạn đang vận động ở mức nào dựa trên số bước trung bình mỗi ngày từ đó để hình dung mức calo tiêu hao tự nhiên (NEAT) của cơ thể.
@@ -823,14 +823,12 @@ const ActivityLevelRow = ({
   label,
   range,
   color,
-  bgColor,
 }: {
   iconName: string;
   iconFamily?: "FontAwesome5" | "MaterialCommunityIcons" | "Ionicons";
   label: string;
   range: string;
   color: string;
-  bgColor: string;
 }) => {
   const IconComponent = 
     iconFamily === "MaterialCommunityIcons" 
@@ -840,13 +838,19 @@ const ActivityLevelRow = ({
       : FontAwesome5;
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
+  const theme = colors.primary === "#A56CFF" ? "dark" : "light";
+
+  // Dynamic colors for level badges to maintain high contrast and look beautiful
+  const badgeBg = color + (theme === "light" ? "14" : "26"); // 8% opacity in light mode, 15% in dark mode
+  const badgeBorder = color + (theme === "light" ? "30" : "40"); // 18% border opacity in light, 25% in dark
+  const textColor = color;
 
   return (
     <View style={styles.levelRow}>
       {/* Pill Badge */}
-      <View style={[styles.levelBadge, { backgroundColor: bgColor, borderColor: color + "40" }]}>
-        <IconComponent name={iconName as any} size={11} color={colors.textPrimary} style={{ marginRight: 6 }} />
-        <Text style={[styles.levelLabelText, { color: colors.textPrimary }]}>{label}</Text>
+      <View style={[styles.levelBadge, { backgroundColor: badgeBg, borderColor: badgeBorder }]}>
+        <IconComponent name={iconName as any} size={11} color={textColor} style={{ marginRight: 6 }} />
+        <Text style={[styles.levelLabelText, { color: textColor }]}>{label}</Text>
       </View>
       {/* Range Text */}
       <Text style={styles.levelRangeText}>{range}</Text>
@@ -979,7 +983,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: "center",
   },
   legendDashedLine: {
-    color: "rgba(255, 255, 255, 0.4)",
+    color: colors.textMuted,
     fontWeight: "bold",
     marginRight: 6,
   },
@@ -1102,7 +1106,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   bannerText: {
     flex: 1,
-    color: "#D1FAE5",
+    color: colors.primary === "#A56CFF" ? "#D1FAE5" : "#065F46",
     fontSize: 12,
     lineHeight: 18,
   },
@@ -1130,7 +1134,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   levelRangeText: { color: colors.textPrimary, fontSize: 13, fontWeight: "500" },
   activityDisclaimer: {
-    color: "rgba(255, 255, 255, 0.4)",
+    color: colors.textMuted,
     fontSize: 10.5,
     lineHeight: 15,
     marginTop: 16,
@@ -1193,7 +1197,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   connectTitle: { fontSize: 20, fontWeight: "bold", color: colors.textPrimary, marginBottom: 12 },
   connectDesc: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 22, paddingHorizontal: 24, marginBottom: 32 },
   connectButton: { backgroundColor: colors.success, paddingVertical: 14, paddingHorizontal: 28, borderRadius: 24, alignItems: "center", justifyContent: "center", width: "80%" },
-  connectButtonText: { fontSize: 16, fontWeight: "bold", color: colors.textPrimary },
+  connectButtonText: { fontSize: 16, fontWeight: "bold", color: "#FFFFFF" },
   errorText: { color: colors.danger, marginTop: 16, textAlign: "center" },
 
   // Modal Styles
@@ -1256,7 +1260,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: "500",
   },
   saveBtnText: {
-    color: colors.textPrimary,
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "bold",
   },
@@ -1426,7 +1430,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginBottom: 20,
   },
   motivationalText: {
-    color: "#E0F2FE",
+    color: colors.primary === "#A56CFF" ? "#E0F2FE" : "#1E40AF",
     fontSize: 13,
     textAlign: "center",
     lineHeight: 18,
@@ -1461,10 +1465,10 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: "bold",
   },
   headerSaveTextActive: {
-    color: "#FFFFFF",
+    color: colors.primary,
   },
   headerSaveTextInactive: {
-    color: "rgba(255, 255, 255, 0.3)",
+    color: colors.textMuted,
   },
   fullScreenModalBody: {
     flex: 1,
@@ -1491,7 +1495,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   inputContainer: {
     backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderColor: colors.primary === "#A56CFF" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1525,7 +1529,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: "center",
   },
   suggestionInfoText: {
-    color: "#4ADE80",
+    color: colors.primary === "#A56CFF" ? "#4ADE80" : "#166534",
     fontSize: 13,
     lineHeight: 18,
     marginLeft: 10,
@@ -1642,7 +1646,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   todayProgressFill: {
     height: "100%",
     borderRadius: 3,
-    backgroundColor: "#A56CFF",
+    backgroundColor: colors.primary,
   },
   todayGoalText: {
     color: colors.textSecondary,

@@ -29,6 +29,7 @@ const debounceSyncSteps = (steps: number, goal: number, dateISO: string, provide
 
 let pedometerSubscription: { remove: () => void } | null = null;
 let lastPedometerSteps = 0;
+let activeFetchTodayPromise: Promise<void> | null = null;
 
 interface NutritionState {
   period: NutritionPeriod;
@@ -238,6 +239,10 @@ export const useStepsStore = create<StepsState>()(
           isConnected = response.granted;
         }
         set({ isSupported, isConnected });
+        if (isConnected) {
+          await get().fetchTodaySteps();
+          get().startStepTracking();
+        }
         return isConnected;
       },
 
@@ -286,46 +291,94 @@ export const useStepsStore = create<StepsState>()(
       },
 
       fetchTodaySteps: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const steps = await pedometerService.fetchTodaySteps();
-          const todayStr = getTodayDateISO();
-          const persistedSteps = (get().stepRecords || {})[todayStr] || 0;
-          let finalSteps = Math.max(steps, persistedSteps);
-          
-          if (!USE_MOCK) {
-            try {
-              const backendTimeline = await getStepsTimeline(todayStr, todayStr);
-              if (backendTimeline && backendTimeline.length > 0) {
-                const backendToday = backendTimeline[0];
-                finalSteps = Math.max(finalSteps, backendToday.steps);
+        if (activeFetchTodayPromise) {
+          return activeFetchTodayPromise;
+        }
+
+        activeFetchTodayPromise = (async () => {
+          set({ isLoading: true, error: null });
+          try {
+            const steps = await pedometerService.fetchTodaySteps();
+            const todayStr = getTodayDateISO();
+            const persistedSteps = (get().stepRecords || {})[todayStr] || 0;
+            let finalSteps = Math.max(steps, persistedSteps);
+            let fetchFromBackendSucceeded = false;
+            
+            if (!USE_MOCK) {
+              try {
+                const backendTimeline = await getStepsTimeline(todayStr, todayStr);
+                fetchFromBackendSucceeded = true;
                 
-                if (backendToday.step_goal && backendToday.step_goal !== get().stepGoal) {
-                  set({ stepGoal: backendToday.step_goal });
+                let resolvedGoal = get().stepGoal;
+                let hasGoalFromBackend = false;
+                
+                if (backendTimeline && backendTimeline.length > 0) {
+                  const backendToday = backendTimeline[0];
+                  finalSteps = Math.max(finalSteps, backendToday.steps);
+                  
+                  if (backendToday.step_goal && backendToday.step_goal > 0) {
+                    resolvedGoal = backendToday.step_goal;
+                    hasGoalFromBackend = true;
+                  }
                 }
+                
+                // Nếu chưa có bản ghi hôm nay, tìm mục tiêu tùy chỉnh trong lịch sử 30 ngày
+                if (!hasGoalFromBackend) {
+                  const now = new Date();
+                  const thirtyDaysAgo = new Date();
+                  thirtyDaysAgo.setDate(now.getDate() - 30);
+                  const fromStr = formatLocalDate(thirtyDaysAgo);
+                  const toStr = formatLocalDate(now);
+                  const recentHistory = await getStepsTimeline(fromStr, toStr);
+                  
+                  if (recentHistory && recentHistory.length > 0) {
+                    const sortedHistory = [...recentHistory].sort(
+                      (a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime()
+                    );
+                    const customGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0 && h.step_goal !== 8000);
+                    if (customGoalEntry) {
+                      resolvedGoal = customGoalEntry.step_goal;
+                    } else if (!hasGoalFromBackend) {
+                      const anyGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0);
+                      if (anyGoalEntry) {
+                        resolvedGoal = anyGoalEntry.step_goal;
+                      }
+                    }
+                  }
+                }
+                
+                if (resolvedGoal !== get().stepGoal) {
+                  set({ stepGoal: resolvedGoal });
+                }
+              } catch (err) {
+                console.warn("Lỗi tải thông tin bước chân hôm nay từ backend:", err);
               }
-            } catch (err) {
-              console.warn("Lỗi tải thông tin bước chân hôm nay từ backend:", err);
             }
+
+            const updatedRecords = { ...(get().stepRecords || {}) };
+            updatedRecords[todayStr] = finalSteps;
+
+            set({ 
+              todaySteps: finalSteps,
+              stepRecords: updatedRecords
+            });
+
+            if (!USE_MOCK && fetchFromBackendSucceeded) {
+              const provider = Platform.OS === "ios" ? 1 : 2;
+              const calories = finalSteps * 0.04;
+              await saveStepLog(finalSteps, get().stepGoal, todayStr, provider, calories);
+            }
+          } catch (err: any) {
+            set({ error: err.message || "Lỗi tải số bước hôm nay" });
+          } finally {
+            set({ isLoading: false });
           }
+        })();
 
-          const updatedRecords = { ...(get().stepRecords || {}) };
-          updatedRecords[todayStr] = finalSteps;
-
-          set({ 
-            todaySteps: finalSteps,
-            stepRecords: updatedRecords
-          });
-
-          if (!USE_MOCK) {
-            const provider = Platform.OS === "ios" ? 1 : 2;
-            const calories = finalSteps * 0.04;
-            await saveStepLog(finalSteps, get().stepGoal, todayStr, provider, calories);
-          }
-        } catch (err: any) {
-          set({ error: err.message || "Lỗi tải số bước hôm nay" });
+        try {
+          await activeFetchTodayPromise;
         } finally {
-          set({ isLoading: false });
+          activeFetchTodayPromise = null;
         }
       },
 
@@ -350,6 +403,27 @@ export const useStepsStore = create<StepsState>()(
               const fromStr = formatLocalDate(prevStartDate);
               const toStr = formatLocalDate(endDate);
               apiHistory = await getStepsTimeline(fromStr, toStr);
+
+              // Tự động cập nhật mục tiêu hiện tại từ bản ghi gần nhất trong lịch sử
+              if (apiHistory && apiHistory.length > 0) {
+                const sortedHistory = [...apiHistory].sort(
+                  (a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime()
+                );
+                const recentGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0);
+                let resolvedGoal = recentGoalEntry?.step_goal ?? get().stepGoal;
+
+                // Nếu mục tiêu gần nhất trong lịch sử là 8000, tìm mục tiêu tùy chỉnh khác 8000
+                if (resolvedGoal === 8000) {
+                  const customGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0 && h.step_goal !== 8000);
+                  if (customGoalEntry) {
+                    resolvedGoal = customGoalEntry.step_goal;
+                  }
+                }
+
+                if (resolvedGoal !== get().stepGoal) {
+                  set({ stepGoal: resolvedGoal });
+                }
+              }
             } catch (err) {
               console.warn("Lỗi tải lịch sử bước chân từ backend:", err);
             }
@@ -362,8 +436,8 @@ export const useStepsStore = create<StepsState>()(
             const apiSteps = apiDay ? apiDay.steps : 0;
             const maxSteps = Math.max(item.steps, persistedSteps, apiSteps);
 
-            // Tự động đồng bộ lên backend nếu dữ liệu local lớn hơn backend
-            if (!USE_MOCK && maxSteps > apiSteps) {
+            // Tự động đồng bộ lên backend nếu dữ liệu local lớn hơn backend (không bao gồm ngày hôm nay)
+            if (!USE_MOCK && maxSteps > apiSteps && item.dateISO !== getTodayDateISO()) {
               const provider = Platform.OS === "ios" ? 1 : 2;
               const calories = maxSteps * 0.04;
               const dayGoal = apiDay?.step_goal ?? get().stepGoal;

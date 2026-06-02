@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { View } from "react-native";
 import Svg, { Rect, Line as SvgLine, G, Text as SvgText, Circle } from "react-native-svg";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export interface BarData {
   label: string;
@@ -29,6 +30,8 @@ export const BarChart: React.FC<BarChartProps> = memo(({
   showYAxis = false,
   showAveragePill = false,
 }) => {
+  const colors = useAppColors();
+  const theme = colors.primary === "#A56CFF" ? "dark" : "light";
   const padding = { top: 20, bottom: 30, left: showYAxis ? 48 : 10, right: 10 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -78,7 +81,7 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                   y1={yPos}
                   x2={chartWidth}
                   y2={yPos}
-                  stroke="rgba(255, 255, 255, 0.08)"
+                  stroke={theme === "dark" ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)"}
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
@@ -103,7 +106,7 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                 y1={chartHeight - (averageValue / max) * chartHeight}
                 x2={chartWidth}
                 y2={chartHeight - (averageValue / max) * chartHeight}
-                stroke="rgba(255, 255, 255, 0.4)"
+                stroke={theme === "dark" ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)"}
                 strokeWidth="1.5"
                 strokeDasharray="4 4"
               />
@@ -116,12 +119,12 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                     width={44}
                     height={20}
                     rx={10}
-                    fill="#FFFFFF"
+                    fill={theme === "dark" ? "#FFFFFF" : colors.primary}
                   />
                   <SvgText
                     x={-26}
                     y={chartHeight - (averageValue / max) * chartHeight + 4}
-                    fill="#000000"
+                    fill={theme === "dark" ? "#000000" : "#FFFFFF"}
                     fontSize="10"
                     fontWeight="bold"
                     textAnchor="middle"
@@ -132,8 +135,8 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                     cx={-2}
                     cy={chartHeight - (averageValue / max) * chartHeight}
                     r={3.5}
-                    fill="#60A5FA"
-                    stroke="#FFFFFF"
+                    fill={colors.info}
+                    stroke={theme === "dark" ? "#FFFFFF" : colors.bgElevated}
                     strokeWidth={1}
                   />
                 </G>

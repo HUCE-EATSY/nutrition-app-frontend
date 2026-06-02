@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography, shadows } from "@/constants";
 import { getBmiStatusLabel, useTranslation } from "@/constants/i18n";
 import { calculateBmi, getBmiStatus, getBmiStatusColors, getTargetBmiDesc } from "@/utils/onboarding";
+import { useAppColors } from "@/hooks/useAppColors";
 
 interface BmiCardProps {
   weightKg: number;
@@ -12,6 +14,9 @@ interface BmiCardProps {
 
 export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   if (error) {
     return (
       <View style={[styles.bmiCard, styles.errorCard]}>
@@ -23,7 +28,7 @@ export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
   const bmiValue = calculateBmi(weightKg, heightCm);
   const bmiStatus = getBmiStatus(bmiValue);
   const statusLabel = getBmiStatusLabel(bmiStatus);
-  const statusColors = getBmiStatusColors(bmiStatus);
+  const statusColors = getBmiStatusColors(bmiStatus, colors);
 
   const statusDesc =
     type === "current"
@@ -36,11 +41,11 @@ export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
     <View style={styles.bmiCard}>
       <View style={styles.bmiTitleRow}>
         <Text style={styles.bmiTitleText}>{titleText}</Text>
-        <Text style={[styles.bmiValueText, { color: statusColors.valueColor }]}>
+        <Text style={[styles.bmiValueText, { color: statusColors?.valueColor }]}>
           {bmiValue}
         </Text>
-        <View style={[styles.badge, { backgroundColor: statusColors.badgeBg }]}>
-          <Text style={[styles.badgeText, { color: statusColors.badgeText }]}>
+        <View style={[styles.badge, { backgroundColor: statusColors?.badgeBg }]}>
+          <Text style={[styles.badgeText, { color: statusColors?.badgeText }]}>
             {statusLabel}
           </Text>
         </View>
@@ -50,15 +55,16 @@ export function BmiCard({ weightKg, heightCm, type, error }: BmiCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   bmiCard: {
-    backgroundColor: "rgba(28, 26, 44, 0.65)",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
     marginVertical: spacing.lg,
     width: "100%",
+    ...shadows.card,
   },
   errorCard: {
     borderColor: "rgba(255, 90, 95, 0.4)",

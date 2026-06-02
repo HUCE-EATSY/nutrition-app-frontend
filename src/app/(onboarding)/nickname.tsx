@@ -7,12 +7,15 @@ import * as z from "zod";
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { useTranslation } from "@/constants/i18n";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function NicknameScreen() {
   const t = useTranslation();
   const language = useSettingsStore((state) => state.language);
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const nicknameSchema = useMemo(() => {
     return z.object({
@@ -60,7 +63,7 @@ export default function NicknameScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   input: {
     ...typography.h2,
     lineHeight: undefined,

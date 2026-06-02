@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useStepsStore } from "@/store/statsStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { StepsPeriod, STEPS_PERIOD_LABELS } from "@/constants/stats";
+import { useAuthStore } from "@/store/authStore";
 
 export const useStepsStats = () => {
   const {
@@ -18,8 +19,11 @@ export const useStepsStats = () => {
 
   const language = useSettingsStore((state) => state.language);
 
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   // Tự động kiểm tra và fetch dữ liệu khi mount
   useEffect(() => {
+    if (!isAuthenticated) return;
     const init = async () => {
       const connected = await checkConnection();
       if (connected) {
@@ -27,7 +31,7 @@ export const useStepsStats = () => {
       }
     };
     init();
-  }, [checkConnection, fetchHistory]);
+  }, [checkConnection, fetchHistory, isAuthenticated]);
 
   const getPeriodLabel = (p: StepsPeriod) => {
     if (language === "en") {

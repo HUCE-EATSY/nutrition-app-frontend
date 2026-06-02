@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
@@ -7,12 +7,15 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { LoadingStepRow } from "@/components/onboarding/LoadingStepRow";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { colors, spacing, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
 import { trackEvent } from "@/utils/analytics";
 import { useOnboardUser } from "@/hooks/queries/useUserQueries";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function CalculatingPlanScreen() {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const labels = t.onboarding.calculating.labels;
   const [stage, setStage] = useState(0);
   const markStepCompleted = useOnboardingStore((state) => state.markStepCompleted);
@@ -43,8 +46,9 @@ export default function CalculatingPlanScreen() {
     trackEvent("plan_calculation_started", { screen_name: "calculating" });
     
     const timers = [
-      setTimeout(() => setStage(1), 700),
-      setTimeout(() => setStage(2), 1400),
+      setTimeout(() => setStage(1), 800),
+      setTimeout(() => setStage(2), 1800),
+      setTimeout(() => setStage(3), 2800),
     ];
 
     submitOnboarding(draft, {
@@ -96,7 +100,7 @@ export default function CalculatingPlanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     flex: 1,
     gap: spacing.xxl,

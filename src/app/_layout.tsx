@@ -13,6 +13,7 @@ import { View, ActivityIndicator, Text } from "react-native";
 
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
+import { getDraftResumePath } from "@/utils/onboarding";
 import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -83,14 +84,34 @@ export default function RootLayout() {
     const [firstSegment, secondSegment] = segments as string[];
     const inPublicGroup = firstSegment === "(public)";
     const isMascotIntro = secondSegment === "mascot-intro";
+    const inOnboardingGroup = firstSegment === "(onboarding)";
 
-    if (!isAuthenticated && !inPublicGroup) {
-      // Redirect to the welcome page if not authenticated and not in public group
-      router.replace("/(public)/welcome");
-    } else if (isAuthenticated && inPublicGroup && !isMascotIntro) {
-      // If we are authenticated but in a public screen (like welcome or social-login), 
-      // go back to the index to let it decide where to go (home or onboarding)
-      router.replace("/");
+    const onboardingState = useOnboardingStore.getState();
+    const hasCompletedOnboarding = onboardingState.hasCompletedOnboarding;
+
+    if (!isAuthenticated) {
+      if (!inPublicGroup) {
+        // Redirect to the welcome page if not authenticated and not in public group
+        router.replace("/(public)/welcome");
+      }
+    } else {
+      // Authenticated users
+      if (!hasCompletedOnboarding) {
+        // If onboarding is incomplete, restrict them to mascot-intro or onboarding steps
+        const allowed = (inPublicGroup && isMascotIntro) || inOnboardingGroup;
+        if (!allowed) {
+          if (onboardingState.publicFlowStep !== "done") {
+            router.replace("/(public)/mascot-intro");
+          } else {
+            router.replace(getDraftResumePath(onboardingState.draft));
+          }
+        }
+      } else {
+        // If onboarding is completed, restrict them from entering public/onboarding groups
+        if (inPublicGroup || inOnboardingGroup) {
+          router.replace("/(tabs)/home");
+        }
+      }
     }
   }, [isAuthenticated, segments, loaded, hydrated, authHydrated, settingsHydrated, router]);
 

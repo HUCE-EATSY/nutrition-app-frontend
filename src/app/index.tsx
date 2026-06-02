@@ -6,7 +6,7 @@ import { colors } from "@/constants";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { useSettingsStore } from "@/store/settingsStore";
-import { getDraftResumePath, getPublicResumePath } from "@/utils/onboarding";
+import { getDraftResumePath } from "@/utils/onboarding";
 
 export default function IndexScreen() {
   const t = useTranslation();
@@ -42,7 +42,7 @@ export default function IndexScreen() {
   // Nếu đã đăng nhập nhưng chưa hoàn thành onboarding, tiếp tục tiến trình tương ứng
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
-      <Redirect href={publicFlowStep !== "done" ? getPublicResumePath(publicFlowStep) : getDraftResumePath(draft)} />
+      <Redirect href={publicFlowStep !== "done" ? "/(public)/mascot-intro" : getDraftResumePath(draft)} />
       <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
       <ActivityIndicator color={colors.primary} />
     </View>

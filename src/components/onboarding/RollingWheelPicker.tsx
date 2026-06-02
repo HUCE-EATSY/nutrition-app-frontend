@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -8,7 +8,8 @@ import {
   View,
 } from "react-native";
 
-import { colors, typography } from "@/constants";
+import { typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 interface RollingWheelPickerProps<T> {
   data: T[];
@@ -31,6 +32,9 @@ export function RollingWheelPicker<T extends string | number>({
   const [isScrolling, setIsScrolling] = useState(false);
   const [internalSelectedValue, setInternalSelectedValue] = useState(selectedValue);
   const isMomentumRef = useRef(false);
+
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const spacerCount = Math.floor(visibleItems / 2);
   const initialIndex = data.indexOf(selectedValue);
@@ -128,7 +132,7 @@ export function RollingWheelPicker<T extends string | number>({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   item: {
     justifyContent: "center",
     alignItems: "center",

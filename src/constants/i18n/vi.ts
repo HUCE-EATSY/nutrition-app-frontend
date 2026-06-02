@@ -57,7 +57,7 @@ export const vi = {
       heroTitle: "Bạn đồng hành macro",
       heroSubtitle: "dễ thương nhưng nghiêm túc với lộ trình của bạn",
       title: "Lên lộ trình dinh dưỡng thông minh cho từng ngày của bạn.",
-      description: "Onboarding trò chuyện tự nhiên, giao diện tối giản và dashboard dễ đọc trên mobile.",
+      description: "",
       cta: "Bắt đầu hành trình",
     },
     social: {
@@ -288,7 +288,7 @@ export const vi = {
     calculating: {
       title: "Đang tính toán lộ trình cá nhân cho hồ sơ của bạn.",
       description: "",
-      labels: ["Đọc hồ sơ và mục tiêu", "Tính chỉ số trao đổi chất", "Cân bằng calo và macro"],
+      labels: ["Đọc hồ sơ và mục tiêu", "Tính BMR và TDEE", "Cân bằng calo và macro", "Dự kiến ngày đạt mục tiêu"],
       testimonialKicker: "Người dùng thử nghiệm",
       testimonialMeta: (author: string, rating: number) => `${author} • ${rating}/5`,
       error: "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.",

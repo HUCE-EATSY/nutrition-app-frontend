@@ -1,21 +1,24 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import { SocialAuthButton } from "@/components/buttons/SocialAuthButton";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, shadows, spacing, typography } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { trackEvent } from "@/utils/analytics";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function SocialLoginScreen() {
   const t = useTranslation();
   const setPublicFlowStep = useOnboardingStore((state) => state.setPublicFlowStep);
   const { isNarrowWidth, isShortHeight } = useResponsiveLayout();
   const { signIn, loading, error } = useGoogleAuth();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const handleClose = useCallback(() => {
     setPublicFlowStep("welcome");
@@ -59,7 +62,7 @@ export default function SocialLoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     flex: 1,
     paddingVertical: spacing.lg,
@@ -72,7 +75,10 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.borderSoft,
+    backgroundColor: colors.bgElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card,
   },
   closeText: {
     color: colors.textPrimary,

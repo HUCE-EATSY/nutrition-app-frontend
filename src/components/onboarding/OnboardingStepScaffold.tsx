@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
@@ -7,7 +7,8 @@ import { BottomCtaBar } from "@/components/layout/BottomCtaBar";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { MascotQuestionBubble } from "@/components/onboarding/MascotQuestionBubble";
-import { colors, spacing, typography } from "@/constants";
+import { spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type OnboardingStepScaffoldProps = {
   step: number;
@@ -39,8 +40,11 @@ export function OnboardingStepScaffold({
   hideBottomCta = false,
 }: OnboardingStepScaffoldProps) {
   useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const content = (
-    <Animated.View entering={FadeInDown.duration(350).springify().damping(18)} style={styles.animatedContent}>
+    <Animated.View entering={FadeInDown.duration(300)} style={styles.animatedContent}>
       <MascotQuestionBubble text={question} />
       <View style={[styles.content, contentStyle]}>{children}</View>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
@@ -70,7 +74,7 @@ export function OnboardingStepScaffold({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   screen: {
     flex: 1,
   },

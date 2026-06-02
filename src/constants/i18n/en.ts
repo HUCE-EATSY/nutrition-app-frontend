@@ -57,7 +57,7 @@ export const en = {
       heroTitle: "Macro Companion",
       heroSubtitle: "cute but serious with your goals",
       title: "Smart nutrition planning for every day.",
-      description: "Natural onboarding conversation, minimal interface and clear mobile dashboard.",
+      description: "",
       cta: "Start Journey",
     },
     social: {
@@ -288,7 +288,7 @@ export const en = {
     calculating: {
       title: "Calculating a personalized roadmap for your profile.",
       description: "",
-      labels: ["Reading profile and goals", "Calculating metabolic rate", "Balancing calories and macros"],
+      labels: ["Reading profile and goals", "Calculating BMR and TDEE", "Balancing calories and macros", "Estimating target date"],
       testimonialKicker: "Beta Tester",
       testimonialMeta: (author: string, rating: number) => `${author} • ${rating}/5`,
       error: "Could not connect to the server for calculations. Please try again.",
