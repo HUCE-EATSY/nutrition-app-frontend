@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Pressable, Platform, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -7,6 +7,13 @@ import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing, typography, radius } from '@/constants';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useTranslation } from "@/constants/i18n";
+import { useDiaryStore } from '@/store/diaryStore';
+import { useAppColors } from '@/hooks/useAppColors';
+import { getNutritionTimeline } from '@/services/nutritionLogService';
+import { exerciseService } from '@/services/exerciseService';
+import { getTodayDateISO } from '@/utils/date';
 
 // Cấu hình Locale tiếng Việt cho Lịch
 LocaleConfig.locales['vi'] = {
@@ -19,16 +26,114 @@ LocaleConfig.locales['vi'] = {
   dayNamesShort: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
   today: 'Hôm nay'
 };
+
+LocaleConfig.locales['en'] = {
+  monthNames: [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ],
+  monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  dayNamesShort: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+  today: 'Today'
+};
+
 LocaleConfig.defaultLocale = 'vi';
 
+// Tính from/to của tháng hiện tại theo format YYYY-MM-DD
+function getCurrentMonthRange(): { from: string; to: string } {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+  const from = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const to = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  return { from, to };
+}
+
 export default function CalendarPickerModal() {
+  const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
+  const theme = useSettingsStore((state) => state.theme);
+  const selectedDate = useDiaryStore((state) => state.selectedDate);
+  const setDate = useDiaryStore((state) => state.setDate);
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
+  React.useEffect(() => {
+    LocaleConfig.defaultLocale = language;
+  }, [language]);
+
   const insets = useSafeAreaInsets();
-  
+
   // Lấy ngày hiện tại format YYYY-MM-DD
-  const today = new Date();
-  const todayString = today.toISOString().split('T')[0];
-  
-  const [selected, setSelected] = useState(todayString);
+  const todayString = getTodayDateISO();
+
+  const [selected, setSelected] = useState(selectedDate || todayString);
+
+  // Tập hợp ngày có hoạt động (ăn uống HOẶC tập luyện) trong tháng hiện tại
+  const [activeDays, setActiveDays] = useState<Set<string>>(new Set());
+  const [loadingDots, setLoadingDots] = useState(true);
+
+  // Load dữ liệu chấm song song khi lịch mở
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoadingDots(true);
+      try {
+        const { from, to } = getCurrentMonthRange();
+        const [foodTimeline, exerciseLogs] = await Promise.all([
+          getNutritionTimeline(from, to),
+          exerciseService.getLogs(from, to),
+        ]);
+
+        if (cancelled) return;
+
+        const days = new Set<string>();
+
+        // Ngày có log ăn uống (có ít nhất 1 calo ghi nhận)
+        foodTimeline.forEach((d) => {
+          if (Number(d.total_calories) > 0) days.add(d.date);
+        });
+
+        // Ngày có log tập luyện
+        exerciseLogs.forEach((log) => {
+          days.add(log.logDate);
+        });
+
+        setActiveDays(days);
+      } catch (err) {
+        console.warn('[Calendar] Lỗi tải dữ liệu chấm:', err);
+      } finally {
+        if (!cancelled) setLoadingDots(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Xây dựng markedDates cho react-native-calendars
+  const markedDates = React.useMemo(() => {
+    const result: Record<string, any> = {};
+
+    // Thêm chấm cho các ngày có hoạt động
+    activeDays.forEach((date) => {
+      result[date] = {
+        marked: true,
+        dotColor: colors.primary,
+      };
+    });
+
+    // Merge với ngày được chọn (giữ chấm nếu ngày đó cũng có hoạt động)
+    result[selected] = {
+      ...(result[selected] ?? {}),
+      selected: true,
+      disableTouchEvent: true,
+      selectedColor: colors.primary,
+    };
+
+    return result;
+  }, [activeDays, selected, colors]);
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -40,27 +145,37 @@ export default function CalendarPickerModal() {
 
   const handleDayPress = (day: { dateString: string }) => {
     setSelected(day.dateString);
-    // Ở đây có thể lưu vào Global Store ngày được chọn
-    
+    setDate(day.dateString);
+
     // Tạo cảm giác mượt mà, delay 300ms rồi đóng để user thấy hiệu ứng màu
     setTimeout(() => {
       handleClose();
     }, 300);
   };
 
-  // Format header title: "Hôm nay, 29 Tháng 04"
-  const formattedHeader = `Hôm nay, ${today.getDate()} Tháng ${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+  // Format header title: "Hôm nay, 29 Tháng 04" / "Today, April 29"
+  const formattedHeader = React.useMemo(() => {
+    const today = new Date();
+    if (language === 'en') {
+      const monthNamesEng = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      return `Today, ${monthNamesEng[today.getMonth()]} ${today.getDate()}`;
+    }
+    return `${t.common.today}, ${today.getDate()} ${t.stats.periods.month} ${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+  }, [language, t]);
 
   const Container = Platform.OS === 'ios' ? BlurView : View;
-  const containerProps = Platform.OS === 'ios' 
-    ? { intensity: 40, tint: "dark", style: styles.container } as any
-    : { style: [styles.container, { backgroundColor: "rgba(18, 16, 25, 0.95)" }] } as any;
+  const containerProps = Platform.OS === 'ios'
+    ? { intensity: 40, tint: theme === "light" ? "light" : "dark", style: styles.container } as any
+    : { style: [styles.container, { backgroundColor: theme === "light" ? "rgba(244, 245, 247, 0.95)" : "rgba(18, 16, 25, 0.95)" }] } as any;
 
   return (
     <Container {...containerProps}>
       {/* Box Lịch nửa trên */}
       <View style={[styles.topSheet, { paddingTop: Math.max(insets.top, spacing.md) }]}>
-        
+
         {/* Header Modal */}
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>{formattedHeader}</Text>
@@ -69,8 +184,16 @@ export default function CalendarPickerModal() {
           </Pressable>
         </View>
 
+        {/* Loading indicator nhỏ khi đang tải chấm */}
+        {loadingDots && (
+          <View style={styles.dotsLoadingRow}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        )}
+
         {/* Lịch */}
         <Calendar
+          key={`${language}-${theme}`}
           current={selected}
           onDayPress={handleDayPress}
           theme={{
@@ -78,12 +201,12 @@ export default function CalendarPickerModal() {
             calendarBackground: "transparent",
             textSectionTitleColor: colors.textMuted,
             selectedDayBackgroundColor: colors.primary,
-            selectedDayTextColor: colors.textPrimary,
+            selectedDayTextColor: "#FFFFFF",
             todayTextColor: colors.primary,
             dayTextColor: colors.textPrimary,
-            textDisabledColor: "rgba(255,255,255,0.1)",
+            textDisabledColor: theme === "light" ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.1)",
             dotColor: colors.primary,
-            selectedDotColor: colors.textPrimary,
+            selectedDotColor: "#FFFFFF",
             arrowColor: colors.textPrimary,
             disabledArrowColor: colors.textMuted,
             monthTextColor: colors.textPrimary,
@@ -124,9 +247,7 @@ export default function CalendarPickerModal() {
               }
             }
           } as any}
-          markedDates={{
-            [selected]: { selected: true, disableTouchEvent: true },
-          }}
+          markedDates={markedDates}
           firstDay={1} // Bắt đầu tuần từ Thứ 2 (T2)
           hideExtraDays={true} // Ẩn các ngày của tháng trước/sau
         />
@@ -138,7 +259,7 @@ export default function CalendarPickerModal() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -175,5 +296,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
+  },
+  dotsLoadingRow: {
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    height: 16,
   },
 });
