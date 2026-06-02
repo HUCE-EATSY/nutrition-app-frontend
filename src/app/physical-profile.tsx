@@ -184,17 +184,6 @@ export default function PhysicalProfileScreen() {
       return;
     }
 
-    const w = parseFloat(editWeight);
-    const minWeight = isLbs ? 44 : 20;
-    const maxWeight = isLbs ? 660 : 300;
-    if (isNaN(w) || w < minWeight || w > maxWeight) {
-      showToast(isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)", "error");
-      return;
-    }
-
-    // Convert weight to kg if it was input in lbs
-    const weightKgVal = isLbs ? parseFloat((w / 2.20462).toFixed(1)) : w;
-
     const birthDateISO = editBirthDate.toISOString().split("T")[0];
     const ageVal = getAgeFromBirthDate(birthDateISO);
     if (ageVal < 18) {
@@ -205,13 +194,16 @@ export default function PhysicalProfileScreen() {
     try {
       setIsSaving(true);
 
+      // Giữ nguyên cân nặng hiện tại, không cho chỉnh ở đây
+      const curWeightKg = profileInfo?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
+
       const payload = {
         displayName: editName,
         avatarUrl: profileInfo?.avatarUrl ?? null,
         gender: editGender, // 1 = Male, 2 = Female
         dateOfBirth: birthDateISO,
         heightCm: h,
-        weightKg: weightKgVal,
+        weightKg: Number(curWeightKg),
         activityLevel: activeGoal?.activityLevel ?? activeGoal?.ActivityLevel ?? 1,
       };
 
@@ -340,13 +332,13 @@ export default function PhysicalProfileScreen() {
             label={t.physicalProfile.weeklyGoal}
             value={weeklyGoalLabel}
             clickable={goalType !== 3}
-            onPress={goalType !== 3 ? () => showToast("Để thay đổi tiến trình, vui lòng chọn 'Thiết lập mục tiêu mới' ở dưới.", "info") : undefined}
+            onPress={goalType !== 3 ? () => setResetModalVisible(true) : undefined}
           />
           <GoalRow
             label={t.physicalProfile.activityLevel}
             value={activityLabel ?? "—"}
-            clickable={goalType !== 3}
-            onPress={goalType !== 3 ? openEditActivityModal : undefined}
+            clickable
+            onPress={() => setResetModalVisible(true)}
             truncate
           />
           <GoalRow
@@ -554,20 +546,6 @@ export default function PhysicalProfileScreen() {
                 />
               </View>
 
-              {/* Cân nặng */}
-              <View style={styles.infoRow}>
-                <Text style={styles.infoRowLabel}>{`Cân nặng (${unit === "lbs" ? "lbs" : "kg"})`}</Text>
-                <TextInput
-                  style={styles.infoRowInput}
-                  value={editWeight}
-                  onChangeText={(text) => setEditWeight(text.replace(/[^0-9.]/g, ""))}
-                  placeholder={isLbs ? "150" : "60"}
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  editable={!isSaving}
-                  returnKeyType="done"
-                />
-              </View>
 
               {/* Ngày sinh */}
               <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>

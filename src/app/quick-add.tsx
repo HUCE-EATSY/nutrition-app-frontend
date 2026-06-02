@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { StyleSheet, Text, View, Pressable, Platform, Alert } from "react-native";
+import { StyleSheet, Text, View, Pressable, Platform } from "react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -12,6 +12,7 @@ import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodItem } from "@/hooks/queries/useFoodQueries";
+import Toast from "@/components/common/Toast";
 
 export default function QuickAddModal() {
   const t = useTranslation();
@@ -24,6 +25,8 @@ export default function QuickAddModal() {
   const tabBarHeight = (isCompactWidth ? 72 : 84) + Math.max(insets.bottom, 8);
 
   const [showFoodSelector, setShowFoodSelector] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -38,8 +41,10 @@ export default function QuickAddModal() {
   };
 
   const handleToast = (feature: string) => {
-    Alert.alert(t.quickAdd.comingSoon, t.quickAdd.featureUnderDev(feature));
+    setToastMessage(t.quickAdd.featureUnderDev(feature));
+    setToastVisible(true);
   };
+
 
   // BlurView trên Android cực kỳ nặng và gây lag animation, ta dùng màu nền trong suốt làm fallback
   const Container = Platform.OS === 'ios' ? BlurView : View;
@@ -155,6 +160,13 @@ export default function QuickAddModal() {
           setShowFoodSelector(false);
           router.replace({ pathname: "/add-entry", params: { foodId: food.id } });
         }}
+      />
+
+      <Toast
+        message={toastMessage}
+        type="info"
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
       />
     </Container>
   );
