@@ -42,7 +42,7 @@ import { spacing, typography, radius } from "@/constants";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useFoodList, FoodItem } from "@/hooks/queries/useFoodQueries";
 import { useDiaryStore } from "@/store/diaryStore";
-import Toast from "@/components/common/Toast";
+import { Toast } from "@/components/common/Toast";
 
 import {
   useMyPlans,

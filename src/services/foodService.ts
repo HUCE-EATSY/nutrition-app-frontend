@@ -238,7 +238,7 @@ export const foodService = {
     if (USE_MOCK) {
       return mockFoods[0] || null;
     }
-    const response = await apiClient.get(API_URLS.foods.barcode(barcode));
+    const response = await apiClient.get(API_URLS.foods.barcode(barcode.toString()));
     const raw = response.data.data ?? response.data ?? null;
     return raw ? mapDetailToDto(raw) : null;
   },

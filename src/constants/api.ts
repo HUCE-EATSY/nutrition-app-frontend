@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 
 /**
  * Địa chỉ API Backend
@@ -8,10 +7,7 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
-  // Fallback for different platforms if .env is missing
-  if (Platform.OS === 'web') {
-    return "http://localhost:5184";
-  }
+  // Fallback if .env is missing
   return "http://192.168.100.215:5184";
 };
 
@@ -28,7 +24,8 @@ export const API_URLS = {
     search: `${API_BASE}/api/foods/search`,          // GET ?Q=&CategoryId=&Page=&PageSize=
     byId: (id: string) => `${API_BASE}/api/foods/${id}`,        // GET /:uuid
     components: (id: string) => `${API_BASE}/api/foods/${id}/components`, // GET /:uuid/components
-    barcode: (code: number) => `${API_BASE}/api/foods/barcode/${code}`,   // GET /barcode/:int64
+    barcode: (code: string) => `${API_BASE}/api/foods/barcode/${code}`,   // GET /barcode/:barcode
+    estimateNutrients: `${API_BASE}/api/foods/estimate-nutrients`, // POST { image_url }
     create: `${API_BASE}/api/foods`,                // POST multipart/form-data
     createRecipe: `${API_BASE}/api/foods/recipes`,  // POST multipart/form-data
   },
@@ -39,6 +36,7 @@ export const API_URLS = {
     foodSummary: `${API_BASE}/api/logs/food/summary`, // GET ?date=
     weight: `${API_BASE}/api/logs/weight`,          // GET ?from=&to=  |  POST
     weightById: (id: number) => `${API_BASE}/api/logs/weight/${id}`, // PUT
+    steps: `${API_BASE}/api/logs/steps`,            // POST | GET ?from=&to=
   },
   /** Meal types */
   mealTypes: `${API_BASE}/api/meal-types`,          // GET
@@ -65,5 +63,12 @@ export const API_URLS = {
     markAllAsRead: `${API_BASE}/api/notifications/mark-all-as-read`,
     delete: (id: string) => `${API_BASE}/api/notifications/${id}`,
     unreadCount: `${API_BASE}/api/notifications/unread-count`,
-  }
+    registerToken: `${API_BASE}/api/notifications/register-token`,
+  },
+  streaks: {
+    me: `${API_BASE}/api/streaks/me`,
+    freeze: `${API_BASE}/api/streaks/freeze`,
+    leaderboard: `${API_BASE}/api/streaks/leaderboard`,
+    simLog: `${API_BASE}/api/streaks/sim-log`,
+  },
 };

@@ -33,3 +33,8 @@ export async function getDailySummary(date: string): Promise<DailySummaryRespons
   const res = await apiClient.get("/api/logs/food/summary", { params: { date } });
   return res.data.data;
 }
+
+export async function getNutritionTimeline(from: string, to: string): Promise<DailySummaryResponse[]> {
+  const res = await apiClient.get("/api/logs/food/timeline", { params: { from, to } });
+  return res.data.data;
+}

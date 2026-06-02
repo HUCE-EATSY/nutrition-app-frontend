@@ -9,7 +9,7 @@ import { StreakChallengeSection } from "@/components/streaks/StreakChallengeSect
 import { StreakHeader } from "@/components/streaks/StreakHeader";
 import { StreakStatsRow } from "@/components/streaks/StreakStatsRow";
 import { WeeklyProgressCard } from "@/components/streaks/WeeklyProgressCard";
-import Toast from "@/components/common/Toast";
+import { Toast } from "@/components/common/Toast";
 import { radius, spacing, typography } from "@/constants";
 import { useStreaks } from "@/hooks/useStreaks";
 import { useAppColors } from "@/hooks/useAppColors";

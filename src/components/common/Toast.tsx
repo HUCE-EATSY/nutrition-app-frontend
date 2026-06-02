@@ -6,7 +6,7 @@ import { colors, spacing, typography, radius } from "@/constants";
 interface ToastProps {
   visible: boolean;
   message: string;
-  type?: "success" | "error" | "info";
+  type?: "success" | "error" | "info" | "warning";
   duration?: number;
   onHide?: () => void;
 }
@@ -55,8 +55,8 @@ export function Toast({ visible, message, type = "success", duration = 2000, onH
 
   if (!visible) return null;
 
-  const iconName = type === "success" ? "checkmark-circle" : type === "error" ? "close-circle" : "information-circle";
-  const iconColor = type === "success" ? colors.success : type === "error" ? colors.danger : colors.primary;
+  const iconName = type === "success" ? "checkmark-circle" : type === "error" ? "close-circle" : type === "warning" ? "warning" : "information-circle";
+  const iconColor = type === "success" ? colors.success : type === "error" ? colors.danger : type === "warning" ? colors.warning : colors.primary;
 
   return (
     <Animated.View
