@@ -138,8 +138,14 @@ export const pedometerService = {
 
     if (Platform.OS === "android") {
       const hcAvailable = await checkHealthConnectAvailable();
-      if (hcAvailable && (await checkHealthConnectPermission())) {
-        return grantedPermissionResponse();
+      if (hcAvailable) {
+        const hcGranted = await checkHealthConnectPermission();
+        return {
+          granted: hcGranted,
+          status: hcGranted ? "granted" : "undetermined" as any,
+          canAskAgain: true,
+          expires: "never",
+        };
       }
     }
 
@@ -169,11 +175,20 @@ export const pedometerService = {
       if (hcAvailable) {
         try {
           const hcGranted = await requestHealthConnectPermission();
-          if (hcGranted) {
-            return grantedPermissionResponse();
-          }
+          return {
+            granted: hcGranted,
+            status: hcGranted ? "granted" : "denied" as any,
+            canAskAgain: true,
+            expires: "never",
+          };
         } catch (error) {
           console.warn("Lỗi khi yêu cầu quyền Health Connect:", error);
+          return {
+            granted: false,
+            status: "undetermined" as any,
+            canAskAgain: true,
+            expires: "never",
+          };
         }
       }
     }
@@ -242,10 +257,6 @@ export const pedometerService = {
       } catch {}
 
       if (!realAvailable || !realPermission) {
-        return 0;
-      }
-
-      if (Platform.OS === "android") {
         return 0;
       }
 
@@ -343,10 +354,6 @@ export const pedometerService = {
       return getEmptyHistory(cur, end);
     }
 
-    if (Platform.OS === "android") {
-      return getEmptyHistory(cur, end);
-    }
-
     try {
       const datesToQuery: Date[] = [];
       const temp = new Date(cur);
@@ -387,6 +394,8 @@ export const pedometerService = {
 
   /**
    * Đăng ký theo dõi số bước chân thời gian thực
+   * - Android: polling Health Connect mỗi 10 giây (HC không có subscribe API)
+   * - iOS: dùng Pedometer.watchStepCount
    */
   watchSteps(callback: (steps: number) => void): { remove: () => void } {
     if (USE_MOCK) {
@@ -400,6 +409,35 @@ export const pedometerService = {
       };
     }
 
+    if (Platform.OS === "android") {
+      let active = true;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+      const poll = async () => {
+        if (!active) return;
+        try {
+          const steps = await pedometerService.fetchTodaySteps();
+          if (active) callback(steps);
+        } catch (error) {
+          console.warn("Lỗi khi polling bước chân từ Health Connect:", error);
+        }
+        if (active) {
+          timeoutId = setTimeout(poll, 10000);
+        }
+      };
+
+      // Gọi ngay lần đầu, sau đó lặp mỗi 10 giây
+      poll();
+
+      return {
+        remove: () => {
+          active = false;
+          if (timeoutId !== null) clearTimeout(timeoutId);
+        },
+      };
+    }
+
+    // iOS: dùng Pedometer native
     try {
       return Pedometer.watchStepCount((result) => {
         callback(result.steps);

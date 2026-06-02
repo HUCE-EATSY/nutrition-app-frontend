@@ -9,8 +9,11 @@ interface AuthState {
   refreshToken: string | null;
   userInfo: UserInfo | null;
   isAuthenticated: boolean;
+  /** True while we're verifying the user's profile after login (prevents premature routing) */
+  isVerifyingProfile: boolean;
   setHydrated: (value: boolean) => void;
   setAuth: (accessToken: string, refreshToken: string | null, userInfo: UserInfo) => void;
+  setVerifyingProfile: (value: boolean) => void;
   clearAuth: () => void;
 }
 
@@ -22,11 +25,13 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       userInfo: null,
       isAuthenticated: false,
+      isVerifyingProfile: false,
       setHydrated: (value: boolean) => set({ hydrated: value }),
       setAuth: (accessToken, refreshToken, userInfo) =>
           set({ accessToken, refreshToken, userInfo, isAuthenticated: true }),
+      setVerifyingProfile: (value: boolean) => set({ isVerifyingProfile: value }),
       clearAuth: () =>
-          set({ accessToken: null, refreshToken: null, userInfo: null, isAuthenticated: false }),
+          set({ accessToken: null, refreshToken: null, userInfo: null, isAuthenticated: false, isVerifyingProfile: false }),
     }),
     {
       name: "dnt-auth-store",

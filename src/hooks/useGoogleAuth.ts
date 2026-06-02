@@ -32,6 +32,7 @@ export const useGoogleAuth = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
+  const { setVerifyingProfile } = useAuthStore();
   const { completeOnboarding, reset: resetOnboarding, setPublicFlowStep } = useOnboardingStore();
   const queryClient = useQueryClient();
 
@@ -68,6 +69,9 @@ export const useGoogleAuth = () => {
         email: data.email,
       });
 
+      // Block routing until profile verification completes
+      setVerifyingProfile(true);
+
       // Verify profile completion on backend
       try {
         const userInfo = await userService.getUserInfo();
@@ -83,6 +87,9 @@ export const useGoogleAuth = () => {
         } else {
           setPublicFlowStep("mascot-intro");
         }
+      } finally {
+        // Allow routing now that onboarding state is settled
+        setVerifyingProfile(false);
       }
     },
     onError: (err) => {

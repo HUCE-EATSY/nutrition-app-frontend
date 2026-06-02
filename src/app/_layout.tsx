@@ -68,6 +68,7 @@ export default function RootLayout() {
   const hydrated = useOnboardingStore((state) => state.hydrated);
   const authHydrated = useAuthStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isVerifyingProfile = useAuthStore((state) => state.isVerifyingProfile);
 
   usePushNotifications(isAuthenticated);
 
@@ -91,6 +92,8 @@ export default function RootLayout() {
   // Auth protection logic — role-based routing (includes admin group support from nam branch)
   useEffect(() => {
     if (!loaded || !hydrated || !authHydrated || !settingsHydrated) return;
+    // Wait until profile verification completes after login to avoid flashing onboarding
+    if (isVerifyingProfile) return;
 
     const [firstSegment, secondSegment] = segments as string[];
     const inPublicGroup = firstSegment === "(public)";
@@ -125,7 +128,7 @@ export default function RootLayout() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, segments, userInfo, loaded, hydrated, authHydrated, settingsHydrated]);
+  }, [isAuthenticated, isVerifyingProfile, segments, userInfo, loaded, hydrated, authHydrated, settingsHydrated]);
 
   if (!loaded && !error) {
     return (

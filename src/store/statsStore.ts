@@ -364,7 +364,7 @@ export const useStepsStore = create<StepsState>()(
             });
 
             if (!USE_MOCK && fetchFromBackendSucceeded) {
-              const provider = Platform.OS === "ios" ? 1 : 2;
+              const provider = Platform.OS === "ios" ? 1 : 3;
               const calories = finalSteps * 0.04;
               await saveStepLog(finalSteps, get().stepGoal, todayStr, provider, calories);
             }
@@ -389,12 +389,19 @@ export const useStepsStore = create<StepsState>()(
           const { startDate: prevStartDate } = getPeriodRange(period, offset - 1);
 
           // Lấy dữ liệu gộp cả chu kỳ hiện tại và trước đó để tính trung bình
+          // (có thể rỗng trên Android nếu không có Health Connect permission)
           const rawHistory = await pedometerService.fetchStepsHistory(prevStartDate, endDate);
 
           // Sắp xếp tăng dần theo thời gian
           const sortedHistory = [...rawHistory].sort(
             (a, b) => new Date(a.dateISO).getTime() - new Date(b.dateISO).getTime()
           );
+
+          // Tạo map tra nhanh từ pedometer data
+          const pedometerMap: Record<string, number> = {};
+          for (const item of sortedHistory) {
+            pedometerMap[item.dateISO] = item.steps;
+          }
 
           // Lấy lịch sử từ backend nếu không phải mock
           let apiHistory: StepLogEntry[] = [];
@@ -406,15 +413,15 @@ export const useStepsStore = create<StepsState>()(
 
               // Tự động cập nhật mục tiêu hiện tại từ bản ghi gần nhất trong lịch sử
               if (apiHistory && apiHistory.length > 0) {
-                const sortedHistory = [...apiHistory].sort(
+                const sortedApiHistory = [...apiHistory].sort(
                   (a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime()
                 );
-                const recentGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0);
+                const recentGoalEntry = sortedApiHistory.find(h => h.step_goal && h.step_goal > 0);
                 let resolvedGoal = recentGoalEntry?.step_goal ?? get().stepGoal;
 
                 // Nếu mục tiêu gần nhất trong lịch sử là 8000, tìm mục tiêu tùy chỉnh khác 8000
                 if (resolvedGoal === 8000) {
-                  const customGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0 && h.step_goal !== 8000);
+                  const customGoalEntry = sortedApiHistory.find(h => h.step_goal && h.step_goal > 0 && h.step_goal !== 8000);
                   if (customGoalEntry) {
                     resolvedGoal = customGoalEntry.step_goal;
                   }
@@ -429,34 +436,53 @@ export const useStepsStore = create<StepsState>()(
             }
           }
 
-          // Gộp dữ liệu từ pedometerService, backend và local
-          const mergedHistory = sortedHistory.map((item) => {
-            const persistedSteps = (get().stepRecords || {})[item.dateISO] || 0;
-            const apiDay = apiHistory.find(h => h.log_date === item.dateISO);
+          // Tạo map tra nhanh từ API data
+          const apiMap: Record<string, StepLogEntry> = {};
+          for (const entry of apiHistory) {
+            apiMap[entry.log_date] = entry;
+          }
+
+          // Tạo danh sách tất cả các ngày trong khoảng (prevStartDate -> endDate)
+          // Không phụ thuộc vào pedometerService có trả data hay không
+          const allDates: string[] = [];
+          const tempDate = new Date(prevStartDate);
+          tempDate.setHours(0, 0, 0, 0);
+          const endDateNorm = new Date(endDate);
+          endDateNorm.setHours(23, 59, 59, 999);
+          while (tempDate <= endDateNorm) {
+            const y = tempDate.getFullYear();
+            const m = String(tempDate.getMonth() + 1).padStart(2, "0");
+            const d = String(tempDate.getDate()).padStart(2, "0");
+            allDates.push(`${y}-${m}-${d}`);
+            tempDate.setDate(tempDate.getDate() + 1);
+          }
+
+          // Gộp dữ liệu từ pedometerService, backend và local cho tất cả các ngày
+          const mergedHistory = allDates.map((dateISO) => {
+            const pedometerSteps = pedometerMap[dateISO] || 0;
+            const persistedSteps = (get().stepRecords || {})[dateISO] || 0;
+            const apiDay = apiMap[dateISO];
             const apiSteps = apiDay ? apiDay.steps : 0;
-            const maxSteps = Math.max(item.steps, persistedSteps, apiSteps);
+            const maxSteps = Math.max(pedometerSteps, persistedSteps, apiSteps);
 
             // Tự động đồng bộ lên backend nếu dữ liệu local lớn hơn backend (không bao gồm ngày hôm nay)
-            if (!USE_MOCK && maxSteps > apiSteps && item.dateISO !== getTodayDateISO()) {
-              const provider = Platform.OS === "ios" ? 1 : 2;
+            if (!USE_MOCK && maxSteps > apiSteps && dateISO !== getTodayDateISO()) {
+              const provider = Platform.OS === "ios" ? 1 : 3;
               const calories = maxSteps * 0.04;
               const dayGoal = apiDay?.step_goal ?? get().stepGoal;
-              saveStepLog(maxSteps, dayGoal, item.dateISO, provider, calories).catch(err => {
-                console.warn(`Lỗi đồng bộ bước chân ngày ${item.dateISO} lên backend:`, err);
+              saveStepLog(maxSteps, dayGoal, dateISO, provider, calories).catch(err => {
+                console.warn(`Lỗi đồng bộ bước chân ngày ${dateISO} lên backend:`, err);
               });
             }
 
             // Đồng bộ ngược lại step goal từ API nếu có khác biệt
-            if (apiDay && apiDay.step_goal && apiDay.step_goal !== (get().historicalGoals || {})[item.dateISO]) {
+            if (apiDay && apiDay.step_goal && apiDay.step_goal !== (get().historicalGoals || {})[dateISO]) {
               const updatedGoals = { ...(get().historicalGoals || {}) };
-              updatedGoals[item.dateISO] = apiDay.step_goal;
+              updatedGoals[dateISO] = apiDay.step_goal;
               set({ historicalGoals: updatedGoals });
             }
 
-            return {
-              ...item,
-              steps: maxSteps,
-            };
+            return { dateISO, steps: maxSteps };
           });
 
           // Xác định số ngày trong chu kỳ hiện tại
@@ -464,7 +490,7 @@ export const useStepsStore = create<StepsState>()(
 
           // Chia làm 2 phần
           const currentPeriodData = mergedHistory.slice(-currentDaysCount);
-          const previousPeriodData = mergedHistory.slice(0, -currentDaysCount);
+          const previousPeriodData = mergedHistory.slice(0, mergedHistory.length - currentDaysCount);
 
           let mapped: { label: string; value: number; goal: number }[] = [];
 
@@ -518,20 +544,21 @@ export const useStepsStore = create<StepsState>()(
                 label = `${day}/${month}`;
               }
 
-              dayList.push({
-                dateISO: dateStr,
-                label,
-              });
-
+              dayList.push({ dateISO: dateStr, label });
               cur.setDate(cur.getDate() + 1);
             }
 
             mapped = dayList.map((d) => {
+              // Fallback chain: currentPeriodData -> stepRecords -> apiHistory
               const found = currentPeriodData.find((item) => item.dateISO === d.dateISO);
+              const persistedSteps = (get().stepRecords || {})[d.dateISO] || 0;
+              const apiDay = apiMap[d.dateISO];
+              const apiSteps = apiDay ? apiDay.steps : 0;
+              const value = found ? found.steps : Math.max(persistedSteps, apiSteps);
               const dayGoal = (get().historicalGoals || {})[d.dateISO] || get().stepGoal;
               return {
                 label: d.label,
-                value: found ? found.steps : 0,
+                value,
                 goal: dayGoal,
               };
             });
@@ -590,7 +617,7 @@ export const useStepsStore = create<StepsState>()(
 
         // Đồng bộ mục tiêu bước chân lên backend cho ngày hôm nay
         if (!USE_MOCK) {
-          const provider = Platform.OS === "ios" ? 1 : 2;
+          const provider = Platform.OS === "ios" ? 1 : 3;
           const currentSteps = get().todaySteps || 0;
           const calories = currentSteps * 0.04;
           saveStepLog(currentSteps, goal, todayStr, provider, calories).catch(err => {
@@ -604,7 +631,7 @@ export const useStepsStore = create<StepsState>()(
           return;
         }
 
-        lastPedometerSteps = 0;
+        lastPedometerSteps = Platform.OS === "android" ? get().todaySteps : 0;
 
         pedometerSubscription = pedometerService.watchSteps((stepsCount) => {
           const delta = stepsCount - lastPedometerSteps;
@@ -671,7 +698,7 @@ export const useStepsStore = create<StepsState>()(
 
             // Đồng bộ số bước với debounce
             if (!USE_MOCK) {
-              const provider = Platform.OS === "ios" ? 1 : 2;
+              const provider = Platform.OS === "ios" ? 1 : 3;
               const calories = updatedSteps * 0.04;
               debounceSyncSteps(updatedSteps, get().stepGoal, todayStr, provider, calories);
             }
