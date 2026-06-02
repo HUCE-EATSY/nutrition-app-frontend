@@ -29,10 +29,27 @@ export function useOnboardingForm<
     mode: "onChange",
   });
   
-  const onSubmit = (data: TFormData) => {
+  const onSubmit = async (data: TFormData) => {
+    console.log(`[useOnboardingForm] ${stepName} - Submitting:`, { 
+      fieldName, 
+      value: data[fieldName],
+      currentStoreValue: storeValue 
+    });
+    
+    // Update draft - this updates Zustand state synchronously
     updateDraft({ [fieldName]: data[fieldName] });
     markStepCompleted(stepName);
-    router.replace(getNextOnboardingPath(stepName));
+    
+    // Log state after update
+    console.log(`[useOnboardingForm] ${stepName} - Updated store:`, {
+      newValue: useOnboardingStore.getState().draft[fieldName]
+    });
+    
+    // Wait for persist middleware to write to storage
+    // Increased timeout to ensure async storage write completes
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    router.push(getNextOnboardingPath(stepName));
   };
   
   const fieldError = form.formState.errors[fieldName];

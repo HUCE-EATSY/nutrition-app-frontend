@@ -48,6 +48,7 @@ export const API_URLS = {
     info: `${API_BASE}/api/User/info`,
     avatar: `${API_BASE}/api/User/avatar`,
     account: `${API_BASE}/api/User/account`,
+    calories: `${API_BASE}/api/User/calories`,
   },
   exercises: {
     categories: `${API_BASE}/api/exercises/categories`,

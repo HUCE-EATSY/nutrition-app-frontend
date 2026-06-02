@@ -64,8 +64,11 @@ export const BarChart: React.FC<BarChartProps> = ({
   const barWidth = data.length > 0 ? (chartWidth / data.length) * 0.45 : 15;
   const spacing = data.length > 0 ? chartWidth / data.length : 30;
 
+  // Tính vị trí giữa cột đầu tiên (T2) để đặt chấm xanh
+  const firstBarX = spacing * 0.5; // Trung tâm của cột đầu tiên
+
   return (
-    <View style={{ width, height }}>
+    <View style={{ width, height, overflow: 'visible' }}>
       <Svg width={width} height={height}>
         <G x={padding.left} y={padding.top}>
           {/* Grid lines & Y Axis Labels */}
@@ -94,52 +97,6 @@ export const BarChart: React.FC<BarChartProps> = ({
               </G>
             );
           })}
-
-          {/* Average Line */}
-          {averageValue !== undefined && averageValue > 0 && (
-            <G>
-              <SvgLine
-                x1={0}
-                y1={chartHeight - (averageValue / max) * chartHeight}
-                x2={chartWidth}
-                y2={chartHeight - (averageValue / max) * chartHeight}
-                stroke="rgba(255, 255, 255, 0.4)"
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-              />
-              
-              {showAveragePill && (
-                <G>
-                  <Rect
-                    x={-48}
-                    y={chartHeight - (averageValue / max) * chartHeight - 10}
-                    width={44}
-                    height={20}
-                    rx={10}
-                    fill="#FFFFFF"
-                  />
-                  <SvgText
-                    x={-26}
-                    y={chartHeight - (averageValue / max) * chartHeight + 4}
-                    fill="#000000"
-                    fontSize="10"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    {Math.round(averageValue)}
-                  </SvgText>
-                  <Circle
-                    cx={-2}
-                    cy={chartHeight - (averageValue / max) * chartHeight}
-                    r={3.5}
-                    fill="#60A5FA"
-                    stroke="#FFFFFF"
-                    strokeWidth={1}
-                  />
-                </G>
-              )}
-            </G>
-          )}
 
           {/* Bars */}
           {data.map((item, index) => {
@@ -190,6 +147,49 @@ export const BarChart: React.FC<BarChartProps> = ({
               </G>
             );
           })}
+
+          {/* Average Line with Label Bubble and Dot - VẼ SAU CÙNG ĐỂ ĐÈ LÊN TRÊN */}
+          {averageValue !== undefined && averageValue > 0 && (
+            <G>
+              {/* Vòng tròn trắng hiển thị số (position absolute, đẩy hẳn sang trái) */}
+              <Circle
+                cx={-38}
+                cy={chartHeight - (averageValue / max) * chartHeight}
+                r={10}
+                fill="#FFFFFF"
+                opacity={1}
+              />
+              <SvgText
+                x={-38}
+                y={chartHeight - (averageValue / max) * chartHeight + 4}
+                fill="#14121c"
+                fontSize="10"
+                fontWeight="bold"
+                textAnchor="middle"
+              >
+                {Math.round(averageValue)}
+              </SvgText>
+              
+              {/* Chấm xanh canh giữa cột đầu tiên (T2) */}
+              <Circle
+                cx={firstBarX}
+                cy={chartHeight - (averageValue / max) * chartHeight}
+                r={3}
+                fill="#3b82f6"
+              />
+              
+              {/* Đường nét đứt ngang (chạy từ chấm xanh đến cuối) */}
+              <SvgLine
+                x1={firstBarX + 5}
+                y1={chartHeight - (averageValue / max) * chartHeight}
+                x2={chartWidth}
+                y2={chartHeight - (averageValue / max) * chartHeight}
+                stroke="rgba(255, 255, 255, 0.8)"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+              />
+            </G>
+          )}
         </G>
       </Svg>
     </View>

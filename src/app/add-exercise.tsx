@@ -18,8 +18,6 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
 import { useSettingsStore } from "@/store/settingsStore";
 import { exerciseService, Exercise } from "@/services/exerciseService";
-import { useDiaryStore } from "@/store/diaryStore";
-import { useStepsStore } from "@/store/statsStore";
 
 export default function AddExerciseScreen() {
   const colors = useAppColors();
@@ -31,18 +29,6 @@ export default function AddExerciseScreen() {
   const [loading, setLoading] = useState(true);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Lấy dữ liệu từ store giống dashboard
-  const { exercises: exerciseLogs } = useDiaryStore();
-  const { todaySteps, isConnected, stepRecords } = useStepsStore();
-  
-  // Tính toán calo giống dashboard
-  const exerciseBurned = Math.round(exerciseLogs.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
-  const todayStr = getTodayDateISO();
-  const stepsForSelectedDate = targetDate === todayStr ? todaySteps : ((stepRecords || {})[targetDate] || 0);
-  const stepBurned = isConnected ? Math.round(stepsForSelectedDate * 0.04) : 0;
-  const totalBurned = exerciseBurned + stepBurned;
-  const exerciseGoal = 500; // Mục tiêu mặc định, có thể lấy từ settings sau
 
   useEffect(() => {
     async function loadExercises() {
@@ -119,41 +105,6 @@ export default function AddExerciseScreen() {
       </View>
 
       <View style={styles.content}>
-        {/* Exercise Summary Card */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Mục tiêu</Text>
-              <View style={styles.summaryValueRow}>
-                <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
-                <Text style={styles.summaryValue}>{exerciseGoal}</Text>
-                <Text style={styles.summaryUnit}>kcal</Text>
-              </View>
-            </View>
-            
-            <View style={styles.summaryDivider} />
-            
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Đã đốt</Text>
-              <View style={styles.summaryValueRow}>
-                <MaterialCommunityIcons name="fire" size={16} color={colors.primary} />
-                <Text style={styles.summaryValue}>{totalBurned}</Text>
-                <Text style={styles.summaryUnit}>kcal</Text>
-              </View>
-            </View>
-          </View>
-          
-          {/* Progress Bar */}
-          <View style={styles.progressBarBg}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { width: `${Math.min(100, (totalBurned / exerciseGoal) * 100)}%` }
-              ]} 
-            />
-          </View>
-        </View>
-
         {/* Search */}
         <View style={styles.searchContainer}>
           <Ionicons color={colors.textMuted} name="search" size={20} style={styles.searchIcon} />
@@ -256,58 +207,6 @@ const getStyles = (colors: any) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-  },
-  summaryCard: {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: spacing.sm,
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  summaryLabel: {
-    color: "#8E8E93",
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 6,
-  },
-  summaryValueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  summaryValue: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  summaryUnit: {
-    color: "#8E8E93",
-    fontSize: 12,
-  },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    marginHorizontal: spacing.md,
-  },
-  progressBarBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    width: "100%",
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 3,
-    backgroundColor: "#A56CFF",
   },
   searchContainer: {
     flexDirection: "row",

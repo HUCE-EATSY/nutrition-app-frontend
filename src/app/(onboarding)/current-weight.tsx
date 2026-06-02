@@ -23,6 +23,13 @@ const currentWeightSchema = z.object({
 export default function CurrentWeightScreen() {
   const t = useTranslation();
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
+  const fullDraft = useOnboardingStore((state) => state.draft);
+  
+  console.log("[CurrentWeight] Component mounted:", {
+    heightCm,
+    fullDraft,
+    currentWeightFromStore: fullDraft.currentWeightKg
+  });
   
   const { control, isValid, meta, onContinue, onBack, watch } = useOnboardingForm(
     "CurrentWeight",
@@ -33,6 +40,12 @@ export default function CurrentWeightScreen() {
 
   const formWeight = watch("currentWeightKg");
   const [localWeight, setLocalWeight] = useState(formWeight || DEFAULT_CURRENT_WEIGHT_KG);
+
+  console.log("[CurrentWeight] Form state:", {
+    formWeight,
+    localWeight,
+    isValid
+  });
 
   useEffect(() => {
     if (formWeight !== undefined && formWeight !== null) {
