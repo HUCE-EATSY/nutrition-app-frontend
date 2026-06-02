@@ -178,7 +178,7 @@ export default function RootLayout() {
 
   // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động (chỉ bọc khi có Client ID hợp lệ để tránh crash ứng dụng)
   if (Platform.OS === "web") {
-    const webClientId = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID ?? "";
+    const webClientId = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
     if (webClientId && webClientId.trim() !== "" && !webClientId.startsWith("your_")) {
       return (
         <GoogleOAuthProvider clientId={webClientId}>

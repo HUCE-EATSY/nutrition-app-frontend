@@ -84,3 +84,4 @@ export function useStreaks(): StreaksData {
     isLoggedToday: data?.isLoggedToday ?? false,
   };
 }
+
