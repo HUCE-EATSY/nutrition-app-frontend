@@ -9,6 +9,7 @@ import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useGetUnreadCount } from "@/hooks/queries/useNotificationQueries";
+import { useStreaks } from "@/hooks/useStreaks";
 
 export function HomeHeader() {
   const t = useTranslation();
@@ -19,6 +20,7 @@ export function HomeHeader() {
   
   const { selectedDate, setDate } = useDiaryStore();
   const { data: unreadCount = 0 } = useGetUnreadCount();
+  const { currentStreak } = useStreaks();
   
   const todayStr = new Date().toISOString().split('T')[0];
   const isToday = selectedDate === todayStr;
@@ -53,7 +55,7 @@ export function HomeHeader() {
         <View style={styles.iconRow}>
           <Pressable hitSlop={10} onPress={() => router.push("/streaks")} style={({ pressed }) => [styles.badge, pressed && styles.badgePressed]}>
             <MaterialCommunityIcons name="fire" size={14} color={colors.warning} />
-            <Text style={styles.badgeText}>0</Text>
+            <Text style={styles.badgeText}>{currentStreak}</Text>
           </Pressable>
           <Pressable hitSlop={10} onPress={() => router.push("/notifications")} style={styles.notifButton}>
             <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={20} color={unreadCount > 0 ? colors.primary : colors.textSecondary} />
