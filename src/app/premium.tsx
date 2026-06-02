@@ -27,7 +27,9 @@ import {
   useCreateOrderMutation,
   useOrderStatusQuery,
   useMockCallbackMutation,
+  useSubscriptionPlansQuery,
 } from "@/hooks/queries/useSubscription";
+import { SubscriptionPlan } from "@/services/subscriptionService";
 
 const { width } = Dimensions.get("window");
 
@@ -38,10 +40,19 @@ export default function PremiumScreen() {
 
   // Get active subscription info
   const { data: subInfo, isLoading: isLoadingSub, refetch: refetchSub } = useMySubscriptionQuery();
+  const { data: plans, isLoading: isLoadingPlans } = useSubscriptionPlansQuery();
   const createOrderMutation = useCreateOrderMutation();
   const mockCallbackMutation = useMockCallbackMutation();
 
-  const [selectedPlanId, setSelectedPlanId] = useState<number>(2); // 2 = Monthly, 3 = Yearly
+  // Chọn plan mặc định là plan đầu tiên khi plans đã load
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+
+  // Tự động chọn plan đầu tiên khi data load xong
+  useEffect(() => {
+    if (plans && plans.length > 0 && selectedPlanId === null) {
+      setSelectedPlanId(plans[0].id);
+    }
+  }, [plans]);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [activeQrUrl, setActiveQrUrl] = useState<string | null>(null);
   const [activeOrderAmount, setActiveOrderAmount] = useState<number | null>(null);
@@ -89,7 +100,15 @@ export default function PremiumScreen() {
     setSelectedPlanId(planId);
   };
 
+  const formatPrice = (price: number) => {
+    return price.toLocaleString("vi-VN") + "đ";
+  };
+
   const handlePurchase = async () => {
+    if (!selectedPlanId) {
+      Alert.alert("Thông báo", "Vui lòng chọn một gói cước.");
+      return;
+    }
     try {
       const response = await createOrderMutation.mutateAsync(selectedPlanId);
       if (response) {
@@ -135,7 +154,7 @@ export default function PremiumScreen() {
 
   const isPremium = subInfo?.isPremium;
 
-  if (isLoadingSub) {
+  if (isLoadingSub || isLoadingPlans) {
     return (
       <SafeScreen>
         <View style={[styles.centered, { flex: 1, backgroundColor: colors.bgBase }]}>
@@ -346,46 +365,34 @@ export default function PremiumScreen() {
             </Text>
 
             <View style={styles.plansRow}>
-              {/* Monthly Plan */}
-              <Pressable
-                onPress={() => handleSelectPlan(2)}
-                style={[
-                  styles.planCard,
-                  { backgroundColor: colors.surface },
-                  selectedPlanId === 2 && { borderColor: colors.primary, borderWidth: 2 },
-                ]}
-              >
-                <Text style={[styles.planCardName, { color: colors.textPrimary }]}>Premium 1 Tháng</Text>
-                <Text style={[styles.planCardPrice, { color: colors.primary }]}>59.000đ</Text>
-                <Text style={[styles.planCardDuration, { color: colors.textMuted }]}>Mỗi tháng</Text>
-                {selectedPlanId === 2 && (
-                  <View style={[styles.selectedCheck, { backgroundColor: colors.primary }]}>
-                    <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                  </View>
-                )}
-              </Pressable>
-
-              {/* Yearly Plan */}
-              <Pressable
-                onPress={() => handleSelectPlan(3)}
-                style={[
-                  styles.planCard,
-                  { backgroundColor: colors.surface },
-                  selectedPlanId === 3 && { borderColor: colors.primary, borderWidth: 2 },
-                ]}
-              >
-                <View style={styles.popularBadge}>
-                  <Text style={styles.popularBadgeText}>TIẾT KIỆM 30%</Text>
-                </View>
-                <Text style={[styles.planCardName, { color: colors.textPrimary }]}>Premium 1 Năm</Text>
-                <Text style={[styles.planCardPrice, { color: colors.primary }]}>499.000đ</Text>
-                <Text style={[styles.planCardDuration, { color: colors.textMuted }]}>Mỗi năm</Text>
-                {selectedPlanId === 3 && (
-                  <View style={[styles.selectedCheck, { backgroundColor: colors.primary }]}>
-                    <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                  </View>
-                )}
-              </Pressable>
+              {(plans ?? []).map((plan: SubscriptionPlan, index: number) => (
+                <Pressable
+                  key={plan.id}
+                  onPress={() => handleSelectPlan(plan.id)}
+                  style={[
+                    styles.planCard,
+                    { backgroundColor: colors.surface },
+                    selectedPlanId === plan.id && { borderColor: colors.primary, borderWidth: 2 },
+                  ]}
+                >
+                  {/* Badge "Tiết kiệm" cho plan có thời hạn dài nhất */}
+                  {index === (plans?.length ?? 0) - 1 && (plans?.length ?? 0) > 1 && (
+                    <View style={styles.popularBadge}>
+                      <Text style={styles.popularBadgeText}>TIẾT KIỆM</Text>
+                    </View>
+                  )}
+                  <Text style={[styles.planCardName, { color: colors.textPrimary }]}>{plan.name}</Text>
+                  <Text style={[styles.planCardPrice, { color: colors.primary }]}>{formatPrice(plan.price)}</Text>
+                  <Text style={[styles.planCardDuration, { color: colors.textMuted }]}>
+                    {plan.durationDays >= 365 ? "Mỗi năm" : "Mỗi tháng"}
+                  </Text>
+                  {selectedPlanId === plan.id && (
+                    <View style={[styles.selectedCheck, { backgroundColor: colors.primary }]}>
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                    </View>
+                  )}
+                </Pressable>
+              ))}
             </View>
 
             {/* Purchase CTA */}
