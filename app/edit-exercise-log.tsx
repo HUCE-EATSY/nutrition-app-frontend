@@ -1,62 +1,91 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  Platform,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { spacing, typography, radius } from "@/constants";
-import { useAppColors } from "@/hooks/useAppColors";
-import { getTodayDateISO } from "@/utils/date";
-import { exerciseService, Exercise } from "@/services/exerciseService";
-import { useSettingsStore } from "@/store/settingsStore";
-import { useTranslation } from "@/constants/i18n";
-import { useOnboardingStore } from "@/store/onboardingStore";
+import { colors, spacing, typography, radius } from "@/constants";
+import { exerciseService, Exercise, ExerciseLog } from "@/services/exerciseService";
+import { userService } from "@/services/userService";
+import { useAuthStore } from "@/store/authStore";
 
-export default function ExerciseDetailScreen() {
-  const t = useTranslation();
-  const colors = useAppColors();
-  const styles = useMemo(() => getStyles(colors), [colors]);
-  const language = useSettingsStore((state) => state.language);
-  const userWeight = useOnboardingStore((state) => state.draft.currentWeightKg) || 65;
-  const { exerciseId, date } = useLocalSearchParams<{ exerciseId: string; date?: string }>();
-  const targetDate = date ?? getTodayDateISO();
-
+export default function EditExerciseLogScreen() {
+  const { logId } = useLocalSearchParams<{ logId: string }>();
+  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
+  
+  const [log, setLog] = useState<ExerciseLog | null>(null);
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loading, setLoading] = useState(true);
   const [intensity, setIntensity] = useState<1 | 2 | 3>(2);
   const [duration, setDuration] = useState("30");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [userWeight, setUserWeight] = useState(65); // Default 65kg
+  
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const targetDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
-    async function loadExercise() {
-      try {
-        setLoading(true);
-        const data = await exerciseService.getExerciseById(exerciseId);
-        setExercise(data);
-      } catch (error: any) {
-        console.error("Load exercise error:", error);
-        Alert.alert(t.common.error, t.exercise.loadDetailError);
-        router.back();
-      } finally {
-        setLoading(false);
-      }
+    if (logId) {
+      loadLogAndExercise();
     }
-    loadExercise();
-  }, [exerciseId, t]);
+  }, [logId]);
 
-  const durationNum = parseFloat(duration) || 0;
+  async function loadLogAndExercise() {
+    try {
+      setLoading(true);
+      // 1. Load log details
+      const logData = await exerciseService.getLogById(logId);
+      setLog(logData);
+      setIntensity(logData.intensity as 1 | 2 | 3);
+      setDuration(logData.durationMinutes.toString());
+      setNotes(logData.notes ?? "");
+      setSelectedDate(new Date(logData.logDate + 'T00:00:00'));
+
+      // 2. Load exercise details for MET value
+      const exData = await exerciseService.getExerciseById(logData.exerciseId);
+      setExercise(exData);
+
+      // 3. Load user weight
+      await loadUserWeight();
+    } catch (error: any) {
+      console.error("Load log/exercise error:", error);
+      Alert.alert("Lỗi", "Không thể tải thông tin nhật ký tập luyện");
+      router.back();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadUserWeight() {
+    try {
+      const userInfo = await userService.getUserInfo();
+      const weight = userInfo?.profile?.weightKg;
+      if (weight && weight > 0) {
+        setUserWeight(weight);
+        console.log("User weight loaded:", weight);
+      }
+    } catch (error) {
+      console.error("Failed to load user weight:", error);
+    }
+  }
+
+  const durationNum = parseInt(duration, 10) || 0;
   const met = exercise?.metValue || 0;
   let caloriesBurned = met * userWeight * (durationNum / 60);
   
@@ -65,40 +94,72 @@ export default function ExerciseDetailScreen() {
   caloriesBurned = Math.round(caloriesBurned);
 
   async function handleSave() {
-    if (!exercise) return;
+    if (!log) return;
+    
+    if (!isAuthenticated) {
+      Alert.alert("Yêu cầu đăng nhập", "Bạn cần đăng nhập để chỉnh sửa nhật ký");
+      return;
+    }
     
     if (durationNum <= 0 || durationNum > 600) {
-      Alert.alert(t.common.error, t.exercise.durationRangeError);
+      Alert.alert("Lỗi", "Thời gian phải từ 1 đến 600 phút.");
       return;
     }
 
     setIsSaving(true);
     try {
-      await exerciseService.createLog({
-        exerciseId: exercise.id,
-        logDate: targetDate,
+      console.log("Updating exercise log:", logId, {
         durationMinutes: durationNum,
         intensity,
         notes: notes.trim() || undefined,
       });
+
+      await exerciseService.updateLog(logId, {
+        durationMinutes: durationNum,
+        intensity,
+        notes: notes.trim(),
+      });
       
-      if (Platform.OS === 'web') {
-        router.replace("/(tabs)/home");
-      } else {
-        Alert.alert(t.common.success, t.exercise.saveActivitySuccess, [
-          { text: "OK", onPress: () => router.replace("/(tabs)/home") }
-        ]);
-      }
+      Alert.alert("Thành công", "Đã cập nhật nhật ký tập luyện", [
+        { text: "OK", onPress: () => router.back() }
+      ]);
     } catch (error: any) {
-      console.error("Save exercise error:", error);
-      if (Platform.OS === 'web') {
-        alert(error?.message || t.exercise.saveActivityError);
-      } else {
-        Alert.alert(t.common.error, error?.message || t.exercise.saveActivityError);
-      }
+      console.error("Update exercise error:", error);
+      const errorMessage = error.response?.data?.message 
+        || error.response?.data?.title
+        || error.message 
+        || "Không thể cập nhật hoạt động";
+      Alert.alert("Thất bại", errorMessage);
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function handleDelete() {
+    if (!log) return;
+    
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa nhật ký tập luyện này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await exerciseService.deleteLog(logId);
+              router.back();
+            } catch (error) {
+              Alert.alert("Lỗi", "Không thể xóa nhật ký");
+            } finally {
+              setIsDeleting(false);
+            }
+          }
+        }
+      ]
+    );
   }
 
   if (loading) {
@@ -111,41 +172,61 @@ export default function ExerciseDetailScreen() {
     );
   }
 
-  if (!exercise) return null;
+  if (!log || !exercise) return null;
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="arrow-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>{language === "en" ? exercise.nameEn : exercise.nameVi}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Sửa nhật ký</Text>
+        <Pressable hitSlop={12} onPress={handleDelete} disabled={isDeleting}>
+          {isDeleting ? (
+            <ActivityIndicator size="small" color={colors.danger} />
+          ) : (
+            <Ionicons color={colors.danger} name="trash-outline" size={24} />
+          )}
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
-          <View style={styles.infoCardHeader}>
-            {exercise.iconUrl ? (
-              <Image source={{ uri: exercise.iconUrl }} style={styles.exerciseDetailImage} />
-            ) : null}
-            <View style={styles.infoCardTextContainer}>
-              <Text style={styles.infoLabel}>{t.exercise.activityType}</Text>
-              <Text style={styles.infoValue}>{language === "en" ? exercise.nameEn : exercise.nameVi}</Text>
-              <Text style={styles.infoSubtext}>{language === "en" ? exercise.nameVi : exercise.nameEn}</Text>
-            </View>
-          </View>
+          {exercise.iconUrl && (
+            <Image 
+              source={{ uri: exercise.iconUrl }} 
+              style={styles.exerciseImage}
+              resizeMode="cover"
+            />
+          )}
+          <Text style={styles.infoLabel}>Bài tập</Text>
+          <Text style={styles.infoValue}>{exercise.nameVi}</Text>
+          <Text style={styles.infoSubtext}>{exercise.nameEn}</Text>
           {exercise.description && (
             <Text style={styles.infoDescription}>{exercise.description}</Text>
           )}
         </View>
 
-        <Text style={styles.sectionLabel}>{t.exercise.intensityLabel}</Text>
+        <Text style={styles.sectionLabel}>Ngày tập (Không thể sửa)</Text>
+        <View style={[styles.dateButton, { opacity: 0.7 }]}>
+          <Ionicons name="calendar-outline" size={20} color={colors.textMuted} />
+          <Text style={[styles.dateButtonText, { color: colors.textMuted }]}>
+            {new Date(targetDate).toLocaleDateString('vi-VN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </Text>
+        </View>
+
+        <Text style={styles.sectionLabel}>Cường độ</Text>
         <View style={styles.intensityRow}>
           {[
-            { value: 1 as const, label: t.exercise.intensityLevels.light, icon: "walk-outline" },
-            { value: 2 as const, label: t.exercise.intensityLevels.moderate, icon: "fitness-outline" },
-            { value: 3 as const, label: t.exercise.intensityLevels.heavy, icon: "barbell-outline" },
+            { value: 1 as const, label: "Nhẹ", icon: "walk-outline" },
+            { value: 2 as const, label: "Trung bình", icon: "fitness-outline" },
+            { value: 3 as const, label: "Nặng", icon: "barbell-outline" },
           ].map((level) => (
             <Pressable
               key={level.value}
@@ -172,7 +253,7 @@ export default function ExerciseDetailScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionLabel}>{t.exercise.timeMinutes}</Text>
+        <Text style={styles.sectionLabel}>Thời gian (phút)</Text>
         <View style={styles.durationRow}>
           <Pressable
             onPress={() => setDuration((d) => String(Math.max(1, parseFloat(d) - 5)))}
@@ -194,12 +275,12 @@ export default function ExerciseDetailScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.sectionLabel}>{t.exercise.notesLabel}</Text>
+        <Text style={styles.sectionLabel}>Ghi chú (tùy chọn)</Text>
         <TextInput
           multiline
           numberOfLines={3}
           onChangeText={setNotes}
-          placeholder={t.exercise.notesPlaceholder}
+          placeholder="Ví dụ: Chạy ở công viên, cảm thấy tốt..."
           placeholderTextColor={colors.textMuted}
           style={styles.notesInput}
           value={notes}
@@ -211,7 +292,7 @@ export default function ExerciseDetailScreen() {
             <View>
               <Text style={styles.burnKcal}>{caloriesBurned} kcal</Text>
               <Text style={styles.burnNote}>
-                {t.exercise.burnSummary(durationNum, caloriesBurned)}
+                {durationNum} phút · {intensity === 1 ? "Nhẹ" : intensity === 3 ? "Nặng" : "Trung bình"}
               </Text>
             </View>
           </View>
@@ -227,7 +308,7 @@ export default function ExerciseDetailScreen() {
           ) : (
             <>
               <Ionicons color="#fff" name="checkmark-circle-outline" size={20} />
-              <Text style={styles.saveBtnText}>{t.exercise.logActivity}</Text>
+              <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
             </>
           )}
         </Pressable>
@@ -236,7 +317,7 @@ export default function ExerciseDetailScreen() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgBase },
   loadingContainer: {
     flex: 1,
@@ -268,19 +349,12 @@ const getStyles = (colors: any) => StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.xs,
   },
-  infoCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.xs,
-  },
-  exerciseDetailImage: {
-    width: 64,
-    height: 64,
+  exerciseImage: {
+    width: '100%',
+    height: 160,
     borderRadius: radius.sm,
-    marginRight: spacing.md,
-  },
-  infoCardTextContainer: {
-    flex: 1,
+    marginBottom: spacing.md,
+    backgroundColor: colors.bgBase,
   },
   infoLabel: {
     ...typography.caption,
@@ -310,6 +384,20 @@ const getStyles = (colors: any) => StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
     marginTop: spacing.sm,
+  },
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  dateButtonText: {
+    ...typography.body,
+    flex: 1,
   },
   intensityRow: { flexDirection: "row", gap: spacing.sm },
   intensityBtn: {

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ActivityIndicator,
+import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View, Alert } from 'react-native';
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "@/components/common/Toast";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
@@ -63,7 +66,8 @@ export default function DiaryTimelineScreen() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-    
+
+
   const macros: MacroInfo[] = [
     {
       label: t.diary.calories,
@@ -435,6 +439,14 @@ export default function DiaryTimelineScreen() {
           initialGrams={editingLogId !== null ? parseFloat(grams) : undefined}
           submitButtonText={editingLogId !== null ? t.common.saveChanges : t.common.addToDiary}
           headerTitle={detailHeaderTitle}
+        />
+        {/* Toast Notification */}
+        <Toast
+          visible={showToast}
+          message={toastMessage}
+          type={toastType}
+          duration={2000}
+          onHide={() => setShowToast(false)}
         />
       </SafeAreaView>
     </ScreenBackground>

@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
@@ -25,9 +26,11 @@ export default function HomeScreen() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
 
-  useEffect(() => {
-    fetchDiary(selectedDate);
-  }, [selectedDate, fetchDiary]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDiary(selectedDate);
+    }, [selectedDate, fetchDiary])
+  );
 
   const goal = Math.round(summary?.targetCalories ?? 2000);
   const consumed = Math.round(summary?.consumedCalories ?? 0);

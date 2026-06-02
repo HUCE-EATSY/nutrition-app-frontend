@@ -188,4 +188,9 @@ export const notificationService = {
     const response = await apiClient.get(API_URLS.notifications.unreadCount);
     return response.data.data;
   },
+
+  registerToken: async (token: string, platform: string): Promise<void> => {
+    if (USE_MOCK) return;
+    await apiClient.post(API_URLS.notifications.registerToken, { token, platform });
+  },
 };

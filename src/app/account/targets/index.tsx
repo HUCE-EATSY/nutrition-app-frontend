@@ -74,21 +74,20 @@ export default function TargetCustomizationScreen() {
         <EnergyMetricsCard bmr={bmr} tdee={tdee} addedCalories={addedCalories} />
 
 
-
         {/* Section 3: Other Targets */}
         <Text style={styles.sectionTitle}>{t.targets.otherTargets}</Text>
         <View style={styles.card}>
-          <TargetListItem
-            icon="footsteps-outline"
-            iconColor="#FFB067"
-            title={t.targets.stepTarget}
-            onPress={() => router.push({ pathname: '/stats/steps', params: { openGoal: 'true' } })}
-          />
           <TargetListItem
             icon="water-outline"
             iconColor="#4D96FF"
             title={t.targets.waterTarget}
             onPress={() => router.push('/account/targets/water')}
+          />
+          <TargetListItem
+            icon="footsteps-outline"
+            iconColor="#FFB067"
+            title={t.targets.stepTarget}
+            onPress={() => router.push({ pathname: '/stats/steps', params: { openGoal: 'true' } })}
             showDivider={false}
           />
         </View>

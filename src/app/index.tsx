@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
 
-import { useTranslation } from "@/constants/i18n";
+import { t } from "@/constants/i18n";
 import { colors } from "@/constants";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
@@ -9,18 +9,14 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { getDraftResumePath } from "@/utils/onboarding";
 
 export default function IndexScreen() {
-  const t = useTranslation();
-  const onboardingHydrated = useOnboardingStore((state) => state.hydrated);
-  const authHydrated = useAuthStore((state) => state.hydrated);
-  const settingsHydrated = useSettingsStore((state) => state.hydrated);
-  
+  const hydrated = useOnboardingStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   const publicFlowStep = useOnboardingStore((state) => state.publicFlowStep);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
   const draft = useOnboardingStore((state) => state.draft);
 
-  // Đợi cho đến khi tất cả các store được khôi phục dữ liệu đầy đủ
-  if (!onboardingHydrated || !authHydrated || !settingsHydrated) {
+  if (!hydrated) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
         <ActivityIndicator color={colors.primary} size="large" />
@@ -29,17 +25,17 @@ export default function IndexScreen() {
     );
   }
 
-  // Nếu chưa đăng nhập, chuyển đến màn hình chào mừng
+  // If not authenticated, go to welcome/login page
   if (!isAuthenticated) {
     return <Redirect href="/(public)/welcome" />;
   }
 
-  // Nếu đã đăng nhập và hoàn thành onboarding, vào màn hình chính
+  // If authenticated but finished onboarding, go to home
   if (hasCompletedOnboarding) {
     return <Redirect href="/(tabs)/home" />;
   }
 
-  // Nếu đã đăng nhập nhưng chưa hoàn thành onboarding, tiếp tục tiến trình tương ứng
+  // If authenticated but not finished onboarding, resume onboarding
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
       <Redirect href={publicFlowStep !== "done" ? "/(public)/mascot-intro" : getDraftResumePath(draft)} />

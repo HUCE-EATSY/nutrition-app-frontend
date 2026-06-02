@@ -103,19 +103,19 @@ function mapSearchToDto(raw: any): FoodItemDto {
   if (!raw) return {} as FoodItemDto;
   return {
     id: raw.id,
-    nameVi: raw.name_vi || "Món ăn chưa rõ tên",
-    nameEn: raw.name_en,
+    nameVi: raw.name_vi || raw.nameVi || "Món ăn chưa rõ tên",
+    nameEn: raw.name_en || raw.nameEn,
     category: "Chưa phân loại",
-    categoryId: raw.category_id || 0,
-    servingSizeG: raw.serving_size_g || 100,
-    servingUnitVi: raw.serving_unit_vi || "g",
-    imageUrl: raw.image_url,
+    categoryId: raw.category_id || raw.categoryId || 0,
+    servingSizeG: raw.serving_size_g || raw.servingSizeG || 100,
+    servingUnitVi: raw.serving_unit_vi || raw.servingUnitVi || "g",
+    imageUrl: raw.image_url || raw.imageUrl || null,
     barcode: null,
     source: raw.source,
-    caloriesKcal: raw.calories_kcal ?? 0,
-    proteinG: raw.protein_g ?? 0,
-    carbsG: raw.carbs_g ?? 0,
-    fatG: raw.fat_g ?? 0,
+    caloriesKcal: raw.calories_kcal ?? raw.caloriesKcal ?? 0,
+    proteinG: raw.protein_g ?? raw.proteinG ?? 0,
+    carbsG: raw.carbs_g ?? raw.carbsG ?? 0,
+    fatG: raw.fat_g ?? raw.fatG ?? 0,
     fiberG: 0,
     sugarG: 0,
     sodiumMg: 0,
@@ -126,22 +126,22 @@ function mapDetailToDto(raw: any): FoodItemDto {
   if (!raw) return {} as FoodItemDto;
   return {
     id: raw.id,
-    nameVi: raw.name_vi || "Món ăn chưa rõ tên",
-    nameEn: raw.name_en,
-    category: raw.category?.name_vi || raw.category?.name_en || "Khác",
+    nameVi: raw.name_vi || raw.nameVi || "Món ăn chưa rõ tên",
+    nameEn: raw.name_en || raw.nameEn,
+    category: raw.category?.name_vi || raw.category?.nameVi || raw.category?.name_en || raw.category?.nameEn || "Khác",
     categoryId: raw.category?.id || 0,
-    servingSizeG: raw.serving_size_g || 100,
-    servingUnitVi: raw.serving_unit_vi || "g",
-    imageUrl: raw.image_url,
+    servingSizeG: raw.serving_size_g || raw.servingSizeG || 100,
+    servingUnitVi: raw.serving_unit_vi || raw.servingUnitVi || "g",
+    imageUrl: raw.image_url || raw.imageUrl || null,
     barcode: raw.barcode,
     source: raw.source,
-    caloriesKcal: raw.nutrition?.calories_kcal ?? 0,
-    proteinG: raw.nutrition?.protein_g ?? 0,
-    carbsG: raw.nutrition?.carbs_g ?? 0,
-    fatG: raw.nutrition?.fat_g ?? 0,
-    fiberG: raw.nutrition?.fiber_g ?? 0,
-    sugarG: raw.nutrition?.sugar_g ?? 0,
-    sodiumMg: raw.nutrition?.sodium_mg ?? 0,
+    caloriesKcal: raw.nutrition?.calories_kcal ?? raw.nutrition?.caloriesKcal ?? raw.caloriesKcal ?? 0,
+    proteinG: raw.nutrition?.protein_g ?? raw.nutrition?.proteinG ?? raw.proteinG ?? 0,
+    carbsG: raw.nutrition?.carbs_g ?? raw.nutrition?.carbsG ?? raw.carbsG ?? 0,
+    fatG: raw.nutrition?.fat_g ?? raw.nutrition?.fatG ?? raw.fatG ?? 0,
+    fiberG: raw.nutrition?.fiber_g ?? raw.nutrition?.fiberG ?? raw.fiberG ?? 0,
+    sugarG: raw.nutrition?.sugar_g ?? raw.nutrition?.sugarG ?? raw.sugarG ?? 0,
+    sodiumMg: raw.nutrition?.sodium_mg ?? raw.nutrition?.sodiumMg ?? raw.sodiumMg ?? 0,
   };
 }
 
@@ -212,12 +212,15 @@ export const foodService = {
       return mockFoods.filter(item => categoryId === undefined || item.categoryId === categoryId);
     }
     try {
-      // NOTE: Giả định API_URLS.foods.base = '/api/foods' (nếu chưa có trong API_URLS thì tạm gọi trực tiếp)
       const res = await apiClient.get("/api/foods", {
         params: { CategoryId: categoryId, Page: page, PageSize: pageSize },
       });
       const resData = res.data.data ?? res.data;
       const items = Array.isArray(resData?.items) ? resData.items : (Array.isArray(resData) ? resData : []);
+      // DEBUG: xem raw response để kiểm tra field names
+      if (items.length > 0) {
+        console.log("[DEBUG] Raw food item từ API:", JSON.stringify(items[0], null, 2));
+      }
       return items.map(mapSearchToDto);
     } catch {
       return [];

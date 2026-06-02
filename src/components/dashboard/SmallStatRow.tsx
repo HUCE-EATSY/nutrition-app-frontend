@@ -19,7 +19,7 @@ export function SmallStatRow() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const { exercises } = useDiaryStore();
-  const burned = exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
+  const burned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const {
@@ -104,7 +104,7 @@ export function SmallStatRow() {
       <View style={styles.cardWrapper}>
         <TouchableOpacity 
           activeOpacity={0.7}
-          onPress={() => router.push("/exercise-stats")}
+          onPress={() => router.push("/stats/activity")}
           style={styles.touchableCard}
         >
           <SurfaceCard style={styles.card}>

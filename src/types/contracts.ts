@@ -24,11 +24,14 @@ export type OnboardingRouteName =
   | "Calculating"
   | "PlanResult";
 
+export type UserRole = 'user' | 'admin';
+
 export interface UserInfo {
   id: string;
   email: string;
   nickname?: string;
   avatarUrl?: string;
+  role?: UserRole; // 'user' (default) | 'admin'
 }
 
 export interface OnboardingDraft {

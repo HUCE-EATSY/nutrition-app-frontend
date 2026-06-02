@@ -36,12 +36,12 @@ export const useGoogleAuth = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (idToken: string) => {
+    mutationFn: async (payload: { token: string; platform: "web" | "native" }) => {
       if (process.env.EXPO_PUBLIC_USE_MOCK === "true") {
         await new Promise((resolve) => setTimeout(resolve, 800));
         return {
           data: {
-            isNewUser: true, // Thay đổi thành true nếu bạn muốn kiểm tra luồng Onboarding
+            isNewUser: true,
             accessToken: "mock-access-token",
             refreshToken: "mock-refresh-token",
             userId: "mock-user-id-0001-0000-000000000000",
@@ -49,7 +49,11 @@ export const useGoogleAuth = () => {
           }
         };
       }
-      const response = await apiClient.post(API_URLS.auth.google, { idToken });
+      const response = await apiClient.post(API_URLS.auth.google, {
+        idToken: payload.platform === "native" ? payload.token : undefined,
+        accessToken: payload.platform === "web" ? payload.token : undefined,
+        platform: payload.platform,
+      });
       return response.data;
     },
     onSuccess: async (json) => {
@@ -96,7 +100,7 @@ export const useGoogleAuth = () => {
       setError(null);
       try {
         await new Promise((resolve) => setTimeout(resolve, 600));
-        mutation.mutate('mock-google-id-token');
+        mutation.mutate({ token: 'mock-google-id-token', platform: 'native' });
       } catch (err: any) {
         setError(err.message || 'Đăng nhập Google giả lập thất bại.');
       } finally {
@@ -118,7 +122,7 @@ export const useGoogleAuth = () => {
       if (response.type === 'success' && response.data) {
         const idToken = response.data.idToken;
         if (idToken) {
-          mutation.mutate(idToken);
+          mutation.mutate({ token: idToken, platform: 'native' });
         } else {
           setError('Không tìm thấy ID Token từ Google.');
         }
@@ -134,6 +138,33 @@ export const useGoogleAuth = () => {
         console.error('Google Sign-In error:', err);
         setError(err.message || 'Đăng nhập Google thất bại.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hàm dùng riêng cho Web: nhận access_token từ useGoogleLogin hook
+  const signInWeb = async (accessToken: string) => {
+    if (process.env.EXPO_PUBLIC_USE_MOCK === "true") {
+      setLoading(true);
+      setError(null);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        mutation.mutate({ token: 'mock-google-id-token', platform: 'web' });
+      } catch (err: any) {
+        setError(err.message || 'Đăng nhập Google giả lập thất bại.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      mutation.mutate({ token: accessToken, platform: 'web' });
+    } catch (err: any) {
+      setError(err.message || 'Đăng nhập Google trên Web thất bại.');
     } finally {
       setLoading(false);
     }
@@ -164,6 +195,7 @@ export const useGoogleAuth = () => {
     loading: loading || mutation.isPending,
     error,
     signIn,
+    signInWeb,
     logout,
     deleteAccount: async () => {
       await userService.deleteAccount();
