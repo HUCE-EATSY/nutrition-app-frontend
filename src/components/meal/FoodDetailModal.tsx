@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
+import { useAppColors } from "@/hooks/useAppColors";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 
@@ -99,6 +100,8 @@ export function FoodDetailModal({
   headerTitle,
 }: FoodDetailModalProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
   const [customServings, setCustomServings] = useState("1");
   const [showNutritionDetail, setShowNutritionDetail] = useState(false);
@@ -406,7 +409,7 @@ export function FoodDetailModal({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   detailOverlay: {
     flex: 1,
     backgroundColor: colors.bgBase,
@@ -750,7 +753,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   detailAddButtonText: {
-    color: colors.textPrimary,
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },

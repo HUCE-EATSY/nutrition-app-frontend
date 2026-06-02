@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,6 +10,9 @@ interface DateNavigatorProps {
 }
 
 export const DateNavigator = ({ label, onPrev, onNext }: DateNavigatorProps) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.dateNavigator}>
       <TouchableOpacity onPress={onPrev} style={styles.navButton}>
@@ -23,7 +26,7 @@ export const DateNavigator = ({ label, onPrev, onNext }: DateNavigatorProps) => 
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   dateNavigator: {
     flexDirection: "row",
     justifyContent: "center",

@@ -1252,7 +1252,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.primary === "#A56CFF" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
   },
   modalButtonSave: {
-    backgroundColor: "#8E57F5",
+    backgroundColor: colors.primary,
   },
   cancelBtnText: {
     color: colors.textSecondary,

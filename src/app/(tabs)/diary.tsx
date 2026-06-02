@@ -61,6 +61,8 @@ export default function DiaryTimelineScreen() {
 
   // Toast state
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
     
   const macros: MacroInfo[] = [
     {

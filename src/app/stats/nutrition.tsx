@@ -62,7 +62,7 @@ export default function NutritionStatsScreen() {
   const macroData = [
     { label: "Chất đạm", value: Number(proteinG), color: colors.danger },
     { label: "Đường bột", value: Number(carbG), color: colors.info },
-    { label: "Chất béo", value: Number(fatG), color: "#F59E0B" },
+    { label: "Chất béo", value: Number(fatG), color: colors.fat },
   ];
 
   return (
@@ -175,7 +175,7 @@ export default function NutritionStatsScreen() {
                   <BarChart
                     data={barChartData}
                     averageValue={targetCalories}
-                    barColor="#A78BFA"
+                    barColor={colors.primary}
                     showYAxis={true}
                     showAveragePill={true}
                     width={screenWidth - 32}
@@ -188,7 +188,7 @@ export default function NutritionStatsScreen() {
                       <Text style={styles.legendItemLabel}>Calo mục tiêu</Text>
                     </View>
                     <View style={styles.legendItem}>
-                      <View style={[styles.legendBar, { backgroundColor: "#A78BFA" }]} />
+                      <View style={[styles.legendBar, { backgroundColor: colors.primary }]} />
                       <Text style={styles.legendItemLabel}>Calo nạp vào</Text>
                     </View>
                   </View>
@@ -222,7 +222,7 @@ export default function NutritionStatsScreen() {
                   <View style={styles.macroRow}>
                     <MacroChip label="Chất đạm" value={`${weeklyAvgProtein}g`} color={colors.danger} />
                     <MacroChip label="Đường bột" value={`${weeklyAvgCarbs}g`} color={colors.info} />
-                    <MacroChip label="Chất béo" value={`${weeklyAvgFat}g`} color="#F59E0B" />
+                    <MacroChip label="Chất béo" value={`${weeklyAvgFat}g`} color={colors.fat} />
                   </View>
                 </View>
               )}
@@ -271,7 +271,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   row: { flexDirection: "row", justifyContent: "space-between", marginVertical: 8 },
   rowLabel: { color: colors.textSecondary, fontSize: 16 },
-  targetValue: { color: "#A78BFA", fontSize: 16, fontWeight: "bold" },
+  targetValue: { color: colors.primary, fontSize: 16, fontWeight: "bold" },
   greyValue: { color: colors.textSecondary, fontSize: 16 },
   divider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 8 },
   chartContainer: { alignItems: "center", marginVertical: 16 },
@@ -281,7 +281,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   nutrientRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   nutrientLabel: { flex: 2, color: colors.textPrimary },
   nutrientCurrent: { flex: 1, color: colors.textSecondary, textAlign: "center" },
-  nutrientTarget: { flex: 1, color: "#A78BFA", textAlign: "right" },
+  nutrientTarget: { flex: 1, color: colors.primary, textAlign: "right" },
 
   // Date Navigator (đồng bộ với steps.tsx)
   dateNavigator: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12, paddingHorizontal: 4 },
@@ -292,7 +292,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   chartSection: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
   chartLegend: { flexDirection: "row", justifyContent: "center", gap: 20, marginTop: 8 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  legendDash: { color: "rgba(255,255,255,0.4)", fontSize: 14 },
+  legendDash: { color: colors.textMuted, fontSize: 14 },
   legendItemLabel: { color: colors.textSecondary, fontSize: 12 },
   legendBar: { width: 12, height: 12, borderRadius: 3 },
 

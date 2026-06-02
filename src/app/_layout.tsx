@@ -119,7 +119,7 @@ export default function RootLayout() {
     return (
       <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
-        <Text style={{ color: 'white', marginTop: 10 }}>Loading fonts...</Text>
+        <Text style={{ color: colors?.textPrimary ?? 'white', marginTop: 10 }}>Loading fonts...</Text>
       </View>
     );
   }
@@ -128,7 +128,7 @@ export default function RootLayout() {
     return (
       <View style={{ flex: 1, backgroundColor: colors?.bgBase ?? '#111020', alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors?.primary ?? '#A56CFF'} size="large" />
-        <Text style={{ color: 'white', marginTop: 10 }}>Hydrating stores...</Text>
+        <Text style={{ color: colors?.textPrimary ?? 'white', marginTop: 10 }}>Hydrating stores...</Text>
       </View>
     );
   }

@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface FilterTabsProps {
@@ -9,6 +9,9 @@ interface FilterTabsProps {
 }
 
 export const FilterTabs: React.FC<FilterTabsProps> = ({ tabs, activeTab, onChange }) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       {tabs.map((tab) => {
@@ -30,7 +33,7 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({ tabs, activeTab, onChang
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: "row",
     backgroundColor: colors.bgElevated, // Surface/Card color
@@ -53,7 +56,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   activeTabText: {
-    color: colors.textPrimary,
+    color: "#FFFFFF",
     fontWeight: "bold",
   },
 });

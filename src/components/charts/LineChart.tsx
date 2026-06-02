@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { colors } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Path, Circle, G, Text as SvgText, Line } from "react-native-svg";
 
@@ -35,11 +35,16 @@ export const LineChart: React.FC<LineChartProps> = ({
   height = 220,
   width = 300,
   actualColor = "#8B5CF6",
-  targetColor = colors.textPrimary,
+  targetColor,
   maxValue,
   minValue,
   yUnit = "kg",
 }) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+  const theme = colors.primary === "#A56CFF" ? "dark" : "light";
+  const resolvedTargetColor = targetColor || colors.textPrimary;
+
   const padding = { top: 20, bottom: 30, left: 36, right: 16 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -124,7 +129,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                 <Line
                   x1={0} y1={yPos}
                   x2={chartWidth} y2={yPos}
-                  stroke="#374151"
+                  stroke={theme === "dark" ? "#374151" : "#E5E7EB"}
                   strokeWidth="1"
                   strokeDasharray="3 3"
                 />
@@ -146,7 +151,7 @@ export const LineChart: React.FC<LineChartProps> = ({
             <>
               <Path
                 d={createPath(targetCoords)}
-                stroke={targetColor}
+                stroke={resolvedTargetColor}
                 strokeWidth="2"
                 fill="transparent"
                 strokeDasharray="5 4"
@@ -231,7 +236,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   tooltip: {
     position: "absolute",
     backgroundColor: colors.bgElevated,

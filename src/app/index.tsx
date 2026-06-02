@@ -24,7 +24,7 @@ export default function IndexScreen() {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
         <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={{ color: "white", marginTop: 20 }}>{t.app.initializing}</Text>
+        <Text style={{ color: colors.textPrimary, marginTop: 20 }}>{t.app.initializing}</Text>
       </View>
     );
   }
@@ -43,7 +43,7 @@ export default function IndexScreen() {
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bgBase }}>
       <Redirect href={publicFlowStep !== "done" ? "/(public)/mascot-intro" : getDraftResumePath(draft)} />
-      <Text style={{ color: 'white', marginBottom: 20 }}>Redirecting...</Text>
+      <Text style={{ color: colors.textPrimary, marginBottom: 20 }}>Redirecting...</Text>
       <ActivityIndicator color={colors.primary} />
     </View>
   );

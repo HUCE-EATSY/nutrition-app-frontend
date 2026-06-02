@@ -4,6 +4,7 @@ import { useAppColors } from '@/hooks/useAppColors';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TargetListItem } from '../../../components/account/targets/TargetListItem';
+import { SafeScreen } from '@/components/layout/SafeScreen';
 
 import { ProgressRingChart } from '../../../components/charts/ProgressRingChart';
 import { EnergyMetricsCard } from '../../../components/account/targets/EnergyMetricsCard';
@@ -47,7 +48,7 @@ export default function TargetCustomizationScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeScreen>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -57,17 +58,17 @@ export default function TargetCustomizationScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Section 1: Nutritional Information Card */}
         <View style={styles.macroRingContainer}>
           <View style={styles.caloCircle}>
-            <Ionicons name="flame" size={24} color="#FF6B6B" />
+            <Ionicons name="flame" size={24} color={colors.protein} />
             <Text style={styles.caloValue}>{targetCalories}</Text>
             <Text style={styles.caloLabel}>{t.targets.calorieGoal}</Text>
           </View>
-          <ProgressRingChart percentage={proteinPct} color="#FF6B6B" label={t.targets.protein} />
-          <ProgressRingChart percentage={carbsPct} color="#4D96FF" label={t.targets.carbs} />
-          <ProgressRingChart percentage={fatPct} color="#FFD95A" label={t.targets.fat} />
+          <ProgressRingChart percentage={proteinPct} color={colors.protein} label={t.targets.protein} />
+          <ProgressRingChart percentage={carbsPct} color={colors.carbs} label={t.targets.carbs} />
+          <ProgressRingChart percentage={fatPct} color={colors.fat} label={t.targets.fat} />
         </View>
 
         <EnergyMetricsCard bmr={bmr} tdee={tdee} addedCalories={addedCalories} />
@@ -92,22 +93,19 @@ export default function TargetCustomizationScreen() {
           />
         </View>
       </ScrollView>
-    </View>
+    </SafeScreen>
   );
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bgBase,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 16,
+    paddingVertical: 12,
   },
   backButton: {
     padding: 4,
@@ -121,7 +119,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     width: 32, // To balance the back button
   },
   scrollContent: {
-    padding: 16,
+    paddingVertical: 16,
     paddingBottom: 40,
   },
   sectionTitle: {
