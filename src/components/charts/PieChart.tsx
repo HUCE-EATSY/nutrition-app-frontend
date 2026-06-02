@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import Svg, { G, Path, Circle, Text as SvgText } from "react-native-svg";
+import { useAppColors } from "@/hooks/useAppColors";
 
 interface MacroData {
   label: string;
@@ -17,6 +18,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   data,
   size = 150,
 }) => {
+  const colors = useAppColors();
   const radius = size / 2;
   const center = size / 2;
   
@@ -41,7 +43,7 @@ export const PieChart: React.FC<PieChartProps> = ({
               cx={center}
               cy={center}
               r={radius}
-              fill="#374151" // Gray 700
+              fill={colors.surfaceAlt}
             />
           ) : (
             data.map((item, index) => {

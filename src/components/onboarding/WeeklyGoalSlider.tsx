@@ -2,7 +2,8 @@ import React, { useRef, useState, useMemo, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View, PanResponder } from "react-native";
 
 import { useTranslation } from "@/constants/i18n";
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, shadows, spacing, typography } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type WeeklyGoalSliderProps = {
   min: number;
@@ -21,8 +22,9 @@ export function WeeklyGoalSlider({
 }: WeeklyGoalSliderProps) {
   const t = useTranslation();
   const [trackWidth, setTrackWidth] = useState(0);
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
-  // 1. TỐI ƯU: Chỉ tính toán lại mảng steps khi min, max, step thay đổi
   const steps = useMemo(() => {
     return Array.from(
       { length: Math.round((max - min) / step) + 1 },
@@ -36,7 +38,6 @@ export function WeeklyGoalSlider({
   const THUMB_SIZE = 28;
   const thumbPosition = percentage * trackWidth;
 
-  // 2. FIX LỖI STALE CLOSURE: Lưu giá trị mới nhất để PanResponder sử dụng
   const latestRefs = useRef({ trackWidth, min, max, step, onChange });
   useEffect(() => {
     latestRefs.current = { trackWidth, min, max, step, onChange };
@@ -59,7 +60,6 @@ export function WeeklyGoalSlider({
     })
   ).current;
 
-  // Hàm update dùng dữ liệu từ latestRefs.current thay vì closure tĩnh
   const updateValueFromX = (localX: number) => {
     const { trackWidth: currWidth, min: currMin, max: currMax, step: currStep, onChange: currOnChange } = latestRefs.current;
     
@@ -108,7 +108,7 @@ export function WeeklyGoalSlider({
         </View>
       ) : (
         <View style={styles.track}>
-          <View style={[styles.fill, { width: `${progress * 100}%` }]} />
+          <View style={[styles.fill, { width: `${progress * 100}%`, backgroundColor: `${colors.primary}33` }]} />
           <View style={styles.pointsRow}>
             {steps.map((stepValue) => {
               const active = stepValue <= value;
@@ -130,8 +130,7 @@ export function WeeklyGoalSlider({
   );
 }
 
-
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrap: {
     gap: spacing.md,
   },
@@ -146,12 +145,13 @@ const styles = StyleSheet.create({
   },
   track: {
     borderRadius: radius.xl,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bgElevated,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xxl,
     position: "relative",
+    ...shadows.card,
   },
   sliderTrack: {
     paddingVertical: spacing.lg,
@@ -206,7 +206,6 @@ const styles = StyleSheet.create({
     top: "50%",
     height: 6,
     borderRadius: radius.pill,
-    backgroundColor: "rgba(165,108,255,0.2)",
     transform: [{ translateY: -3 }],
   },
   pointsRow: {
@@ -222,7 +221,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: radius.pill,
-    backgroundColor: "#6D6880",
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 2,
     borderColor: "transparent",
   },

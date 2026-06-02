@@ -80,9 +80,11 @@ export const mockExerciseCategories: ExerciseCategory[] = [
     nameEn: "Cardio",
     iconUrl: null,
     exercises: [
-      { id: "e1", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Chạy bộ", nameEn: "Running", description: "Chạy bộ ngoài trời hoặc máy chạy", metValue: 8.0, unit: "phút", iconUrl: null },
-      { id: "e2", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Đạp xe", nameEn: "Cycling", description: "Đạp xe đạp", metValue: 6.0, unit: "phút", iconUrl: null },
-      { id: "e3", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Nhảy dây", nameEn: "Jump Rope", description: "Nhảy dây tốc độ trung bình", metValue: 10.0, unit: "phút", iconUrl: null },
+      { id: "e1", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Chạy bộ", nameEn: "Running", description: "Chạy bộ ngoài trời hoặc máy chạy", metValue: 8.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/running.jpg" },
+      { id: "e2", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Đi bộ", nameEn: "Walking", description: "Đi bộ tốc độ trung bình", metValue: 3.5, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/walking.jpg" },
+      { id: "e3", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Đạp xe", nameEn: "Cycling", description: "Đạp xe đạp ngoài trời", metValue: 6.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/cycling.jpg" },
+      { id: "e4", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Bơi lội", nameEn: "Swimming", description: "Bơi lội tự do", metValue: 7.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/swimming.jpg" },
+      { id: "e5", categoryId: 1, categoryNameVi: "Cardio", nameVi: "Nhảy dây", nameEn: "Jump Rope", description: "Nhảy dây tốc độ trung bình", metValue: 10.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/jump-rope.jpg" },
     ]
   },
   {
@@ -91,9 +93,30 @@ export const mockExerciseCategories: ExerciseCategory[] = [
     nameEn: "Strength",
     iconUrl: null,
     exercises: [
-      { id: "e4", categoryId: 2, categoryNameVi: "Kháng lực", nameVi: "Hít đất", nameEn: "Push-ups", description: "Hít đất", metValue: 4.0, unit: "phút", iconUrl: null },
-      { id: "e5", categoryId: 2, categoryNameVi: "Kháng lực", nameVi: "Squat", nameEn: "Squats", description: "Gánh đùi", metValue: 5.0, unit: "phút", iconUrl: null },
-      { id: "e6", categoryId: 2, categoryNameVi: "Kháng lực", nameVi: "Nâng tạ", nameEn: "Weight Lifting", description: "Tập tạ tự do", metValue: 3.5, unit: "phút", iconUrl: null },
+      { id: "e6", categoryId: 2, categoryNameVi: "Kháng lực", nameVi: "Tập tạ", nameEn: "Weight Training", description: "Tập tạ tự do", metValue: 5.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/weight-training.jpg" },
+      { id: "e7", categoryId: 2, categoryNameVi: "Kháng lực", nameVi: "Hít đất", nameEn: "Push-ups", description: "Hít đất", metValue: 4.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/push-ups.jpg" },
+      { id: "e8", categoryId: 2, categoryNameVi: "Kháng lực", nameVi: "Gập bụng", nameEn: "Sit-ups", description: "Gập bụng", metValue: 4.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/sit-ups.jpg" },
+    ]
+  },
+  {
+    id: 3,
+    nameVi: "Linh hoạt",
+    nameEn: "Flexibility",
+    iconUrl: null,
+    exercises: [
+      { id: "e9", categoryId: 3, categoryNameVi: "Linh hoạt", nameVi: "Yoga", nameEn: "Yoga", description: "Yoga thư giãn", metValue: 3.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/yoga.jpg" },
+      { id: "e10", categoryId: 3, categoryNameVi: "Linh hoạt", nameVi: "Pilates", nameEn: "Pilates", description: "Tập Pilates", metValue: 3.5, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/pilates.jpg" },
+    ]
+  },
+  {
+    id: 4,
+    nameVi: "Thể thao",
+    nameEn: "Sports",
+    iconUrl: null,
+    exercises: [
+      { id: "e11", categoryId: 4, categoryNameVi: "Thể thao", nameVi: "Bóng đá", nameEn: "Football", description: "Đá bóng", metValue: 8.0, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/football.jpg" },
+      { id: "e12", categoryId: 4, categoryNameVi: "Thể thao", nameVi: "Cầu lông", nameEn: "Badminton", description: "Đánh cầu lông", metValue: 5.5, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/badminton.jpg" },
+      { id: "e13", categoryId: 4, categoryNameVi: "Thể thao", nameVi: "Bóng rổ", nameEn: "Basketball", description: "Chơi bóng rổ", metValue: 6.5, unit: "phút", iconUrl: "https://res.cloudinary.com/drsgmoufr/image/upload/v1/exercises/basketball.jpg" },
     ]
   }
 ];
@@ -132,6 +155,12 @@ export const exerciseService = {
           break;
         }
       }
+      const { useOnboardingStore } = require("@/store/onboardingStore");
+      const weightKg = useOnboardingStore.getState().draft.currentWeightKg || 65;
+      let calculatedBurn = (exercise?.metValue ?? 5) * weightKg * (data.durationMinutes / 60);
+      if (data.intensity === 1) calculatedBurn *= 0.8;
+      if (data.intensity === 3) calculatedBurn *= 1.2;
+
       const newLog: ExerciseLog = {
         id: "mock-ex-log-" + Math.floor(Math.random() * 100000),
         exerciseId: data.exerciseId,
@@ -140,7 +169,7 @@ export const exerciseService = {
         logDate: data.logDate,
         durationMinutes: data.durationMinutes,
         intensity: data.intensity,
-        caloriesBurned: Math.round(data.durationMinutes * (exercise?.metValue ?? 5) * 60 * 70 / 200), // Công thức tính calo tiêu thụ đại khái
+        caloriesBurned: Math.round(calculatedBurn),
         notes: data.notes ?? null,
         createdAt: new Date().toISOString(),
       };

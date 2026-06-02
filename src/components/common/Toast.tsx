@@ -1,109 +1,122 @@
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, typography, radius } from "@/constants";
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { useAppColors } from '@/hooks/useAppColors';
+import { radius, spacing, typography } from '@/constants';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ToastProps {
-  visible: boolean;
   message: string;
-  type?: "success" | "error" | "info";
+  type?: 'success' | 'error' | 'warning' | 'info';
+  visible: boolean;
+  onHide: () => void;
   duration?: number;
-  onHide?: () => void;
 }
 
-export function Toast({ visible, message, type = "success", duration = 2000, onHide }: ToastProps) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(-20)).current;
+const ICONS: Record<string, any> = {
+  success: 'checkmark-circle',
+  error: 'close-circle',
+  warning: 'warning',
+  info: 'information-circle',
+};
+
+const Toast: React.FC<ToastProps> = ({
+  message,
+  type = 'info',
+  visible,
+  onHide,
+  duration = 3000,
+}) => {
+  const colors = useAppColors();
+  const opacity = React.useRef(new Animated.Value(0)).current;
+  const translateY = React.useRef(new Animated.Value(-12)).current;
 
   useEffect(() => {
     if (visible) {
-      // Fade in
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 300,
+          duration: 250,
           useNativeDriver: true,
         }),
         Animated.timing(translateY, {
           toValue: 0,
-          duration: 300,
+          duration: 250,
           useNativeDriver: true,
         }),
       ]).start();
 
-      // Auto hide
       const timer = setTimeout(() => {
         Animated.parallel([
           Animated.timing(opacity, {
             toValue: 0,
-            duration: 300,
+            duration: 250,
             useNativeDriver: true,
           }),
           Animated.timing(translateY, {
-            toValue: -20,
-            duration: 300,
+            toValue: -12,
+            duration: 250,
             useNativeDriver: true,
           }),
-        ]).start(() => {
-          if (onHide) onHide();
-        });
+        ]).start(() => onHide());
       }, duration);
 
       return () => clearTimeout(timer);
     }
-  }, [visible, duration, onHide, opacity, translateY]);
+  }, [visible]);
 
   if (!visible) return null;
 
-  const iconName = type === "success" ? "checkmark-circle" : type === "error" ? "close-circle" : "information-circle";
-  const iconColor = type === "success" ? colors.success : type === "error" ? colors.danger : colors.primary;
+  const accentColor = {
+    success: colors.success,
+    error:   colors.danger,
+    warning: colors.warning,
+    info:    colors.primary,
+  }[type];
 
   return (
     <Animated.View
       style={[
         styles.container,
         {
+          backgroundColor: colors.surface,
+          borderColor: accentColor,
           opacity,
           transform: [{ translateY }],
         },
       ]}
     >
-      <View style={styles.content}>
-        <Ionicons name={iconName} size={20} color={iconColor} />
-        <Text style={styles.message}>{message}</Text>
-      </View>
+      <Ionicons name={ICONS[type]} size={20} color={accentColor} />
+      <Text style={[styles.message, { color: colors.textPrimary }]}>{message}</Text>
     </Animated.View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
+    position: 'absolute',
     top: 60,
     left: spacing.lg,
     right: spacing.lg,
-    zIndex: 9999,
-    elevation: 10,
-  },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.borderSoft,
-    shadowColor: "#000",
+    borderLeftWidth: 4,
+    zIndex: 9999,
+    elevation: 12,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   message: {
-    ...typography.body,
-    color: colors.textPrimary,
+    ...typography.bodyStrong,
+    fontSize: 14,
     flex: 1,
   },
 });
+
+export default Toast;
+

@@ -3,5 +3,13 @@ import { useAppColors } from "@/hooks/useAppColors";
 
 export default function PublicLayout() {
   const colors = useAppColors();
-  return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bgBase } }} />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        contentStyle: { backgroundColor: colors.bgBase },
+      }}
+    />
+  );
 }

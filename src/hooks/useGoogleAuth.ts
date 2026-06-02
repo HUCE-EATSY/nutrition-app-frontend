@@ -32,16 +32,17 @@ export const useGoogleAuth = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const { setAuth, clearAuth, userInfo, isAuthenticated } = useAuthStore();
+  const { setVerifyingProfile } = useAuthStore();
   const { completeOnboarding, reset: resetOnboarding, setPublicFlowStep } = useOnboardingStore();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (idToken: string) => {
+    mutationFn: async (payload: { token: string; platform: "web" | "native" }) => {
       if (process.env.EXPO_PUBLIC_USE_MOCK === "true") {
         await new Promise((resolve) => setTimeout(resolve, 800));
         return {
           data: {
-            isNewUser: true, // Thay đổi thành true nếu bạn muốn kiểm tra luồng Onboarding
+            isNewUser: true,
             accessToken: "mock-access-token",
             refreshToken: "mock-refresh-token",
             userId: "mock-user-id-0001-0000-000000000000",
@@ -49,25 +50,47 @@ export const useGoogleAuth = () => {
           }
         };
       }
-      const response = await apiClient.post(API_URLS.auth.google, { idToken });
+      const response = await apiClient.post(API_URLS.auth.google, {
+        idToken: payload.platform === "native" ? payload.token : undefined,
+        accessToken: payload.platform === "web" ? payload.token : undefined,
+        platform: payload.platform,
+      });
       return response.data;
     },
-    onSuccess: (json) => {
+    onSuccess: async (json) => {
       const { data } = json;
 
       // Clear query client cache to avoid cross-user/cross-session leaks
       queryClient.clear();
 
-      if (data.isNewUser === false) {
-        completeOnboarding();
-      } else {
-        setPublicFlowStep("mascot-intro");
-      }
-
+      // Set credentials first so subsequent API calls are authorized
       setAuth(data.accessToken, data.refreshToken, {
         id: data.userId,
         email: data.email,
       });
+
+      // Block routing until profile verification completes
+      setVerifyingProfile(true);
+
+      // Verify profile completion on backend
+      try {
+        const userInfo = await userService.getUserInfo();
+        if (userInfo && userInfo.profile) {
+          completeOnboarding();
+        } else {
+          setPublicFlowStep("mascot-intro");
+        }
+      } catch (err) {
+        console.error("Failed to fetch user info on login, falling back to isNewUser:", err);
+        if (data.isNewUser === false) {
+          completeOnboarding();
+        } else {
+          setPublicFlowStep("mascot-intro");
+        }
+      } finally {
+        // Allow routing now that onboarding state is settled
+        setVerifyingProfile(false);
+      }
     },
     onError: (err) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sync with database';
@@ -84,7 +107,7 @@ export const useGoogleAuth = () => {
       setError(null);
       try {
         await new Promise((resolve) => setTimeout(resolve, 600));
-        mutation.mutate('mock-google-id-token');
+        mutation.mutate({ token: 'mock-google-id-token', platform: 'native' });
       } catch (err: any) {
         setError(err.message || 'Đăng nhập Google giả lập thất bại.');
       } finally {
@@ -106,7 +129,7 @@ export const useGoogleAuth = () => {
       if (response.type === 'success' && response.data) {
         const idToken = response.data.idToken;
         if (idToken) {
-          mutation.mutate(idToken);
+          mutation.mutate({ token: idToken, platform: 'native' });
         } else {
           setError('Không tìm thấy ID Token từ Google.');
         }
@@ -122,6 +145,33 @@ export const useGoogleAuth = () => {
         console.error('Google Sign-In error:', err);
         setError(err.message || 'Đăng nhập Google thất bại.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hàm dùng riêng cho Web: nhận access_token từ useGoogleLogin hook
+  const signInWeb = async (accessToken: string) => {
+    if (process.env.EXPO_PUBLIC_USE_MOCK === "true") {
+      setLoading(true);
+      setError(null);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        mutation.mutate({ token: 'mock-google-id-token', platform: 'web' });
+      } catch (err: any) {
+        setError(err.message || 'Đăng nhập Google giả lập thất bại.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      mutation.mutate({ token: accessToken, platform: 'web' });
+    } catch (err: any) {
+      setError(err.message || 'Đăng nhập Google trên Web thất bại.');
     } finally {
       setLoading(false);
     }
@@ -152,6 +202,7 @@ export const useGoogleAuth = () => {
     loading: loading || mutation.isPending,
     error,
     signIn,
+    signInWeb,
     logout,
     deleteAccount: async () => {
       await userService.deleteAccount();

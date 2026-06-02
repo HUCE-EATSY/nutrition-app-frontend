@@ -1,7 +1,7 @@
-import React from 'react';
-import { colors } from "@/constants";
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
 
 interface EnergyMetricsCardProps {
   bmr: number;
@@ -11,6 +11,8 @@ interface EnergyMetricsCardProps {
 
 export function EnergyMetricsCard({ bmr, tdee, addedCalories }: EnergyMetricsCardProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   return (
     <View style={styles.card}>
@@ -34,7 +36,7 @@ export function EnergyMetricsCard({ bmr, tdee, addedCalories }: EnergyMetricsCar
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: {
     backgroundColor: colors.bgElevated,
     borderRadius: 16,

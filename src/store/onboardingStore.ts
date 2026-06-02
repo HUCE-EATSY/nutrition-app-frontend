@@ -69,10 +69,20 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       hasCompletedOnboarding: false,
       draft: createInitialDraft(),
       serverPlan: null,
-      setHydrated: (value: boolean) => set(() => ({ hydrated: value })),
+      setHydrated: (value: boolean) => {
+        console.log("[OnboardingStore] Hydration status:", value);
+        set(() => ({ hydrated: value }));
+      },
       setPublicFlowStep: (step: PublicFlowStep) => set(() => ({ publicFlowStep: step })),
       setServerPlan: (plan: NutritionPlan) => set(() => ({ serverPlan: plan })),
-      updateDraft: (patch) => set((state) => ({ draft: updateDraft(state.draft, patch) })),
+      updateDraft: (patch) => {
+        console.log("[OnboardingStore] updateDraft called:", patch);
+        set((state) => {
+          const newDraft = updateDraft(state.draft, patch);
+          console.log("[OnboardingStore] New draft state:", newDraft);
+          return { draft: newDraft };
+        });
+      },
       markStepCompleted: (step) =>
         set((state) => ({
           draft: updateDraft(state.draft, {
@@ -99,6 +109,7 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         serverPlan: state.serverPlan,
       }),
       onRehydrateStorage: () => (state) => {
+        console.log("[OnboardingStore] Rehydrated state:", state?.draft);
         state?.setHydrated(true);
       },
     },

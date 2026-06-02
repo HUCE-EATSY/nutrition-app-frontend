@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
@@ -25,9 +26,11 @@ export default function HomeScreen() {
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
 
-  useEffect(() => {
-    fetchDiary(selectedDate);
-  }, [selectedDate, fetchDiary]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDiary(selectedDate);
+    }, [selectedDate, fetchDiary])
+  );
 
   const goal = Math.round(summary?.targetCalories ?? 2000);
   const consumed = Math.round(summary?.consumedCalories ?? 0);
@@ -39,7 +42,7 @@ export default function HomeScreen() {
   const stepBurned = isConnected ? Math.round(stepsForSelectedDate * 0.04) : 0;
 
   const burned = exerciseBurned + stepBurned;
-  const remaining = Math.round(Math.max(goal - consumed + burned, 0));
+  const remaining = Math.round(Math.max(goal - consumed, 0));
   const percentage = Math.round(Math.min((consumed / goal) * 100, 100));
 
   // Phân phối logs vào các khung giờ để hiển thị

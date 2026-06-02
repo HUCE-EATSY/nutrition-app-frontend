@@ -41,14 +41,16 @@ export const useWaterStore = create<WaterState>()(
       setWaterGoal: (userId, goal) => {
         const data = { ...get().userWaterData };
         const userWater = getUserWater(data, userId);
-        data[userId] = { ...userWater, waterGoal: goal };
+        const finalGoal = Math.min(10000, Math.max(1, goal));
+        data[userId] = { ...userWater, waterGoal: finalGoal };
         set({ userWaterData: data });
       },
 
       setDefaultStep: (userId, step) => {
         const data = { ...get().userWaterData };
         const userWater = getUserWater(data, userId);
-        data[userId] = { ...userWater, defaultStep: step };
+        const finalStep = Math.min(2000, Math.max(1, step));
+        data[userId] = { ...userWater, defaultStep: finalStep };
         set({ userWaterData: data });
       },
 
@@ -57,7 +59,7 @@ export const useWaterStore = create<WaterState>()(
         const userWater = getUserWater(data, userId);
         const logs = { ...userWater.waterLogs };
         const current = logs[dateISO] || 0;
-        logs[dateISO] = current + amount;
+        logs[dateISO] = Math.min(10000, current + amount);
         data[userId] = { ...userWater, waterLogs: logs };
         set({ userWaterData: data });
       },
@@ -76,7 +78,7 @@ export const useWaterStore = create<WaterState>()(
         const data = { ...get().userWaterData };
         const userWater = getUserWater(data, userId);
         const logs = { ...userWater.waterLogs };
-        logs[dateISO] = Math.max(0, amount);
+        logs[dateISO] = Math.min(10000, Math.max(0, amount));
         data[userId] = { ...userWater, waterLogs: logs };
         set({ userWaterData: data });
       },

@@ -158,4 +158,26 @@ export const userService = {
     }
     await apiClient.delete(API_URLS.user.account);
   },
+
+  /** GET /api/User/calories → CalorieCalculationResponse */
+  getCalories: async (): Promise<{
+    bmr: number;
+    tdee: number;
+    weeklyTdee: number;
+    activityMultiplier: number;
+    activityDescription: string;
+  }> => {
+    if (USE_MOCK) {
+      await delay(500);
+      return {
+        bmr: 1650,
+        tdee: 2557.5,
+        weeklyTdee: 17902.5,
+        activityMultiplier: 1.55,
+        activityDescription: "Vận động vừa (tập 3-5 ngày/tuần)",
+      };
+    }
+    const response = await apiClient.get(API_URLS.user.calories);
+    return response.data.data;
+  },
 };

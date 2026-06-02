@@ -1,15 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,11 +21,7 @@ import { getTodayDateISO } from "@/utils/date";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslation } from "@/constants/i18n";
-import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
-import { useDiaryStore } from "@/store/diaryStore";
-
-// Cân nặng mặc định nếu chưa có profile (kg)
-const DEFAULT_WEIGHT_KG = 65;
+import { userService } from "@/services/userService";
 
 export default function ExerciseDetailScreen() {
   const t = useTranslation();
@@ -34,30 +32,39 @@ export default function ExerciseDetailScreen() {
   const targetDate = date ?? getTodayDateISO();
 
   const [exercise, setExercise] = useState<Exercise | null>(null);
+  const [userWeight, setUserWeight] = useState<number>(65); // Default weight
   const [loading, setLoading] = useState(true);
   const [intensity, setIntensity] = useState<1 | 2 | 3>(2);
   const [duration, setDuration] = useState("30");
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: userInfo } = useGetUserInfo();
-  const userWeight = userInfo?.profile?.weightKg ?? DEFAULT_WEIGHT_KG;
-
   useEffect(() => {
-    async function loadExercise() {
+    async function loadData() {
       try {
         setLoading(true);
-        const data = await exerciseService.getExerciseById(exerciseId);
-        setExercise(data);
+        
+        // Load exercise details and user weight in parallel
+        const [exerciseData, userInfo] = await Promise.all([
+          exerciseService.getExerciseById(exerciseId),
+          userService.getUserInfo()
+        ]);
+        
+        setExercise(exerciseData);
+        
+        // Get weight from user profile (same source as backend)
+        const weight = userInfo?.profile?.weightKg || 65;
+        setUserWeight(weight);
+        
       } catch (error: any) {
-        console.error("Load exercise error:", error);
+        console.error("Load data error:", error);
         Alert.alert(t.common.error, t.exercise.loadDetailError);
         router.back();
       } finally {
         setLoading(false);
       }
     }
-    loadExercise();
+    loadData();
   }, [exerciseId, t]);
 
   const durationNum = parseFloat(duration) || 0;
@@ -85,16 +92,21 @@ export default function ExerciseDetailScreen() {
         intensity,
         notes: notes.trim() || undefined,
       });
-
-      // Đồng bộ lại diary store
-      await useDiaryStore.getState().fetchDiary(targetDate);
       
-      Alert.alert(t.common.success, t.exercise.saveActivitySuccess, [
-        { text: "OK", onPress: () => router.replace("/exercise-diary") }
-      ]);
+      if (Platform.OS === 'web') {
+        router.replace("/(tabs)/home");
+      } else {
+        Alert.alert(t.common.success, t.exercise.saveActivitySuccess, [
+          { text: "OK", onPress: () => router.replace("/(tabs)/home") }
+        ]);
+      }
     } catch (error: any) {
       console.error("Save exercise error:", error);
-      Alert.alert(t.common.error, error?.message || t.exercise.saveActivityError);
+      if (Platform.OS === 'web') {
+        alert(error?.message || t.exercise.saveActivityError);
+      } else {
+        Alert.alert(t.common.error, error?.message || t.exercise.saveActivityError);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -124,9 +136,16 @@ export default function ExerciseDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
-          <Text style={styles.infoLabel}>{t.exercise.activityType}</Text>
-          <Text style={styles.infoValue}>{language === "en" ? exercise.nameEn : exercise.nameVi}</Text>
-          <Text style={styles.infoSubtext}>{language === "en" ? exercise.nameVi : exercise.nameEn}</Text>
+          <View style={styles.infoCardHeader}>
+            {exercise.iconUrl ? (
+              <Image source={{ uri: exercise.iconUrl }} style={styles.exerciseDetailImage} />
+            ) : null}
+            <View style={styles.infoCardTextContainer}>
+              <Text style={styles.infoLabel}>{t.exercise.activityType}</Text>
+              <Text style={styles.infoValue}>{language === "en" ? exercise.nameEn : exercise.nameVi}</Text>
+              <Text style={styles.infoSubtext}>{language === "en" ? exercise.nameVi : exercise.nameEn}</Text>
+            </View>
+          </View>
           {exercise.description && (
             <Text style={styles.infoDescription}>{exercise.description}</Text>
           )}
@@ -259,6 +278,20 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.lg,
     gap: spacing.xs,
+  },
+  infoCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  exerciseDetailImage: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.sm,
+    marginRight: spacing.md,
+  },
+  infoCardTextContainer: {
+    flex: 1,
   },
   infoLabel: {
     ...typography.caption,

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Toast } from "@/components/common/Toast";
+import Toast from "@/components/common/Toast";
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
@@ -65,7 +65,6 @@ export default function AddEntryScreen() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-
 
 
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────

@@ -1,10 +1,42 @@
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { StateStorage } from "zustand/middleware";
 
 const CHUNK_SIZE = 1000;
 const CHUNK_PREFIX = "___chunked___:";
 
-export const secureStorage: StateStorage = {
+// ---------------------------------------------------------------------------
+// Web fallback: use browser localStorage (synchronous ops wrapped in Promises)
+// ---------------------------------------------------------------------------
+const webStorage: StateStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    try {
+      return localStorage.getItem(name);
+    } catch (error) {
+      console.error(`Error reading from localStorage for key ${name}:`, error);
+      return null;
+    }
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    try {
+      localStorage.setItem(name, value);
+    } catch (error) {
+      console.error(`Error writing to localStorage for key ${name}:`, error);
+    }
+  },
+  removeItem: async (name: string): Promise<void> => {
+    try {
+      localStorage.removeItem(name);
+    } catch (error) {
+      console.error(`Error deleting from localStorage for key ${name}:`, error);
+    }
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Mobile: use expo-secure-store with chunking (SecureStore has a 2 KB limit)
+// ---------------------------------------------------------------------------
+const nativeStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
       const val = await SecureStore.getItemAsync(name);
@@ -94,3 +126,9 @@ export const secureStorage: StateStorage = {
     }
   },
 };
+
+// ---------------------------------------------------------------------------
+// Export: pick the right storage based on the current platform
+// ---------------------------------------------------------------------------
+export const secureStorage: StateStorage =
+  Platform.OS === "web" ? webStorage : nativeStorage;

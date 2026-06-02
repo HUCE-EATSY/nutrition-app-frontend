@@ -16,7 +16,8 @@ import * as ImagePicker from "expo-image-picker";
 import { colors, spacing, typography, radius } from "@/constants";
 import { foodService } from "@/services/foodService";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
-import { Toast } from "@/components/common/Toast";
+import { useQueryClient } from "@tanstack/react-query";
+import Toast from "@/components/common/Toast";
 import { useDiaryStore } from "@/store/diaryStore";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -27,6 +28,7 @@ type DetectionPhase =
   | "error";        // Có lỗi
 
 export default function DetectFoodScreen() {
+  const queryClient = useQueryClient();
   const [phase, setPhase] = useState<DetectionPhase>("idle");
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -116,7 +118,11 @@ export default function DetectFoodScreen() {
       }
 
       // Step 3: Map sang FoodItem shape cho FoodDetailModal
-      const foodItem = foodService.mapEstimatedToFoodItem(estimated);
+      // Dùng ảnh vừa chụp làm fallback nếu API không trả về imageUrl
+      const foodItem = {
+        ...foodService.mapEstimatedToFoodItem(estimated),
+        imageUrl: estimated.image_url || uri,
+      };
       setDetectedFood(foodItem);
       setPhase("result");
     } catch (err: any) {
@@ -152,6 +158,9 @@ export default function DetectFoodScreen() {
           sodiumMg: raw.nutrition.sodium_mg,
         },
       });
+
+      // Vô hiệu hoá cache danh sách món ăn để món mới hiện ngay ở Tất cả món
+      queryClient.invalidateQueries({ queryKey: ["food", "list"] });
 
       // Step 2: Log vào diary với serving đã chọn
       const currentHour = new Date().getHours();

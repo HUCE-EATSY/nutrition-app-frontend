@@ -9,8 +9,9 @@ import {
   View,
 } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography } from "@/constants";
 import { clamp, roundToStep } from "@/utils/date";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type HorizontalRulerPickerProps = {
   min: number;
@@ -27,14 +28,13 @@ type HorizontalRulerPickerProps = {
 const TICK_WIDTH = 10;
 const CENTER_LINE_WIDTH = 3;
 
-// 1. Tách TickItem ra và dùng React.memo.
-// Chỉ re-render vạch này nếu prop isSelected thay đổi.
-const TickItem = memo(({ item, min, step, majorTickEvery, isSelected }: {
+const TickItem = memo(({ item, min, step, majorTickEvery, isSelected, styles }: {
   item: number;
   min: number;
   step: number;
   majorTickEvery: number;
   isSelected: boolean;
+  styles: any;
 }) => {
   const diff = Math.round((item - min) / step);
   const isMajor = diff % majorTickEvery === 0;
@@ -51,8 +51,7 @@ const TickItem = memo(({ item, min, step, majorTickEvery, isSelected }: {
     </View>
   );
 }, (prevProps, nextProps) => {
-  // Tối ưu hóa: Chỉ so sánh isSelected vì các prop khác không bao giờ đổi
-  return prevProps.isSelected === nextProps.isSelected;
+  return prevProps.isSelected === nextProps.isSelected && prevProps.styles === nextProps.styles;
 });
 TickItem.displayName = "TickItem";
 
@@ -73,9 +72,12 @@ export function HorizontalRulerPicker({
   const [internalValue, setInternalValue] = useState(value);
   const lastScrollValueRef = useRef(value);
   
-  // 2. Thay đổi isScrolling thành useRef để tránh re-render
   const isScrollingRef = useRef(false);
   const isMomentumRef = useRef(false);
+  const lastCallbackTimeRef = useRef(0);
+
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
 
   const data = useMemo(() => {
     const items = [];
@@ -87,7 +89,6 @@ export function HorizontalRulerPicker({
 
   const safeValue = clamp(value, min, max);
 
-  // 3. Tối ưu useEffect đồng bộ value từ bên ngoài
   useEffect(() => {
     if (isScrollingRef.current) return;
     
@@ -104,7 +105,6 @@ export function HorizontalRulerPicker({
         }
       }
     }
-    // Gỡ internalValue ra khỏi dependency, chỉ trigger khi `value` từ cha đổi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, isReady, containerWidth, data, step]);
 
@@ -126,7 +126,6 @@ export function HorizontalRulerPicker({
     setIsReady(true);
   }, []);
 
-  // 4. Dùng useCallback và lastScrollValueRef để tránh re-render và tránh cập nhật state trong render phase
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / TICK_WIDTH);
@@ -136,7 +135,11 @@ export function HorizontalRulerPicker({
       lastScrollValueRef.current = newValue;
       setInternalValue(newValue);
       if (onScrollValueChange) {
-        onScrollValueChange(newValue);
+        const now = Date.now();
+        if (now - lastCallbackTimeRef.current > 80) {
+          onScrollValueChange(newValue);
+          lastCallbackTimeRef.current = now;
+        }
       }
     }
   }, [data, onScrollValueChange]);
@@ -159,10 +162,14 @@ export function HorizontalRulerPicker({
         const newValue = data[clamp(index, 0, data.length - 1)];
         if (newValue !== undefined) {
           onChange(newValue);
+          if (onScrollValueChange) {
+            onScrollValueChange(newValue);
+            lastCallbackTimeRef.current = 0; // Reset throttle timer
+          }
         }
       }
     }, 0);
-  }, [data, onChange]);
+  }, [data, onChange, onScrollValueChange]);
 
   const onMomentumScrollEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     isScrollingRef.current = false;
@@ -172,10 +179,13 @@ export function HorizontalRulerPicker({
     const newValue = data[clamp(index, 0, data.length - 1)];
     if (newValue !== undefined) {
       onChange(newValue);
+      if (onScrollValueChange) {
+        onScrollValueChange(newValue);
+        lastCallbackTimeRef.current = 0; // Reset throttle timer
+      }
     }
-  }, [data, onChange]);
+  }, [data, onChange, onScrollValueChange]);
 
-  // 5. Wrap renderItem với useCallback
   const renderItem = useCallback(({ item }: { item: number }) => {
     const isSelected = Math.abs(item - internalValue) < step / 4;
     return (
@@ -185,11 +195,11 @@ export function HorizontalRulerPicker({
         step={step}
         majorTickEvery={majorTickEvery}
         isSelected={isSelected}
+        styles={styles}
       />
     );
-  }, [internalValue, min, step, majorTickEvery]);
+  }, [internalValue, min, step, majorTickEvery, styles]);
 
-  // 6. Memoize cấu trúc layout
   const getItemLayout = useCallback((_: any, index: number) => ({
     length: TICK_WIDTH,
     offset: TICK_WIDTH * index,
@@ -236,8 +246,7 @@ export function HorizontalRulerPicker({
   );
 }
 
-
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   wrap: {
     gap: spacing.xxl,
     alignItems: "center",
@@ -279,15 +288,17 @@ const styles = StyleSheet.create({
   },
   tick: {
     width: 1.5,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: colors.textMuted,
     borderRadius: radius.pill,
+    opacity: 0.5,
   },
   minorTick: {
     height: 18,
   },
   majorTick: {
     height: 36,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    backgroundColor: colors.textSecondary,
+    opacity: 0.8,
   },
   selectedTick: {
     backgroundColor: colors.primary,

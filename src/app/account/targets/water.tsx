@@ -7,13 +7,12 @@ import {
   Platform,
   Alert,
   KeyboardAvoidingView,
-  TextInput,
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { spacing, typography, radius } from "@/constants";
+import { spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { SafeScreen } from "@/components/layout/SafeScreen";
 import { useWaterStore } from "@/store/waterStore";
@@ -26,15 +25,20 @@ export default function WaterTargetScreen() {
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
-  
-  const userId = useAuthStore((state) => state.userInfo?.id || "guest");
-  const userWater = useWaterStore((state) => state.userWaterData[userId] || { waterGoal: 2000, waterLogs: {}, defaultStep: 250 });
+  const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
+  const userWaterData = useWaterStore((state) => state.userWaterData);
+  const waterGoal = userWaterData[userId]?.waterGoal ?? 2000;
   const setWaterGoal = useWaterStore((state) => state.setWaterGoal);
-  const [goal, setGoal] = useState(userWater.waterGoal);
+
+  const [goal, setGoal] = useState(waterGoal);
 
   const handleSave = () => {
-    if (isNaN(goal) || goal <= 0) {
-      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống phải lớn hơn 0.");
+    if (isNaN(goal) || goal < 500) {
+      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống tối thiểu phải từ 500 ml trở lên.");
+      return;
+    }
+    if (goal > 10000) {
+      Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
       return;
     }
     setWaterGoal(userId, goal);
@@ -42,7 +46,13 @@ export default function WaterTargetScreen() {
   };
 
   const handleQuickAdd = (amount: number) => {
-    setGoal((prev: number) => prev + amount);
+    setGoal((prev: number) => {
+      if (prev + amount > 10000) {
+        Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
+        return 10000;
+      }
+      return prev + amount;
+    });
   };
 
   const handleQuickSubtract = (amount: number) => {
@@ -52,7 +62,13 @@ export default function WaterTargetScreen() {
 
   const handleGoalChange = (text: string) => {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    setGoal(isNaN(val) ? 0 : val);
+    const parsed = isNaN(val) ? 0 : val;
+    if (parsed > 10000) {
+      Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
+      setGoal(10000);
+    } else {
+      setGoal(parsed);
+    }
   };
 
   return (
@@ -71,8 +87,8 @@ export default function WaterTargetScreen() {
           <View style={styles.headerSpacer} />
         </View>
 
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent} 
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           {/* Stepper controls for Goal */}

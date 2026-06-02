@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants";
+import { radius, spacing, typography, shadows } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 type OptionCardProps = {
   title: string;
@@ -11,45 +13,58 @@ type OptionCardProps = {
   onPress: () => void;
 };
 
-export function OptionCard({ title, subtitle, icon, accent = colors.primary, selected = false, onPress }: OptionCardProps) {
+export function OptionCard({ title, subtitle, icon, accent, selected = false, onPress }: OptionCardProps) {
+  const appColors = useAppColors();
+  const activeAccent = accent || appColors.primary;
+  const styles = useMemo(() => getStyles(appColors), [appColors]);
+  // Light mode needs a more visible tint since the base is already light
+  const selectedBg = `${activeAccent}${appColors.bgBase === '#111020' ? '14' : '26'}`;
+
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [
-      styles.card,
-      !subtitle && styles.cardNoSubtitle,
-      selected && styles.selected,
-      pressed && styles.pressed
-    ]}>
-      <View style={[styles.iconWrap, { backgroundColor: `${accent}22` }]}>
-        <Text style={styles.iconText}>{icon ?? "•"}</Text>
+    <Pressable 
+      accessibilityRole="button"
+      onPress={onPress} 
+      pointerEvents="box-only"
+      style={({ pressed }) => [
+        styles.card,
+        !subtitle && styles.cardNoSubtitle,
+        selected && {
+          borderColor: activeAccent,
+          backgroundColor: selectedBg,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        pressed && styles.pressed
+      ]}
+    >
+      <View style={[styles.iconWrap, { backgroundColor: `${activeAccent}22` }]}>
+        <Text style={styles.iconText} selectable={false} selectionColor="rgba(0,0,0,0)">{icon ?? "•"}</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        <Text style={styles.title} selectable={false} selectionColor="rgba(0,0,0,0)">{title}</Text>
+        {subtitle ? <Text style={styles.subtitle} selectable={false} selectionColor="rgba(0,0,0,0)">{subtitle}</Text> : null}
       </View>
-      <View style={[styles.radio, selected && { borderColor: accent, backgroundColor: accent }]} />
+      <View style={[styles.radio, selected && { borderColor: activeAccent, backgroundColor: activeAccent }]} />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: {
     minHeight: 92,
     padding: spacing.lg,
     borderRadius: radius.xl,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.borderSoft,
+    borderColor: colors.border,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+    ...shadows.card,
   },
   cardNoSubtitle: {
     minHeight: 76,
     padding: spacing.md,
-  },
-  selected: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(165,108,255,0.12)",
   },
   pressed: {
     opacity: 0.96,
@@ -81,6 +96,6 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: radius.pill,
     borderWidth: 2,
-    borderColor: colors.borderSoft,
+    borderColor: colors.border,
   },
 });
