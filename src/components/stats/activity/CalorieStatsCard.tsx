@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -10,6 +10,9 @@ interface CalorieStatsCardProps {
 }
 
 export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus }: CalorieStatsCardProps) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.card}>
       <View style={styles.cardHeaderRow}>
@@ -40,7 +43,7 @@ export const CalorieStatsCard = ({ targetCalories, consumedCalories, daysStatus 
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: { backgroundColor: colors.bgElevated, borderRadius: 16, padding: 16, marginBottom: 16 },
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
   cardTitle: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold" },

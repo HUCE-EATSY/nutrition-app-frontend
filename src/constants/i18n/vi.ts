@@ -57,7 +57,7 @@ export const vi = {
       heroTitle: "Bạn đồng hành macro",
       heroSubtitle: "dễ thương nhưng nghiêm túc với lộ trình của bạn",
       title: "Lên lộ trình dinh dưỡng thông minh cho từng ngày của bạn.",
-      description: "Onboarding trò chuyện tự nhiên, giao diện tối giản và dashboard dễ đọc trên mobile.",
+      description: "",
       cta: "Bắt đầu hành trình",
     },
     social: {
@@ -288,10 +288,33 @@ export const vi = {
     calculating: {
       title: "Đang tính toán lộ trình cá nhân cho hồ sơ của bạn.",
       description: "",
-      labels: ["Đọc hồ sơ và mục tiêu", "Tính chỉ số trao đổi chất", "Cân bằng calo và macro"],
+      labels: ["Đọc hồ sơ và mục tiêu", "Tính BMR và TDEE", "Cân bằng calo và macro", "Dự kiến ngày đạt mục tiêu"],
       testimonialKicker: "Người dùng thử nghiệm",
       testimonialMeta: (author: string, rating: number) => `${author} • ${rating}/5`,
       error: "Không thể kết nối với máy chủ để tính toán. Vui lòng thử lại.",
+      testimonials: [
+        {
+          id: "1",
+          authorName: "Hà Anh",
+          rating: 5,
+          title: "Dễ theo sát mục tiêu",
+          content: "Flow onboarding rất mượt, mình hiểu ngay lượng calo và macro cần tập trung.",
+        },
+        {
+          id: "2",
+          authorName: "Minh Quân",
+          rating: 5,
+          title: "Cảm giác như có coach riêng",
+          content: "Dashboard đẹp, soi chỉ số nhanh và không bị quá y khoa.",
+        },
+        {
+          id: "3",
+          authorName: "Bảo Ngọc",
+          rating: 4,
+          title: "Một tay vẫn dùng tốt",
+          content: "CTA rõ ràng, thao tác dễ, hợp với việc check nhanh trong ngày.",
+        },
+      ],
     },
     planResult: {
       title: "Bạn đã có khung calo và macro để bắt đầu ngay hôm nay.",

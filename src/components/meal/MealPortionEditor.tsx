@@ -1,7 +1,9 @@
+import React from "react";
 import { View, Text, Pressable, TextInput, ActivityIndicator, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, typography, radius } from "@/constants";
+import { spacing, typography, radius } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
+import { useAppColors } from "@/hooks/useAppColors";
 
 interface Nutrition {
   calories: number;
@@ -34,6 +36,8 @@ export function MealPortionEditor({
   setSelectedHour,
 }: MealPortionEditorProps) {
   const t = useTranslation();
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
   const gramNum = parseFloat(grams) || 0;
 
   return (
@@ -148,7 +152,7 @@ export function MealPortionEditor({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     gap: spacing.md,
     paddingVertical: spacing.sm,

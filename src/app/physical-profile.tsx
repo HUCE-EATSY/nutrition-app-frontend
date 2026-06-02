@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import {
-  Alert,
-  Modal,
+import { Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,12 +10,11 @@ import {
   View,
   TextInput,
   ActivityIndicator,
-} from "react-native";
+  KeyboardAvoidingView,
+  Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
-import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { gradients, radius, spacing, typography } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { t, useTranslation } from "@/constants/i18n";
@@ -61,12 +58,17 @@ export default function PhysicalProfileScreen() {
   const [editBasicVisible, setEditBasicVisible] = useState(false);
   const [editActivityVisible, setEditActivityVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+      
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
+    const typeStr = typeof type !== "undefined" ? type : "success";
+    Alert.alert(typeStr === "error" ? "Lỗi" : "Thông báo", msg);
+  };
 
   // States for basic info form
   const [editName, setEditName] = useState("");
   const [editGender, setEditGender] = useState<1 | 2>(1);
-  const [editHeight, setEditHeight] = useState<number>(170);
-  const [editWeight, setEditWeight] = useState<number>(60);
+  const [editHeight, setEditHeight] = useState<string>("170");
+  const [editWeight, setEditWeight] = useState<string>("60");
   const [editBirthDate, setEditBirthDate] = useState<Date>(new Date("2000-08-15"));
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -157,8 +159,8 @@ export default function PhysicalProfileScreen() {
 
     setEditName(curName);
     setEditGender(curGender === 1 || String(curGender).toLowerCase() === "male" ? 1 : 2);
-    setEditHeight(Number(curHeight));
-    setEditWeight(Number(displayedWeightVal));
+    setEditHeight(String(curHeight));
+    setEditWeight(String(displayedWeightVal));
     setEditBirthDate(new Date(dobISO));
 
     setEditBasicVisible(true);
@@ -172,19 +174,21 @@ export default function PhysicalProfileScreen() {
 
   const handleSaveBasicInfo = async () => {
     if (!editName.trim()) {
-      Alert.alert(t.common.error, t.validators.nicknameMin);
+      showToast(t.validators.nicknameMin, "error");
       return;
     }
 
-    const h = editHeight;
+    const h = parseFloat(editHeight);
     if (isNaN(h) || h < 50 || h > 300) {
-      Alert.alert(t.common.error, "Chiều cao không hợp lệ (50 - 300 cm)");
+      showToast("Chiều cao không hợp lệ (50 - 300 cm)", "error");
       return;
     }
 
-    const w = editWeight;
-    if (isNaN(w) || w < 20 || w > 300) {
-      Alert.alert(t.common.error, isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)");
+    const w = parseFloat(editWeight);
+    const minWeight = isLbs ? 44 : 20;
+    const maxWeight = isLbs ? 660 : 300;
+    if (isNaN(w) || w < minWeight || w > maxWeight) {
+      showToast(isLbs ? "Cân nặng không hợp lệ (44 - 660 lbs)" : "Cân nặng không hợp lệ (20 - 300 kg)", "error");
       return;
     }
 
@@ -194,7 +198,7 @@ export default function PhysicalProfileScreen() {
     const birthDateISO = editBirthDate.toISOString().split("T")[0];
     const ageVal = getAgeFromBirthDate(birthDateISO);
     if (ageVal < 18) {
-      Alert.alert(t.common.error, t.validators.adultOnly);
+      showToast(t.validators.adultOnly, "error");
       return;
     }
 
@@ -214,10 +218,10 @@ export default function PhysicalProfileScreen() {
       await userService.updateProfile(payload);
       queryClient.invalidateQueries({ queryKey: ["user"] });
       setEditBasicVisible(false);
-      Alert.alert(t.common.success, "Cập nhật hồ sơ thành công!");
+      showToast("Cập nhật hồ sơ thành công!", "success");
     } catch (err: any) {
       console.error("Save basic profile error:", err);
-      Alert.alert(t.common.error, err?.message || "Không thể cập nhật hồ sơ");
+      showToast(err?.message || "Không thể cập nhật hồ sơ", "error");
     } finally {
       setIsSaving(false);
     }
@@ -246,10 +250,10 @@ export default function PhysicalProfileScreen() {
       await userService.updateProfile(payload);
       queryClient.invalidateQueries({ queryKey: ["user"] });
       setEditActivityVisible(false);
-      Alert.alert(t.common.success, "Cập nhật mức vận động thành công!");
+      showToast("Cập nhật mức vận động thành công!", "success");
     } catch (err: any) {
       console.error("Save activity level error:", err);
-      Alert.alert(t.common.error, err?.message || "Không thể cập nhật mức vận động");
+      showToast(err?.message || "Không thể cập nhật mức vận động", "error");
     } finally {
       setIsSaving(false);
     }
@@ -319,10 +323,7 @@ export default function PhysicalProfileScreen() {
           </View>
 
           {/* Goal type badge */}
-          <Pressable
-            style={styles.goalBadge}
-            onPress={() => setResetModalVisible(true)}
-          >
+          <View style={styles.goalBadge}>
             <LinearGradient
               colors={gradients.button}
               start={{ x: 0, y: 0 }}
@@ -332,20 +333,20 @@ export default function PhysicalProfileScreen() {
               <Ionicons name="flag" size={14} color="#fff" />
               <Text style={styles.goalBadgeText}>{goalLabel ?? "—"}</Text>
             </LinearGradient>
-          </Pressable>
+          </View>
 
           {/* Goal rows */}
           <GoalRow
             label={t.physicalProfile.weeklyGoal}
             value={weeklyGoalLabel}
-            clickable
-            onPress={() => setResetModalVisible(true)}
+            clickable={goalType !== 3}
+            onPress={goalType !== 3 ? () => showToast("Để thay đổi tiến trình, vui lòng chọn 'Thiết lập mục tiêu mới' ở dưới.", "info") : undefined}
           />
           <GoalRow
             label={t.physicalProfile.activityLevel}
             value={activityLabel ?? "—"}
-            clickable
-            onPress={() => setResetModalVisible(true)}
+            clickable={goalType !== 3}
+            onPress={goalType !== 3 ? openEditActivityModal : undefined}
             truncate
           />
           <GoalRow
@@ -387,6 +388,7 @@ export default function PhysicalProfileScreen() {
         </Pressable>
       </View>
 
+      
       {/* ── Reset Confirmation Modal ── */}
       <Modal
         transparent
@@ -481,89 +483,106 @@ export default function PhysicalProfileScreen() {
           if (!isSaving) setEditBasicVisible(false);
         }}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior="padding"
+        >
+          <Pressable
+            style={{ flex: 1 }}
+            onPress={() => !isSaving && setEditBasicVisible(false)}
+          />
           <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.xl }]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Cập nhật thông tin cơ bản</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
-              {/* Display Name / Nickname */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>BIỆT DANH</Text>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              bounces={false}
+            >
+              {/* Biệt danh */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoRowLabel}>Biệt danh</Text>
                 <TextInput
-                  style={styles.textInput}
+                  style={styles.infoRowInput}
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="Nhập biệt danh..."
                   placeholderTextColor={colors.textMuted}
                   editable={!isSaving}
+                  returnKeyType="next"
                 />
               </View>
 
-              {/* Gender selection */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>GIỚI TÍNH</Text>
-                <View style={styles.genderContainer}>
+              {/* Giới tính */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoRowLabel}>Giới tính</Text>
+                <View style={styles.genderToggle}>
                   <Pressable
-                    style={[styles.genderBtn, editGender === 1 && styles.genderBtnActive]}
+                    style={[styles.genderChip, editGender === 1 && styles.genderChipActive]}
                     onPress={() => !isSaving && setEditGender(1)}
                   >
-                    <Text style={[styles.genderBtnText, editGender === 1 && styles.genderBtnTextActive]}>
-                      Nam
-                    </Text>
+                    <Text style={[styles.genderChipText, editGender === 1 && styles.genderChipTextActive]}>Nam</Text>
                   </Pressable>
                   <Pressable
-                    style={[styles.genderBtn, editGender === 2 && styles.genderBtnActive]}
+                    style={[styles.genderChip, editGender === 2 && styles.genderChipActive]}
                     onPress={() => !isSaving && setEditGender(2)}
                   >
-                    <Text style={[styles.genderBtnText, editGender === 2 && styles.genderBtnTextActive]}>
-                      Nữ
-                    </Text>
+                    <Text style={[styles.genderChipText, editGender === 2 && styles.genderChipTextActive]}>Nữ</Text>
                   </Pressable>
                 </View>
               </View>
 
-              <View style={{ gap: spacing.lg, marginTop: spacing.sm }}>
-                {/* Height */}
-                <QuantityStepper
-                  label="CHIỀU CAO (CM)"
+              {/* Chiều cao */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoRowLabel}>Chiều cao (cm)</Text>
+                <TextInput
+                  style={styles.infoRowInput}
                   value={editHeight}
-                  unit="cm"
-                  step={1}
-                  onChange={(text) => {
-                    const val = parseFloat(text.replace(/[^0-9.]/g, ""));
-                    if (!isNaN(val)) setEditHeight(val);
-                  }}
-                  onAdd={(amount) => setEditHeight(prev => prev + amount)}
-                  onSubtract={(amount) => setEditHeight(prev => Math.max(0, prev - amount))}
+                  onChangeText={(text) => setEditHeight(text.replace(/[^0-9.]/g, ""))}
+                  placeholder="170"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  editable={!isSaving}
+                  returnKeyType="next"
                 />
+              </View>
 
-                {/* Birthdate */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>NGÀY SINH</Text>
-                  <Pressable
-                    style={[styles.textInput, { justifyContent: "center" }]}
-                    onPress={() => !isSaving && setShowDatePicker(true)}
-                  >
-                    <Text style={{ color: colors.textPrimary, ...typography.body }}>
-                      {editBirthDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
-                    </Text>
-                  </Pressable>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={editBirthDate}
-                      mode="date"
-                      display="default"
-                      maximumDate={new Date()}
-                      onChange={(event, selectedDate) => {
-                        setShowDatePicker(false);
-                        if (selectedDate) {
-                          setEditBirthDate(selectedDate);
-                        }
-                      }}
-                    />
-                  )}
-                </View>
+              {/* Cân nặng */}
+              <View style={styles.infoRow}>
+                <Text style={styles.infoRowLabel}>{`Cân nặng (${unit === "lbs" ? "lbs" : "kg"})`}</Text>
+                <TextInput
+                  style={styles.infoRowInput}
+                  value={editWeight}
+                  onChangeText={(text) => setEditWeight(text.replace(/[^0-9.]/g, ""))}
+                  placeholder={isLbs ? "150" : "60"}
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="numeric"
+                  editable={!isSaving}
+                  returnKeyType="done"
+                />
+              </View>
+
+              {/* Ngày sinh */}
+              <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.infoRowLabel}>Ngày sinh</Text>
+                <Pressable onPress={() => !isSaving && setShowDatePicker(true)}>
+                  <Text style={styles.infoRowDateText}>
+                    {editBirthDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "long", year: "numeric" })}
+                  </Text>
+                </Pressable>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={editBirthDate}
+                    mode="date"
+                    display="default"
+                    maximumDate={new Date()}
+                    onChange={(event, selectedDate) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) setEditBirthDate(selectedDate);
+                    }}
+                  />
+                )}
               </View>
             </ScrollView>
 
@@ -595,10 +614,75 @@ export default function PhysicalProfileScreen() {
               </Pressable>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
+      {/* ── Edit Activity Level Modal ── */}
+      <Modal
+        transparent
+        animationType="slide"
+        visible={editActivityVisible}
+        onRequestClose={() => {
+          if (!isSaving) setEditActivityVisible(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.xl }]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>{t.physicalProfile.activityLevel}</Text>
 
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 380 }}>
+              {Object.keys(t.onboarding.activityOptions).map((key, index) => {
+                const optKey = key as keyof typeof t.onboarding.activityOptions;
+                const opt = t.onboarding.activityOptions[optKey];
+                const optVal = index + 1; // 1 to 5
+                const isActive = editActivityLevel === optVal;
+
+                return (
+                  <Pressable
+                    key={key}
+                    style={[styles.activityOption, isActive && styles.activityOptionActive]}
+                    onPress={() => !isSaving && setEditActivityLevel(optVal)}
+                  >
+                    <Text style={[styles.activityOptionTitle, isActive && styles.activityOptionTitleActive]}>
+                      {opt.title}
+                    </Text>
+                    <Text style={styles.activityOptionSub}>{opt.subtitle}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={({ pressed }) => [styles.modalBtnOutline, pressed && { opacity: 0.7 }]}
+                onPress={() => !isSaving && setEditActivityVisible(false)}
+                disabled={isSaving}
+              >
+                <Text style={styles.modalBtnOutlineText}>{t.common.cancel}</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.modalBtnPrimary, pressed && { opacity: 0.85 }]}
+                onPress={() => handleSaveActivityLevel(editActivityLevel)}
+                disabled={isSaving}
+              >
+                <LinearGradient
+                  colors={gradients.button}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.modalBtnGradient}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.modalBtnPrimaryText}>{t.common.save}</Text>
+                  )}
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1000,6 +1084,59 @@ const getStyles = (colors: any) => StyleSheet.create({
     color: colors.textSecondary,
   },
   genderBtnTextActive: {
+    color: colors.primary,
+  },
+  // ── Inline row layout for Edit Basic Info ──
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSoft,
+  },
+  infoRowLabel: {
+    ...typography.body,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  infoRowInput: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 15,
+    textAlign: "right",
+    paddingVertical: spacing.xs,
+    paddingHorizontal: 0,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+  },
+  infoRowDateText: {
+    ...typography.body,
+    color: colors.textPrimary,
+    textAlign: "right",
+  },
+  genderToggle: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  genderChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+  genderChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: "rgba(165, 108, 255, 0.15)",
+  },
+  genderChipText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: "600",
+  },
+  genderChipTextActive: {
     color: colors.primary,
   },
   activityOption: {

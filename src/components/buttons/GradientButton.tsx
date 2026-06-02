@@ -71,7 +71,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   label: {
     ...typography.h3,
-    color: colors.textPrimary,
+    color: "#FFFFFF",
     flexShrink: 1,
     textAlign: "center",
   },

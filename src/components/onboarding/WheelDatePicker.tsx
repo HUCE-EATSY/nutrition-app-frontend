@@ -2,7 +2,8 @@ import React, { useMemo, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { useTranslation } from "@/constants/i18n";
-import { radius } from "@/constants";
+import { radius, shadows } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 
 import { RollingWheelPicker } from "./RollingWheelPicker";
 
@@ -19,14 +20,15 @@ function getDaysInMonth(month: number, year: number) {
   return new Date(year, month, 0).getDate();
 }
 
-// 1. Đưa các hằng số không thay đổi ra ngoài component
 const ITEM_HEIGHT = 54;
 const VISIBLE_ITEMS = 5;
 const HIGHLIGHT_TOP = Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT;
 
 export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }: WheelDatePickerProps) {
   const t = useTranslation();
-  // 2. Dùng useMemo để tránh khởi tạo lại mảng mỗi lần render
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
   const years = useMemo(() => {
     return Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
   }, [minYear, maxYear]);
@@ -40,7 +42,6 @@ export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }
     return Array.from({ length: maxDay }, (_, i) => i + 1);
   }, [month, year]);
 
-  // 3. Dùng useCallback để tránh tạo lại function reference, giúp RollingWheelPicker không bị re-render vô cớ
   const handleDayChange = useCallback((d: number) => {
     onChange({ day: d, month, year });
   }, [month, year, onChange]);
@@ -57,7 +58,6 @@ export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }
 
   const monthWord = t.onboarding.wheelDate.month;
   const formatMonthLabel = useCallback((m: number) => `${monthWord} ${m}`, [monthWord]);
-
 
   return (
     <View style={styles.container}>
@@ -101,13 +101,16 @@ export function WheelDatePicker({ day, month, year, minYear, maxYear, onChange }
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     width: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    backgroundColor: colors.bgElevated,
     borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: "hidden",
     position: "relative",
+    ...shadows.card,
   },
   pickerWrap: {
     flexDirection: "row",
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 12,
     right: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: colors.surface,
     borderRadius: radius.md,
     zIndex: 0,
   },

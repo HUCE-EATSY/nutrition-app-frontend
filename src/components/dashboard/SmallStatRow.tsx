@@ -10,6 +10,7 @@ import { SurfaceCard } from "../common/SurfaceCard";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useStepsStore } from "@/store/statsStore";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useAuthStore } from "@/store/authStore";
 
 export function SmallStatRow() {
   const t = useTranslation();
@@ -19,6 +20,7 @@ export function SmallStatRow() {
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const { exercises } = useDiaryStore();
   const burned = Math.round(exercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const {
     hydrated,
@@ -31,14 +33,16 @@ export function SmallStatRow() {
   useEffect(() => {
     if (!hydrated) return;
 
-    // Kiểm tra kết nối khi mở ứng dụng
-    checkConnection();
+    if (isAuthenticated) {
+      // Kiểm tra kết nối khi mở ứng dụng hoặc khi đăng nhập thành công
+      checkConnection();
+    }
 
     // Tự động làm mới khi quay lại ứng dụng
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active") {
         const state = useStepsStore.getState();
-        if (state.isConnected) {
+        if (state.isConnected && useAuthStore.getState().isAuthenticated) {
           state.fetchTodaySteps();
         }
       }
@@ -47,7 +51,7 @@ export function SmallStatRow() {
     return () => {
       subscription.remove();
     };
-  }, [hydrated, checkConnection]);
+  }, [hydrated, isAuthenticated, checkConnection]);
 
   const handlePressSteps = () => {
     router.push("/stats/steps");
@@ -114,7 +118,7 @@ export function SmallStatRow() {
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <View style={styles.plusCircle}>
-                   <MaterialCommunityIcons name="plus" size={14} color={colors.textPrimary} />
+                   <MaterialCommunityIcons name="plus" size={14} color="#FFFFFF" />
                 </View>
               </TouchableOpacity>
             </View>

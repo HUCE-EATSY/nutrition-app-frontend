@@ -1,5 +1,5 @@
 import React from "react";
-import { colors } from "@/constants";
+import { useAppColors } from "@/hooks/useAppColors";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface DateItem {
@@ -15,6 +15,9 @@ interface DateSliderProps {
 }
 
 export const DateSlider: React.FC<DateSliderProps> = ({ dates, selectedDate, onSelectDate }) => {
+  const colors = useAppColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -37,7 +40,7 @@ export const DateSlider: React.FC<DateSliderProps> = ({ dates, selectedDate, onS
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     marginVertical: 16,
   },
@@ -67,6 +70,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   activeText: {
-    color: colors.textPrimary,
+    color: "#FFFFFF",
   },
 });

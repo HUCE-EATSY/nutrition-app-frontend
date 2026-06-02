@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
@@ -8,7 +8,10 @@ import {
   Text,
   View,
   Switch,
+  LayoutAnimation,
 } from "react-native";
+import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { Portal, Dialog, Button, RadioButton } from "react-native-paper";
 
 import { SafeScreen } from "@/components/layout/SafeScreen";
@@ -44,6 +47,10 @@ export default function SettingsScreen() {
   const setUnit = useSettingsStore((state) => state.setUnit);
   const setNotificationsEnabled = useSettingsStore((state) => state.setNotificationsEnabled);
 
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [theme, language, unit, notificationsEnabled]);
+
   const { data: serverSettings = [], isLoading: isLoadingSettings } = useGetNotificationSettings();
   const updateSettingMutation = useUpdateNotificationSetting();
 
@@ -66,14 +73,18 @@ export default function SettingsScreen() {
     }
   };
 
+  const performPostAuthCleanup = () => {
+    setConfirmVisible(false);
+    setConfirmType(null);
+    resetOnboarding();
+    useOnboardingStore.getState().setPublicFlowStep("social-login");
+    router.replace("/(public)/social-login");
+  };
+
   const handleLogout = async () => {
     try {
-      setConfirmVisible(false);
-      setConfirmType(null);
       await logout();
-      resetOnboarding();
-      useOnboardingStore.getState().setPublicFlowStep("social-login");
-      router.replace("/(public)/social-login");
+      performPostAuthCleanup();
     } catch (error) {
       console.error("Logout failed:", error);
       Alert.alert(t.common.error, t.settings.logoutError);
@@ -82,12 +93,8 @@ export default function SettingsScreen() {
 
   const handleDeleteData = async () => {
     try {
-      setConfirmVisible(false);
-      setConfirmType(null);
       await deleteAccount();
-      resetOnboarding();
-      useOnboardingStore.getState().setPublicFlowStep("social-login");
-      router.replace("/(public)/social-login");
+      performPostAuthCleanup();
     } catch (error) {
       console.error("Delete data failed:", error);
       Alert.alert(t.common.error, t.settings.deleteDataError);
@@ -126,7 +133,7 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
 
         {/* Email */}
-        <Pressable style={styles.row} onPress={() => Alert.alert("Email", userEmail)}>
+        <Pressable style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]} onPress={() => Alert.alert("Email", userEmail)}>
           <View style={styles.rowLeft}>
             <Text style={styles.rowTitle}>{t.settings.email}</Text>
           </View>
@@ -141,7 +148,7 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
 
         {/* Gói đăng ký */}
-        <Pressable style={styles.row} onPress={() => Alert.alert(t.settings.subscription, "DNT Standard Edition")}>
+        <Pressable style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]} onPress={() => Alert.alert(t.settings.subscription, "DNT Standard Edition")}>
           <View style={styles.rowLeft}>
             <Text style={styles.rowTitle}>{t.settings.subscription}</Text>
           </View>
@@ -150,45 +157,6 @@ export default function SettingsScreen() {
           </View>
         </Pressable>
 
-        <View style={styles.divider} />
-
-        {/* Điều khoản sử dụng */}
-        <Pressable
-          style={styles.row}
-          onPress={() =>
-            router.push({
-              pathname: "/webview",
-              params: { title: t.settings.terms, type: "terms" },
-            })
-          }
-        >
-          <View style={styles.rowLeft}>
-            <Text style={styles.rowTitle}>{t.settings.terms}</Text>
-          </View>
-          <View style={styles.rowRight}>
-            <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
-          </View>
-        </Pressable>
-
-        <View style={styles.divider} />
-
-        {/* Chính sách riêng tư */}
-        <Pressable
-          style={styles.row}
-          onPress={() =>
-            router.push({
-              pathname: "/webview",
-              params: { title: t.settings.privacyPolicy, type: "privacy" },
-            })
-          }
-        >
-          <View style={styles.rowLeft}>
-            <Text style={styles.rowTitle}>{t.settings.privacyPolicy}</Text>
-          </View>
-          <View style={styles.rowRight}>
-            <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
-          </View>
-        </Pressable>
       </View>
 
       {/* CÀI ĐẶT ỨNG DỤNG */}
@@ -202,7 +170,10 @@ export default function SettingsScreen() {
           <View style={styles.rowRight}>
             <Switch
               value={theme === "dark"}
-              onValueChange={(val) => setTheme(val ? "dark" : "light")}
+              onValueChange={(val) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setTheme(val ? "dark" : "light");
+              }}
               trackColor={{ false: "#767577", true: colors.primary }}
               thumbColor={theme === "dark" ? "#FFFFFF" : "#f4f3f4"}
             />
@@ -212,7 +183,7 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
 
         {/* Language */}
-        <Pressable style={styles.row} onPress={() => setLangDialogVisible(true)}>
+        <Pressable style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]} onPress={() => setLangDialogVisible(true)}>
           <View style={styles.rowLeft}>
             <Text style={styles.rowTitle}>{t.settings.language}</Text>
           </View>
@@ -225,24 +196,12 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
 
         {/* Unit */}
-        <Pressable style={styles.row} onPress={() => setUnitDialogVisible(true)}>
+        <Pressable style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]} onPress={() => setUnitDialogVisible(true)}>
           <View style={styles.rowLeft}>
             <Text style={styles.rowTitle}>{t.settings.unit}</Text>
           </View>
           <View style={styles.rowRight}>
             <Text style={styles.rowValue}>{t.settings.units[unit]}</Text>
-            <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
-          </View>
-        </Pressable>
-
-        <View style={styles.divider} />
-
-        {/* Privacy Screen */}
-        <Pressable style={styles.row} onPress={() => router.push("/account/privacy")}>
-          <View style={styles.rowLeft}>
-            <Text style={styles.rowTitle}>{t.settings.privacySettings}</Text>
-          </View>
-          <View style={styles.rowRight}>
             <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
           </View>
         </Pressable>
@@ -257,7 +216,10 @@ export default function SettingsScreen() {
           <View style={styles.rowRight}>
             <Switch
               value={notificationsEnabled}
-              onValueChange={(val) => setNotificationsEnabled(val)}
+              onValueChange={(val) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setNotificationsEnabled(val);
+              }}
               trackColor={{ false: "#767577", true: colors.primary }}
               thumbColor={notificationsEnabled ? "#FFFFFF" : "#f4f3f4"}
             />
@@ -266,7 +228,11 @@ export default function SettingsScreen() {
 
         {/* Dynamic child notification configurations */}
         {notificationsEnabled && (
-          <View style={styles.notificationChildren}>
+          <Animated.View
+            entering={FadeInUp.duration(300)}
+            exiting={FadeOutDown.duration(200)}
+            style={styles.notificationChildren}
+          >
             {isLoadingSettings ? (
               <Text style={[styles.childRowTitle, { paddingVertical: spacing.xs, opacity: 0.7 }]}>
                 {language === "vi" ? "Đang tải cài đặt..." : "Loading settings..."}
@@ -279,12 +245,13 @@ export default function SettingsScreen() {
                     <Text style={styles.childRowTitle}>{displayName}</Text>
                     <Switch
                       value={item.isEnabled}
-                      onValueChange={(val) =>
+                      onValueChange={(val) => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         updateSettingMutation.mutate({
                           notificationTypeId: item.notificationTypeId,
                           isEnabled: val,
-                        })
-                      }
+                        });
+                      }}
                       trackColor={{ false: "#767577", true: colors.primary }}
                       thumbColor="#FFFFFF"
                       disabled={updateSettingMutation.isPending}
@@ -293,7 +260,7 @@ export default function SettingsScreen() {
                 );
               })
             )}
-          </View>
+          </Animated.View>
         )}
       </View>
 
@@ -302,7 +269,7 @@ export default function SettingsScreen() {
       <View style={styles.card}>
         {/* Xoá dữ liệu */}
         <Pressable
-          style={styles.row}
+          style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]}
           onPress={() => {
             setConfirmType("delete");
             setConfirmVisible(true);
@@ -319,7 +286,7 @@ export default function SettingsScreen() {
 
         {/* Đăng xuất */}
         <Pressable
-          style={styles.row}
+          style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]}
           onPress={() => {
             setConfirmType("logout");
             setConfirmVisible(true);
@@ -341,6 +308,7 @@ export default function SettingsScreen() {
           <Dialog.Content>
             <RadioButton.Group
               onValueChange={(val) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setLanguage(val as any);
                 setLangDialogVisible(false);
               }}
@@ -361,6 +329,7 @@ export default function SettingsScreen() {
           <Dialog.Content>
             <RadioButton.Group
               onValueChange={(val) => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setUnit(val as any);
                 setUnitDialogVisible(false);
               }}

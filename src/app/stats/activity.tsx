@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useActivityStats } from "@/hooks/stats/useActivityStats";
 import { FilterTabs } from "@/components/stats/FilterTabs";
 import { DateNavigator } from "@/components/stats/DateNavigator";
@@ -11,9 +12,13 @@ import { CalorieStatsCard } from "@/components/stats/activity/CalorieStatsCard";
 import { InsightBox } from "@/components/stats/InsightBox";
 import { exerciseService } from "@/services/exerciseService";
 import { getTodayDateISO } from "@/utils/date";
+import { useAppColors } from "@/hooks/useAppColors";
+import { spacing, typography, radius } from "@/constants";
 
 export default function ActivityStatsScreen() {
   const router = useRouter();
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
   const { activeTabLabel, tabs, handleTabChange } = useActivityStats();
   const [loading, setLoading] = useState(true);
   const [weekData, setWeekData] = useState<{ label: string; value: number }[]>([]);
@@ -76,23 +81,24 @@ export default function ActivityStatsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView edges={["top", "bottom"]} style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thống kê hoạt động</Text>
         <TouchableOpacity 
           style={styles.backBtn}
           onPress={() => router.push("/add-exercise")}
         >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Ionicons name="add" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <FilterTabs 
           tabs={tabs} 
           activeTab={activeTabLabel} 
@@ -103,7 +109,7 @@ export default function ActivityStatsScreen() {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#A56CFF" />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
           </View>
         ) : (
@@ -125,25 +131,36 @@ export default function ActivityStatsScreen() {
             )}
           </>
         )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#12101F" },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, paddingTop: 60 },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bgBase },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   backBtn: { padding: 8 },
-  headerTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "bold" },
-  content: { padding: 16 },
+  headerTitle: { ...typography.h3, color: colors.textPrimary },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl,
+  },
   loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
-    gap: 12,
+    gap: spacing.sm,
   },
   loadingText: {
-    color: "#8E8E93",
-    fontSize: 14,
+    ...typography.body,
+    color: colors.textSecondary,
   },
 });

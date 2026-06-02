@@ -67,7 +67,6 @@ export default function AddEntryScreen() {
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
 
-
   // ── Load pre-selected food nếu có foodId ─────────────────────────────────
   const { data: preSelectedFood } = useFoodDetails(foodId);
   useEffect(() => {

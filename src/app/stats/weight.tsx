@@ -218,7 +218,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   summaryRow: { flexDirection: "row", gap: 12, marginBottom: 16 },
   summaryCard: { flex: 1, backgroundColor: colors.bgElevated, borderRadius: 12, padding: 12, alignItems: "center" },
   summaryLabel: { color: colors.textSecondary, fontSize: 10, fontWeight: "bold", marginBottom: 8 },
-  summaryValuePurple: { color: "#A78BFA", fontSize: 16, fontWeight: "bold" },
+  summaryValuePurple: { color: colors.primary, fontSize: 16, fontWeight: "bold" },
   summaryValueWhite: { color: colors.textPrimary, fontSize: 16, fontWeight: "bold" },
   cardHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   bmiHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },

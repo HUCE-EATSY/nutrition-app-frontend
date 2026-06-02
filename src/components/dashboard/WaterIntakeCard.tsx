@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Pressable } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Pressable, Alert } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
@@ -57,7 +57,13 @@ export function WaterIntakeCard() {
          <View style={styles.divider} />
          <TouchableOpacity 
            style={[styles.btn, styles.btnActive]} 
-           onPress={() => addWater(userId, selectedDate, step)}
+           onPress={() => {
+             if (intake + step > 10000) {
+               Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+             } else {
+               addWater(userId, selectedDate, step);
+             }
+           }}
            activeOpacity={0.7}
          >
             <MaterialCommunityIcons name="plus" size={18} color={colors.carbs} />

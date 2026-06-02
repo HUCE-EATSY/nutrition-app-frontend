@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { router } from "expo-router";
 import { StyleSheet, TextInput } from "react-native";
 import { Controller } from "react-hook-form";
@@ -5,19 +6,27 @@ import * as z from "zod";
 
 import { OnboardingStepScaffold } from "@/components/onboarding/OnboardingStepScaffold";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
-import { t, useTranslation } from "@/constants/i18n";
-import { colors, radius, spacing, typography } from "@/constants";
-
-const nicknameSchema = z.object({
-  nickname: z
-    .string()
-    .trim()
-    .min(2, t.validators.nicknameMin)
-    .max(24, t.validators.nicknameMax),
-});
+import { useTranslation } from "@/constants/i18n";
+import { radius, spacing, typography } from "@/constants";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function NicknameScreen() {
   const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
+  const colors = useAppColors();
+  const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const nicknameSchema = useMemo(() => {
+    return z.object({
+      nickname: z
+        .string()
+        .trim()
+        .min(2, t.validators.nicknameMin)
+        .max(24, t.validators.nicknameMax),
+    });
+  }, [language, t]);
+
   const { control, error, isValid, meta, onContinue } = useOnboardingForm(
     "Nickname",
     "nickname",
@@ -54,7 +63,7 @@ export default function NicknameScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   input: {
     ...typography.h2,
     lineHeight: undefined,
@@ -67,4 +76,3 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
 });
-

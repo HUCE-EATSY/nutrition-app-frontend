@@ -5,8 +5,9 @@ import { DailySummaryResponse, WeightLogEntry, StepLogEntry } from "@/types/cont
 import { getDailySummary, getNutritionTimeline } from "@/services/nutritionLogService";
 import { getWeightTimeline, getUserGoal } from "@/services/weightLogService";
 import { getTodayDateISO, getDateRangeForPeriod, formatLocalDate } from "@/utils/date";
-import { AppState, Platform } from "react-native";
+import { AppState, Platform, Alert, Linking } from "react-native";
 import { pedometerService } from "@/services/pedometerService";
+import { useSettingsStore } from "./settingsStore";
 import { secureStorage } from "./secureStorage";
 import { getStepsTimeline, saveStepLog } from "@/services/stepLogService";
 
@@ -28,6 +29,7 @@ const debounceSyncSteps = (steps: number, goal: number, dateISO: string, provide
 
 let pedometerSubscription: { remove: () => void } | null = null;
 let lastPedometerSteps = 0;
+let activeFetchTodayPromise: Promise<void> | null = null;
 
 interface NutritionState {
   period: NutritionPeriod;
@@ -205,11 +207,11 @@ export const useStepsStore = create<StepsState>()(
       period: StepsPeriod.WEEK,
       offset: 0,
       setPeriod: (period) => {
-        set({ period, offset: 0 });
+        set({ period, offset: 0, historyData: [] });
         get().fetchHistory(period, 0);
       },
       setOffset: (offset) => {
-        set({ offset });
+        set({ offset, historyData: [] });
         get().fetchHistory(get().period, offset);
       },
 
@@ -233,9 +235,14 @@ export const useStepsStore = create<StepsState>()(
         const isSupported = await pedometerService.isAvailable();
         let isConnected = false;
         if (isSupported) {
-          isConnected = await pedometerService.checkStepsPermission();
+          const response = await pedometerService.checkStepsPermission();
+          isConnected = response.granted;
         }
         set({ isSupported, isConnected });
+        if (isConnected) {
+          await get().fetchTodaySteps();
+          get().startStepTracking();
+        }
         return isConnected;
       },
 
@@ -253,14 +260,28 @@ export const useStepsStore = create<StepsState>()(
             return;
           }
 
-          const granted = await pedometerService.requestStepsPermission();
-          if (granted) {
+          const response = await pedometerService.requestStepsPermission();
+          if (response.granted) {
             set({ isSupported: true, isConnected: true });
             await get().fetchTodaySteps();
             get().startStepTracking();
             await get().fetchHistory(get().period, get().offset);
           } else {
             set({ isConnected: false, error: "Quyền truy cập bước chân bị từ chối" });
+            if (response.status === "denied" && response.canAskAgain === false) {
+              const lang = useSettingsStore.getState().language;
+              const title = lang === "vi" ? "Quyền truy cập bị từ chối" : "Permission Denied";
+              const message = lang === "vi" 
+                ? "Ứng dụng cần quyền truy cập cảm biến để đếm bước chân. Vui lòng bật quyền này trong Cài đặt của thiết bị."
+                : "The app needs step counting sensor permission. Please enable it in your device settings.";
+              const cancelText = lang === "vi" ? "Hủy" : "Cancel";
+              const settingsText = lang === "vi" ? "Cài đặt" : "Settings";
+              
+              Alert.alert(title, message, [
+                { text: cancelText, style: "cancel" },
+                { text: settingsText, onPress: () => Linking.openSettings() },
+              ]);
+            }
           }
         } catch (err: any) {
           set({ error: err.message || "Lỗi kết nối cảm biến bước chân" });
@@ -270,46 +291,94 @@ export const useStepsStore = create<StepsState>()(
       },
 
       fetchTodaySteps: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const steps = await pedometerService.fetchTodaySteps();
-          const todayStr = getTodayDateISO();
-          const persistedSteps = (get().stepRecords || {})[todayStr] || 0;
-          let finalSteps = Math.max(steps, persistedSteps);
-          
-          if (!USE_MOCK) {
-            try {
-              const backendTimeline = await getStepsTimeline(todayStr, todayStr);
-              if (backendTimeline && backendTimeline.length > 0) {
-                const backendToday = backendTimeline[0];
-                finalSteps = Math.max(finalSteps, backendToday.steps);
+        if (activeFetchTodayPromise) {
+          return activeFetchTodayPromise;
+        }
+
+        activeFetchTodayPromise = (async () => {
+          set({ isLoading: true, error: null });
+          try {
+            const steps = await pedometerService.fetchTodaySteps();
+            const todayStr = getTodayDateISO();
+            const persistedSteps = (get().stepRecords || {})[todayStr] || 0;
+            let finalSteps = Math.max(steps, persistedSteps);
+            let fetchFromBackendSucceeded = false;
+            
+            if (!USE_MOCK) {
+              try {
+                const backendTimeline = await getStepsTimeline(todayStr, todayStr);
+                fetchFromBackendSucceeded = true;
                 
-                if (backendToday.step_goal && backendToday.step_goal !== get().stepGoal) {
-                  set({ stepGoal: backendToday.step_goal });
+                let resolvedGoal = get().stepGoal;
+                let hasGoalFromBackend = false;
+                
+                if (backendTimeline && backendTimeline.length > 0) {
+                  const backendToday = backendTimeline[0];
+                  finalSteps = Math.max(finalSteps, backendToday.steps);
+                  
+                  if (backendToday.step_goal && backendToday.step_goal > 0) {
+                    resolvedGoal = backendToday.step_goal;
+                    hasGoalFromBackend = true;
+                  }
                 }
+                
+                // Nếu chưa có bản ghi hôm nay, tìm mục tiêu tùy chỉnh trong lịch sử 30 ngày
+                if (!hasGoalFromBackend) {
+                  const now = new Date();
+                  const thirtyDaysAgo = new Date();
+                  thirtyDaysAgo.setDate(now.getDate() - 30);
+                  const fromStr = formatLocalDate(thirtyDaysAgo);
+                  const toStr = formatLocalDate(now);
+                  const recentHistory = await getStepsTimeline(fromStr, toStr);
+                  
+                  if (recentHistory && recentHistory.length > 0) {
+                    const sortedHistory = [...recentHistory].sort(
+                      (a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime()
+                    );
+                    const customGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0 && h.step_goal !== 8000);
+                    if (customGoalEntry) {
+                      resolvedGoal = customGoalEntry.step_goal;
+                    } else if (!hasGoalFromBackend) {
+                      const anyGoalEntry = sortedHistory.find(h => h.step_goal && h.step_goal > 0);
+                      if (anyGoalEntry) {
+                        resolvedGoal = anyGoalEntry.step_goal;
+                      }
+                    }
+                  }
+                }
+                
+                if (resolvedGoal !== get().stepGoal) {
+                  set({ stepGoal: resolvedGoal });
+                }
+              } catch (err) {
+                console.warn("Lỗi tải thông tin bước chân hôm nay từ backend:", err);
               }
-            } catch (err) {
-              console.warn("Lỗi tải thông tin bước chân hôm nay từ backend:", err);
             }
+
+            const updatedRecords = { ...(get().stepRecords || {}) };
+            updatedRecords[todayStr] = finalSteps;
+
+            set({ 
+              todaySteps: finalSteps,
+              stepRecords: updatedRecords
+            });
+
+            if (!USE_MOCK && fetchFromBackendSucceeded) {
+              const provider = Platform.OS === "ios" ? 1 : 3;
+              const calories = finalSteps * 0.04;
+              await saveStepLog(finalSteps, get().stepGoal, todayStr, provider, calories);
+            }
+          } catch (err: any) {
+            set({ error: err.message || "Lỗi tải số bước hôm nay" });
+          } finally {
+            set({ isLoading: false });
           }
+        })();
 
-          const updatedRecords = { ...(get().stepRecords || {}) };
-          updatedRecords[todayStr] = finalSteps;
-
-          set({ 
-            todaySteps: finalSteps,
-            stepRecords: updatedRecords
-          });
-
-          if (!USE_MOCK) {
-            const provider = Platform.OS === "ios" ? 1 : 2;
-            const calories = finalSteps * 0.04;
-            await saveStepLog(finalSteps, get().stepGoal, todayStr, provider, calories);
-          }
-        } catch (err: any) {
-          set({ error: err.message || "Lỗi tải số bước hôm nay" });
+        try {
+          await activeFetchTodayPromise;
         } finally {
-          set({ isLoading: false });
+          activeFetchTodayPromise = null;
         }
       },
 
@@ -320,12 +389,19 @@ export const useStepsStore = create<StepsState>()(
           const { startDate: prevStartDate } = getPeriodRange(period, offset - 1);
 
           // Lấy dữ liệu gộp cả chu kỳ hiện tại và trước đó để tính trung bình
+          // (có thể rỗng trên Android nếu không có Health Connect permission)
           const rawHistory = await pedometerService.fetchStepsHistory(prevStartDate, endDate);
 
           // Sắp xếp tăng dần theo thời gian
           const sortedHistory = [...rawHistory].sort(
             (a, b) => new Date(a.dateISO).getTime() - new Date(b.dateISO).getTime()
           );
+
+          // Tạo map tra nhanh từ pedometer data
+          const pedometerMap: Record<string, number> = {};
+          for (const item of sortedHistory) {
+            pedometerMap[item.dateISO] = item.steps;
+          }
 
           // Lấy lịch sử từ backend nếu không phải mock
           let apiHistory: StepLogEntry[] = [];
@@ -334,39 +410,79 @@ export const useStepsStore = create<StepsState>()(
               const fromStr = formatLocalDate(prevStartDate);
               const toStr = formatLocalDate(endDate);
               apiHistory = await getStepsTimeline(fromStr, toStr);
+
+              // Tự động cập nhật mục tiêu hiện tại từ bản ghi gần nhất trong lịch sử
+              if (apiHistory && apiHistory.length > 0) {
+                const sortedApiHistory = [...apiHistory].sort(
+                  (a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime()
+                );
+                const recentGoalEntry = sortedApiHistory.find(h => h.step_goal && h.step_goal > 0);
+                let resolvedGoal = recentGoalEntry?.step_goal ?? get().stepGoal;
+
+                // Nếu mục tiêu gần nhất trong lịch sử là 8000, tìm mục tiêu tùy chỉnh khác 8000
+                if (resolvedGoal === 8000) {
+                  const customGoalEntry = sortedApiHistory.find(h => h.step_goal && h.step_goal > 0 && h.step_goal !== 8000);
+                  if (customGoalEntry) {
+                    resolvedGoal = customGoalEntry.step_goal;
+                  }
+                }
+
+                if (resolvedGoal !== get().stepGoal) {
+                  set({ stepGoal: resolvedGoal });
+                }
+              }
             } catch (err) {
               console.warn("Lỗi tải lịch sử bước chân từ backend:", err);
             }
           }
 
-          // Gộp dữ liệu từ pedometerService, backend và local
-          const mergedHistory = sortedHistory.map((item) => {
-            const persistedSteps = (get().stepRecords || {})[item.dateISO] || 0;
-            const apiDay = apiHistory.find(h => h.log_date === item.dateISO);
-            const apiSteps = apiDay ? apiDay.steps : 0;
-            const maxSteps = Math.max(item.steps, persistedSteps, apiSteps);
+          // Tạo map tra nhanh từ API data
+          const apiMap: Record<string, StepLogEntry> = {};
+          for (const entry of apiHistory) {
+            apiMap[entry.log_date] = entry;
+          }
 
-            // Tự động đồng bộ lên backend nếu dữ liệu local lớn hơn backend
-            if (!USE_MOCK && maxSteps > apiSteps) {
-              const provider = Platform.OS === "ios" ? 1 : 2;
+          // Tạo danh sách tất cả các ngày trong khoảng (prevStartDate -> endDate)
+          // Không phụ thuộc vào pedometerService có trả data hay không
+          const allDates: string[] = [];
+          const tempDate = new Date(prevStartDate);
+          tempDate.setHours(0, 0, 0, 0);
+          const endDateNorm = new Date(endDate);
+          endDateNorm.setHours(23, 59, 59, 999);
+          while (tempDate <= endDateNorm) {
+            const y = tempDate.getFullYear();
+            const m = String(tempDate.getMonth() + 1).padStart(2, "0");
+            const d = String(tempDate.getDate()).padStart(2, "0");
+            allDates.push(`${y}-${m}-${d}`);
+            tempDate.setDate(tempDate.getDate() + 1);
+          }
+
+          // Gộp dữ liệu từ pedometerService, backend và local cho tất cả các ngày
+          const mergedHistory = allDates.map((dateISO) => {
+            const pedometerSteps = pedometerMap[dateISO] || 0;
+            const persistedSteps = (get().stepRecords || {})[dateISO] || 0;
+            const apiDay = apiMap[dateISO];
+            const apiSteps = apiDay ? apiDay.steps : 0;
+            const maxSteps = Math.max(pedometerSteps, persistedSteps, apiSteps);
+
+            // Tự động đồng bộ lên backend nếu dữ liệu local lớn hơn backend (không bao gồm ngày hôm nay)
+            if (!USE_MOCK && maxSteps > apiSteps && dateISO !== getTodayDateISO()) {
+              const provider = Platform.OS === "ios" ? 1 : 3;
               const calories = maxSteps * 0.04;
               const dayGoal = apiDay?.step_goal ?? get().stepGoal;
-              saveStepLog(maxSteps, dayGoal, item.dateISO, provider, calories).catch(err => {
-                console.warn(`Lỗi đồng bộ bước chân ngày ${item.dateISO} lên backend:`, err);
+              saveStepLog(maxSteps, dayGoal, dateISO, provider, calories).catch(err => {
+                console.warn(`Lỗi đồng bộ bước chân ngày ${dateISO} lên backend:`, err);
               });
             }
 
             // Đồng bộ ngược lại step goal từ API nếu có khác biệt
-            if (apiDay && apiDay.step_goal && apiDay.step_goal !== (get().historicalGoals || {})[item.dateISO]) {
+            if (apiDay && apiDay.step_goal && apiDay.step_goal !== (get().historicalGoals || {})[dateISO]) {
               const updatedGoals = { ...(get().historicalGoals || {}) };
-              updatedGoals[item.dateISO] = apiDay.step_goal;
+              updatedGoals[dateISO] = apiDay.step_goal;
               set({ historicalGoals: updatedGoals });
             }
 
-            return {
-              ...item,
-              steps: maxSteps,
-            };
+            return { dateISO, steps: maxSteps };
           });
 
           // Xác định số ngày trong chu kỳ hiện tại
@@ -374,7 +490,7 @@ export const useStepsStore = create<StepsState>()(
 
           // Chia làm 2 phần
           const currentPeriodData = mergedHistory.slice(-currentDaysCount);
-          const previousPeriodData = mergedHistory.slice(0, -currentDaysCount);
+          const previousPeriodData = mergedHistory.slice(0, mergedHistory.length - currentDaysCount);
 
           let mapped: { label: string; value: number; goal: number }[] = [];
 
@@ -428,20 +544,21 @@ export const useStepsStore = create<StepsState>()(
                 label = `${day}/${month}`;
               }
 
-              dayList.push({
-                dateISO: dateStr,
-                label,
-              });
-
+              dayList.push({ dateISO: dateStr, label });
               cur.setDate(cur.getDate() + 1);
             }
 
             mapped = dayList.map((d) => {
+              // Fallback chain: currentPeriodData -> stepRecords -> apiHistory
               const found = currentPeriodData.find((item) => item.dateISO === d.dateISO);
+              const persistedSteps = (get().stepRecords || {})[d.dateISO] || 0;
+              const apiDay = apiMap[d.dateISO];
+              const apiSteps = apiDay ? apiDay.steps : 0;
+              const value = found ? found.steps : Math.max(persistedSteps, apiSteps);
               const dayGoal = (get().historicalGoals || {})[d.dateISO] || get().stepGoal;
               return {
                 label: d.label,
-                value: found ? found.steps : 0,
+                value,
                 goal: dayGoal,
               };
             });
@@ -500,7 +617,7 @@ export const useStepsStore = create<StepsState>()(
 
         // Đồng bộ mục tiêu bước chân lên backend cho ngày hôm nay
         if (!USE_MOCK) {
-          const provider = Platform.OS === "ios" ? 1 : 2;
+          const provider = Platform.OS === "ios" ? 1 : 3;
           const currentSteps = get().todaySteps || 0;
           const calories = currentSteps * 0.04;
           saveStepLog(currentSteps, goal, todayStr, provider, calories).catch(err => {
@@ -514,7 +631,7 @@ export const useStepsStore = create<StepsState>()(
           return;
         }
 
-        lastPedometerSteps = 0;
+        lastPedometerSteps = Platform.OS === "android" ? get().todaySteps : 0;
 
         pedometerSubscription = pedometerService.watchSteps((stepsCount) => {
           const delta = stepsCount - lastPedometerSteps;
@@ -581,7 +698,7 @@ export const useStepsStore = create<StepsState>()(
 
             // Đồng bộ số bước với debounce
             if (!USE_MOCK) {
-              const provider = Platform.OS === "ios" ? 1 : 2;
+              const provider = Platform.OS === "ios" ? 1 : 3;
               const calories = updatedSteps * 0.04;
               debounceSyncSteps(updatedSteps, get().stepGoal, todayStr, provider, calories);
             }

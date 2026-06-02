@@ -1,6 +1,7 @@
-import React from "react";
+import React, { memo } from "react";
 import { View } from "react-native";
 import Svg, { Rect, Line as SvgLine, G, Text as SvgText, Circle } from "react-native-svg";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export interface BarData {
   label: string;
@@ -19,7 +20,7 @@ interface BarChartProps {
   showAveragePill?: boolean;
 }
 
-export const BarChart: React.FC<BarChartProps> = ({
+export const BarChart: React.FC<BarChartProps> = memo(({
   data,
   height = 200,
   width = 300,
@@ -29,6 +30,8 @@ export const BarChart: React.FC<BarChartProps> = ({
   showYAxis = false,
   showAveragePill = false,
 }) => {
+  const colors = useAppColors();
+  const isDark = colors.bgBase === "#111020";
   const padding = { top: 20, bottom: 30, left: showYAxis ? 48 : 10, right: 10 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -78,7 +81,7 @@ export const BarChart: React.FC<BarChartProps> = ({
                   y1={yPos}
                   x2={chartWidth}
                   y2={yPos}
-                  stroke="rgba(255, 255, 255, 0.08)"
+                  stroke={colors.border}
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
@@ -86,7 +89,7 @@ export const BarChart: React.FC<BarChartProps> = ({
                   x={-12}
                   y={yPos + 4}
                   fontSize="10"
-                  fill="#9CA3AF"
+                  fill={colors.textMuted}
                   textAnchor="end"
                 >
                   {formatYLabel(tick)}
@@ -103,7 +106,7 @@ export const BarChart: React.FC<BarChartProps> = ({
                 y1={chartHeight - (averageValue / max) * chartHeight}
                 x2={chartWidth}
                 y2={chartHeight - (averageValue / max) * chartHeight}
-                stroke="rgba(255, 255, 255, 0.4)"
+                stroke={isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)"}
                 strokeWidth="1.5"
                 strokeDasharray="4 4"
               />
@@ -116,12 +119,12 @@ export const BarChart: React.FC<BarChartProps> = ({
                     width={44}
                     height={20}
                     rx={10}
-                    fill="#FFFFFF"
+                    fill={isDark ? "#FFFFFF" : colors.primary}
                   />
                   <SvgText
                     x={-26}
                     y={chartHeight - (averageValue / max) * chartHeight + 4}
-                    fill="#000000"
+                    fill={isDark ? "#000000" : "#FFFFFF"}
                     fontSize="10"
                     fontWeight="bold"
                     textAnchor="middle"
@@ -132,8 +135,8 @@ export const BarChart: React.FC<BarChartProps> = ({
                     cx={-2}
                     cy={chartHeight - (averageValue / max) * chartHeight}
                     r={3.5}
-                    fill="#60A5FA"
-                    stroke="#FFFFFF"
+                    fill={colors.info}
+                    stroke={isDark ? "#FFFFFF" : colors.bgElevated}
                     strokeWidth={1}
                   />
                 </G>
@@ -181,7 +184,7 @@ export const BarChart: React.FC<BarChartProps> = ({
                     x={x + barWidth / 2}
                     y={chartHeight + 20}
                     fontSize="12"
-                    fill="#9CA3AF"
+                    fill={colors.textMuted}
                     textAnchor="middle"
                   >
                     {displayLabel}
@@ -194,4 +197,4 @@ export const BarChart: React.FC<BarChartProps> = ({
       </Svg>
     </View>
   );
-};
+});

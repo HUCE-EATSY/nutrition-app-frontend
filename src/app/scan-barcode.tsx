@@ -9,11 +9,13 @@ import { foodService } from "@/services/foodService";
 import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { useDiaryStore } from "@/store/diaryStore";
+import { useAppColors } from "@/hooks/useAppColors";
 
 export default function ScanBarcodeScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const colors = useAppColors();
 
   const { addMealEntry, selectedDate } = useDiaryStore();
   const [scannedFood, setScannedFood] = useState<any>(null);
@@ -93,7 +95,7 @@ export default function ScanBarcodeScreen() {
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
-          <Ionicons name="close" size={28} color="#FFF" />
+          <Ionicons name="close" size={28} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.title}>Quét Mã Vạch</Text>
         <View style={{ width: 28 }} />
@@ -132,10 +134,10 @@ export default function ScanBarcodeScreen() {
               </Text>
               <View style={styles.errorButtons}>
                 <Pressable
-                  style={[styles.errorBtn, { backgroundColor: "#2a224a" }]}
+                  style={[styles.errorBtn, { backgroundColor: colors.surface }]}
                   onPress={() => { setNotFoundBarcode(null); setScanned(false); }}
                 >
-                  <Text style={styles.errorBtnText}>Quét lại</Text>
+                  <Text style={[styles.errorBtnText, { color: colors.textPrimary }]}>Quét lại</Text>
                 </Pressable>
                 <Pressable
                   style={[styles.errorBtn, { backgroundColor: colors.primary }]}
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h3,
-    color: "#FFF",
+    color: colors.textPrimary,
   },
   cameraContainer: {
     flex: 1,
@@ -287,13 +289,13 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   errorBox: {
-    backgroundColor: "#181231",
+    backgroundColor: colors.bgElevated,
     padding: spacing.xl,
     borderRadius: radius.lg,
     alignItems: "center",
     width: "100%",
     borderWidth: 1,
-    borderColor: "#282142",
+    borderColor: colors.borderSoft,
   },
   errorTitle: {
     ...typography.h3,

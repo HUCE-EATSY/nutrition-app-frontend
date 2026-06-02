@@ -12,6 +12,7 @@ import { t, useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 import { GoalType } from "@/types/contracts";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const createWeeklyGoalSchema = (goalType: GoalType | null) => {
   const bounds = getWeeklyGoalBounds(goalType);
@@ -27,7 +28,8 @@ export default function WeeklyGoalScreen() {
   const t = useTranslation();
   const goalType = useOnboardingStore((state) => state.draft.goalType);
   const bounds = getWeeklyGoalBounds(goalType);
-  const weeklyGoalSchema = useMemo(() => createWeeklyGoalSchema(goalType), [goalType]);
+  const language = useSettingsStore((state) => state.language);
+  const weeklyGoalSchema = useMemo(() => createWeeklyGoalSchema(goalType), [goalType, language]);
 
   const { control, error, isValid, meta, onContinue, onBack } = useOnboardingForm(
     "WeeklyGoal",
@@ -62,4 +64,3 @@ export default function WeeklyGoalScreen() {
     </OnboardingStepScaffold>
   );
 }
-

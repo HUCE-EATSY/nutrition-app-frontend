@@ -2,7 +2,12 @@ import React from "react";
 import { View, StyleSheet, Text } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
-import { typography } from "@/constants";
+import { colors, typography } from "@/constants";
+
+export interface MacroRingData {
+  value: number;
+  color: string;
+}
 
 interface MacroRingChartProps {
   proteinPct: number;
@@ -47,7 +52,7 @@ export function MacroRingChart({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="rgba(0,0,0,0.05)"
+          stroke={colors.surfaceAlt}
           strokeWidth={strokeWidth}
           fill="none"
         />

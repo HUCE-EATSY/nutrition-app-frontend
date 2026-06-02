@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { router } from "expo-router";
 import { useForm, FieldValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -5,6 +6,7 @@ import * as z from "zod";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { getNextOnboardingPath, getOnboardingMeta, getPreviousOnboardingPath } from "@/utils/onboarding";
 import { OnboardingRouteName, OnboardingDraft } from "@/types/contracts";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export function useOnboardingForm<
   TFieldName extends keyof OnboardingDraft,
@@ -29,13 +31,22 @@ export function useOnboardingForm<
     mode: "onChange",
   });
   
+  const language = useSettingsStore((state) => state.language);
+  const { trigger, formState: { errors } } = form;
+
+  useEffect(() => {
+    if (errors[fieldName as any]) {
+      trigger(fieldName as any);
+    }
+  }, [language, fieldName, trigger, errors]);
+
   const onSubmit = (data: TFormData) => {
     updateDraft({ [fieldName]: data[fieldName] });
     markStepCompleted(stepName);
     router.replace(getNextOnboardingPath(stepName));
   };
   
-  const fieldError = form.formState.errors[fieldName];
+  const fieldError = errors[fieldName as any];
   const error = fieldError?.message as string | undefined;
   
   return {
@@ -49,5 +60,3 @@ export function useOnboardingForm<
     onBack: () => router.replace(getPreviousOnboardingPath(stepName)),
   };
 }
-
-
