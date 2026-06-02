@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { streakService } from "@/services/streakService";
 
@@ -24,11 +26,24 @@ export const STREAK_QUERY_KEYS = {
 
 export function useStreaks(): StreaksData {
   const queryClient = useQueryClient();
+  const [appState, setAppState] = useState<AppStateStatus>(AppState.currentState);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      setAppState(nextAppState);
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const isAppActive = appState === "active";
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: STREAK_QUERY_KEYS.me(),
     queryFn: streakService.getStreak,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Consider data immediately stale for true real-time updates
+    refetchInterval: isAppActive ? 3000 : false, // Poll every 3 seconds when app is in foreground
   });
 
   const freezeMutation = useMutation({
@@ -69,3 +84,4 @@ export function useStreaks(): StreaksData {
     isLoggedToday: data?.isLoggedToday ?? false,
   };
 }
+

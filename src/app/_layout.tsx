@@ -171,14 +171,16 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 
-  // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động
+  // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động (chỉ bọc khi có Client ID hợp lệ để tránh crash ứng dụng)
   if (Platform.OS === "web") {
     const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-    return (
-      <GoogleOAuthProvider clientId={webClientId}>
-        {stackContent}
-      </GoogleOAuthProvider>
-    );
+    if (webClientId && webClientId.trim() !== "" && !webClientId.startsWith("your_")) {
+      return (
+        <GoogleOAuthProvider clientId={webClientId}>
+          {stackContent}
+        </GoogleOAuthProvider>
+      );
+    }
   }
 
   return stackContent;

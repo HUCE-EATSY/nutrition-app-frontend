@@ -11,6 +11,7 @@ import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
+import { useMySubscriptionQuery } from "@/hooks/queries/useSubscription";
 import { useQueryClient } from "@tanstack/react-query";
 import { radius, spacing, typography } from "@/constants";
 import { userService } from "@/services/userService";
@@ -27,6 +28,8 @@ export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
   const { data: serverUserInfo } = useGetUserInfo();
+  const { data: subInfo } = useMySubscriptionQuery();
+  const isPremium = subInfo?.isPremium;
 
   const colors = useAppColors();
   const unit = useSettingsStore((state) => state.unit);
@@ -174,22 +177,28 @@ export default function AccountScreen() {
       </View>
 
       {/* Premium Banner */}
-      <LinearGradient
-        colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
-        end={{ x: 1, y: 0.5 }}
-        start={{ x: 0, y: 0.5 }}
-        style={styles.premiumBanner}
-      >
-        <View style={styles.premiumContent}>
-          <Text style={styles.premiumTitle}>{t.account.premium.bannerTitle}</Text>
-          <Pressable style={styles.premiumButton}>
-            <Text style={styles.premiumButtonText}>{t.account.premium.cta}</Text>
-          </Pressable>
-        </View>
-        <View style={styles.premiumIconContainer}>
-          <Ionicons color="#FF9500" name="flame" size={64} />
-        </View>
-      </LinearGradient>
+      <Pressable onPress={() => router.push("/premium")}>
+        <LinearGradient
+          colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
+          end={{ x: 1, y: 0.5 }}
+          start={{ x: 0, y: 0.5 }}
+          style={styles.premiumBanner}
+        >
+          <View style={styles.premiumContent}>
+            <Text style={styles.premiumTitle}>
+              {isPremium ? "Bạn đang sở hữu đặc quyền Premium 🌟" : t.account.premium.bannerTitle}
+            </Text>
+            <View style={styles.premiumButton}>
+              <Text style={styles.premiumButtonText}>
+                {isPremium ? "Xem chi tiết" : t.account.premium.cta}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.premiumIconContainer}>
+            <Ionicons color="#FF9500" name={isPremium ? "ribbon" : "flame"} size={64} />
+          </View>
+        </LinearGradient>
+      </Pressable>
 
       {/* Stats Row */}
       <View style={styles.statsRow}>
