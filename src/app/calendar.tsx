@@ -13,6 +13,7 @@ import { useDiaryStore } from '@/store/diaryStore';
 import { useAppColors } from '@/hooks/useAppColors';
 import { getNutritionTimeline } from '@/services/nutritionLogService';
 import { exerciseService } from '@/services/exerciseService';
+import { getTodayDateISO } from '@/utils/date';
 
 // Cấu hình Locale tiếng Việt cho Lịch
 LocaleConfig.locales['vi'] = {
@@ -66,8 +67,7 @@ export default function CalendarPickerModal() {
   const insets = useSafeAreaInsets();
 
   // Lấy ngày hiện tại format YYYY-MM-DD
-  const today = new Date();
-  const todayString = today.toISOString().split('T')[0];
+  const todayString = getTodayDateISO();
 
   const [selected, setSelected] = useState(selectedDate || todayString);
 

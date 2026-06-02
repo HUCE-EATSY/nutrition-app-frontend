@@ -11,6 +11,14 @@ export type SubscriptionPlanMe = {
   statusValue?: number;
 };
 
+export type SubscriptionPlan = {
+  id: number;
+  code: string;
+  name: string;
+  price: number;
+  durationDays: number;
+};
+
 export type CreateOrderResponse = {
   orderId: string;
   qrUrl: string;
@@ -28,6 +36,11 @@ export type OrderStatusResponse = {
 export const subscriptionService = {
   getSubscriptionMe: async (): Promise<SubscriptionPlanMe> => {
     const response = await apiClient.get(`${API_BASE}/api/Subscription/me`);
+    return response.data.data;
+  },
+
+  getSubscriptionPlans: async (): Promise<SubscriptionPlan[]> => {
+    const response = await apiClient.get(`${API_BASE}/api/Subscription/plans`);
     return response.data.data;
   },
 

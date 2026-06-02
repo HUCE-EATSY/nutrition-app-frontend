@@ -10,6 +10,7 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useGetUnreadCount } from "@/hooks/queries/useNotificationQueries";
 import { useStreaks } from "@/hooks/useStreaks";
+import { getTodayDateISO } from "@/utils/date";
 
 export function HomeHeader() {
   const t = useTranslation();
@@ -22,7 +23,7 @@ export function HomeHeader() {
   const { data: unreadCount = 0 } = useGetUnreadCount();
   const { currentStreak } = useStreaks();
   
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayDateISO();
   const isToday = selectedDate === todayStr;
   
   const getFormattedDate = () => {
