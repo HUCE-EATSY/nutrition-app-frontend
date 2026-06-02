@@ -74,6 +74,7 @@ export function HorizontalRulerPicker({
   
   const isScrollingRef = useRef(false);
   const isMomentumRef = useRef(false);
+  const lastCallbackTimeRef = useRef(0);
 
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
@@ -134,7 +135,11 @@ export function HorizontalRulerPicker({
       lastScrollValueRef.current = newValue;
       setInternalValue(newValue);
       if (onScrollValueChange) {
-        onScrollValueChange(newValue);
+        const now = Date.now();
+        if (now - lastCallbackTimeRef.current > 80) {
+          onScrollValueChange(newValue);
+          lastCallbackTimeRef.current = now;
+        }
       }
     }
   }, [data, onScrollValueChange]);
@@ -157,10 +162,14 @@ export function HorizontalRulerPicker({
         const newValue = data[clamp(index, 0, data.length - 1)];
         if (newValue !== undefined) {
           onChange(newValue);
+          if (onScrollValueChange) {
+            onScrollValueChange(newValue);
+            lastCallbackTimeRef.current = 0; // Reset throttle timer
+          }
         }
       }
     }, 0);
-  }, [data, onChange]);
+  }, [data, onChange, onScrollValueChange]);
 
   const onMomentumScrollEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     isScrollingRef.current = false;
@@ -170,8 +179,12 @@ export function HorizontalRulerPicker({
     const newValue = data[clamp(index, 0, data.length - 1)];
     if (newValue !== undefined) {
       onChange(newValue);
+      if (onScrollValueChange) {
+        onScrollValueChange(newValue);
+        lastCallbackTimeRef.current = 0; // Reset throttle timer
+      }
     }
-  }, [data, onChange]);
+  }, [data, onChange, onScrollValueChange]);
 
   const renderItem = useCallback(({ item }: { item: number }) => {
     const isSelected = Math.abs(item - internalValue) < step / 4;

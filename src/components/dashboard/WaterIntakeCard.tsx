@@ -59,7 +59,7 @@ export function WaterIntakeCard() {
            style={[styles.btn, styles.btnActive]} 
            onPress={() => {
              if (intake + step > 10000) {
-               Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+               Alert.alert(t.water.limitErrorTitle, t.water.limitTotalError);
              } else {
                addWater(userId, selectedDate, step);
              }

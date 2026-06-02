@@ -69,6 +69,8 @@ const getStyles = (colors: any) => StyleSheet.create({
   errorCard: {
     borderColor: "rgba(255, 90, 95, 0.4)",
     backgroundColor: "rgba(255, 90, 95, 0.08)",
+    elevation: 0,
+    shadowOpacity: 0,
   },
   bmiTitleRow: {
     flexDirection: "row",
@@ -109,5 +111,6 @@ const getStyles = (colors: any) => StyleSheet.create({
     color: colors.danger,
     fontSize: 14,
     lineHeight: 20,
+    backgroundColor: "transparent",
   },
 });

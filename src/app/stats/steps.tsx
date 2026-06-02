@@ -25,6 +25,8 @@ import { StepsPeriod } from "@/constants/stats";
 import { getStepsTimeline } from "@/services/stepLogService";
 import { StepLogEntry } from "@/types/contracts";
 import { formatLocalDate } from "@/utils/date";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -59,6 +61,8 @@ const getPeriodRange = (period: StepsPeriod, offset: number) => {
 };
 
 export default function StepsStatsScreen() {
+  const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
@@ -159,11 +163,42 @@ export default function StepsStatsScreen() {
     }
   }, [historyModalVisible]);
 
+  // Helper to translate labels from store (CN, T2, Th01 etc.)
+  const translatePeriodLabel = (label: string) => {
+    if (label.startsWith("Th")) {
+      const monthNum = parseInt(label.replace("Th", ""), 10);
+      const monthNames = language === "vi"
+        ? ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"]
+        : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return monthNames[monthNum - 1] || label;
+    }
+    const weekdayMap: Record<string, string> = {
+      "T2": t.stats.days.mon,
+      "T3": t.stats.days.tue,
+      "T4": t.stats.days.wed,
+      "T5": t.stats.days.thu,
+      "T6": t.stats.days.fri,
+      "T7": t.stats.days.sat,
+      "CN": t.stats.days.sun,
+    };
+    return weekdayMap[label] || label;
+  };
+
+  const translatedHistoryData = React.useMemo(() => {
+    return historyData.map(item => ({
+      ...item,
+      label: translatePeriodLabel(item.label)
+    }));
+  }, [historyData, language]);
+
   // Định dạng khoảng thời gian hiển thị đầu trang
   const getFormattedDateRange = () => {
     const { startDate, endDate } = getPeriodRange(period, offset);
     if (period === StepsPeriod.MONTH) {
-      return `Tháng ${startDate.getMonth() + 1}`;
+      const monthNames = language === "vi"
+        ? ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"]
+        : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      return monthNames[startDate.getMonth()];
     }
     if (period === StepsPeriod.SIX_MONTHS) {
       const formatMonthYear = (date: Date) => {
@@ -182,15 +217,15 @@ export default function StepsStatsScreen() {
   };
 
   const getPeriodLabel = (tab: string) => {
-    if (tab === "Tuần") return "tuần này";
-    if (tab === "Tháng") return "tháng này";
-    return "6 tháng này";
+    if (tab === "Tuần" || tab === "Week") return t.stats.periods.thisWeek;
+    if (tab === "Tháng" || tab === "Month") return t.stats.periods.thisMonth;
+    return t.stats.periods.sixMonthsThis;
   };
 
   const getPreviousPeriodLabel = (tab: string) => {
-    if (tab === "Tuần") return "tuần trước";
-    if (tab === "Tháng") return "tháng trước";
-    return "6 tháng trước";
+    if (tab === "Tuần" || tab === "Week") return t.stats.periods.lastWeek;
+    if (tab === "Tháng" || tab === "Month") return t.stats.periods.lastMonth;
+    return t.stats.periods.sixMonthsLast;
   };
 
   // Xử lý lưu mục tiêu mới
@@ -213,7 +248,7 @@ export default function StepsStatsScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
               <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Bước chân</Text>
+            <Text style={styles.headerTitle}>{t.stats.stepsTitleShort}</Text>
             <View style={{ width: 40 }} />
           </View>
 
@@ -221,9 +256,9 @@ export default function StepsStatsScreen() {
             <View style={styles.iconCircleLarge}>
               <Ionicons name="footsteps-outline" size={48} color={colors.success} />
             </View>
-            <Text style={styles.connectTitle}>Tự động đếm bước chân</Text>
+            <Text style={styles.connectTitle}>{t.stats.connectTitle}</Text>
             <Text style={styles.connectDesc}>
-              Cho phép ứng dụng truy cập cảm biến đếm bước chân của thiết bị để tự động ghi nhận số bước chân của bạn mỗi ngày.
+              {t.stats.connectDesc}
             </Text>
             
             <TouchableOpacity 
@@ -231,7 +266,7 @@ export default function StepsStatsScreen() {
               activeOpacity={0.8}
               onPress={connectAndSync}
             >
-              <Text style={styles.connectButtonText}>Cấp quyền truy cập</Text>
+              <Text style={styles.connectButtonText}>{t.stats.connectButtonText}</Text>
             </TouchableOpacity>
 
             {error && (
@@ -246,9 +281,9 @@ export default function StepsStatsScreen() {
   // Lời khuyên động dưới bảng thống kê tuần
   const getBannerText = () => {
     if (averageSteps >= stepGoal) {
-      return "Tuyệt vời! Bạn đã hoàn thành xuất sắc mục tiêu vận động. Hãy duy trì thói quen lành mạnh này nhé!";
+      return t.stats.workoutNoticeBanner.perfect;
     }
-    return "Tuần này bạn đã vận động ổn định. Thêm chút nữa vào cuối tuần để hoàn thành mục tiêu nhé!";
+    return t.stats.workoutNoticeBanner.steady;
   };
 
   // Render Calendar Grid for Month view
@@ -356,7 +391,10 @@ export default function StepsStatsScreen() {
     const mostActive = historyData.reduce((max, item) => item.value > max.value ? item : max, historyData[0]);
     if (mostActive.value === 0) return "";
     const monthNum = parseInt(mostActive.label.replace("Th", ""), 10);
-    return `Tháng ${monthNum}`;
+    const monthNames = language === "vi"
+      ? ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"]
+      : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return monthNames[monthNum - 1] || "";
   };
 
   return (
@@ -369,17 +407,17 @@ export default function StepsStatsScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Bước chân</Text>
+          <Text style={styles.headerTitle}>{t.stats.stepsTitleShort}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         {/* Today's Step Card */}
         <View style={styles.todayCard}>
           <View style={styles.todayCardLeft}>
-            <Text style={styles.todayCardLabel}>HÔM NAY</Text>
+            <Text style={styles.todayCardLabel}>{t.stats.today}</Text>
             <Text style={styles.todayStepsValue}>
-              {todaySteps.toLocaleString("vi-VN")}
-              <Text style={styles.todayStepsUnit}> bước</Text>
+              {todaySteps.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}
+              <Text style={styles.todayStepsUnit}> {t.stats.stepsUnit}</Text>
             </Text>
             
             {/* Progress Bar towards goal */}
@@ -387,7 +425,7 @@ export default function StepsStatsScreen() {
               <View style={[styles.todayProgressFill, { width: `${Math.min(100, (todaySteps / stepGoal) * 100)}%` }]} />
             </View>
             <Text style={styles.todayGoalText}>
-              Mục tiêu: {stepGoal.toLocaleString("vi-VN")} bước ({Math.round(Math.min(100, (todaySteps / stepGoal) * 100))}%)
+              {t.stats.goal}: {stepGoal.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} {t.stats.stepsUnit} ({Math.round(Math.min(100, (todaySteps / stepGoal) * 100))}%)
             </Text>
           </View>
 
@@ -408,19 +446,19 @@ export default function StepsStatsScreen() {
           <View style={styles.todayStatItem}>
             <MaterialCommunityIcons name="fire" size={20} color={colors.danger} />
             <Text style={styles.todayStatVal}>{Math.round(todaySteps * 0.04)} kcal</Text>
-            <Text style={styles.todayStatLbl}>Calo tiêu hao</Text>
+            <Text style={styles.todayStatLbl}>{t.stats.caloriesBurned}</Text>
           </View>
           
           <View style={styles.todayStatItem}>
             <MaterialCommunityIcons name="map-marker-distance" size={20} color={colors.info} />
             <Text style={styles.todayStatVal}>{(todaySteps * 0.00075).toFixed(2)} km</Text>
-            <Text style={styles.todayStatLbl}>Quãng đường</Text>
+            <Text style={styles.todayStatLbl}>{t.stats.distance}</Text>
           </View>
 
           <View style={styles.todayStatItem}>
             <MaterialCommunityIcons name="clock-outline" size={20} color="#10B981" />
-            <Text style={styles.todayStatVal}>{Math.round(todaySteps / 120)} phút</Text>
-            <Text style={styles.todayStatLbl}>Thời gian đi</Text>
+            <Text style={styles.todayStatVal}>{Math.round(todaySteps / 120)} {language === "vi" ? "phút" : "mins"}</Text>
+            <Text style={styles.todayStatLbl}>{t.stats.walkingTime}</Text>
           </View>
         </View>
 
@@ -466,12 +504,12 @@ export default function StepsStatsScreen() {
         ) : historyData.length === 0 ? (
           <View style={styles.chartEmptyContainer}>
             <Ionicons name="footsteps-outline" size={40} color={colors.borderSoft} />
-            <Text style={styles.emptyText}>Chưa có dữ liệu bước chân</Text>
+            <Text style={styles.emptyText}>{t.stats.noDataSteps}</Text>
           </View>
         ) : (
           <View style={styles.chartSection}>
             <BarChart 
-              data={historyData} 
+              data={translatedHistoryData} 
               averageValue={averageSteps}
               barColor={colors.success} 
               showYAxis={true} 
@@ -483,11 +521,11 @@ export default function StepsStatsScreen() {
             <View style={styles.legendContainer}>
               <View style={styles.legendItem}>
                 <Text style={styles.legendDashedLine}>- - -</Text>
-                <Text style={styles.legendLabel}>Bước trung bình</Text>
+                <Text style={styles.legendLabel}>{t.stats.averageSteps}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={styles.legendBarIndicator} />
-                <Text style={styles.legendLabel}>Dữ liệu ghi nhận</Text>
+                <Text style={styles.legendLabel}>{t.stats.loggedData}</Text>
               </View>
             </View>
           </View>
@@ -501,11 +539,11 @@ export default function StepsStatsScreen() {
             </View>
             <View style={styles.headerTextContainer}>
               <View style={styles.titleWithInfo}>
-                <Text style={styles.cardTitle}>Thống kê bước chân</Text>
+                <Text style={styles.cardTitle}>{t.stats.stepsTitle}</Text>
                 <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} style={{ marginLeft: 6 }} />
               </View>
               <Text style={styles.subHeader}>
-                Mục tiêu: {stepGoal.toLocaleString("vi-VN")} bước/ngày
+                {t.stats.goal}: {stepGoal.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} {t.stats.stepsPerDay}
               </Text>
             </View>
           </View>
@@ -515,12 +553,12 @@ export default function StepsStatsScreen() {
             <View style={styles.metricBox}>
               <View style={styles.metricValueContainer}>
                 <Text style={styles.metricValue}>
-                  {averageSteps.toLocaleString("vi-VN")}
+                  {averageSteps.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}
                 </Text>
-                <Text style={styles.metricUnitInline}>bước/ngày</Text>
+                <Text style={styles.metricUnitInline}>{t.stats.stepsPerDay}</Text>
               </View>
               <Text style={styles.metricLabel}>
-                {isSixMonths ? "Trung bình 6 tháng" : `Trung bình ${getPeriodLabel(activeTabLabel)}`}
+                {isSixMonths ? t.stats.sixMonthAverage : t.stats.averagePeriod(getPeriodLabel(activeTabLabel))}
               </Text>
             </View>
             
@@ -528,13 +566,13 @@ export default function StepsStatsScreen() {
               <View style={styles.metricValueContainer}>
                 <Text style={styles.metricValue}>
                   {isSixMonths 
-                    ? maxMonthSteps.toLocaleString("vi-VN") 
-                    : previousAverageSteps.toLocaleString("vi-VN")}
+                    ? maxMonthSteps.toLocaleString(language === "vi" ? "vi-VN" : "en-US") 
+                    : previousAverageSteps.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}
                 </Text>
-                <Text style={styles.metricUnitInline}>bước/ngày</Text>
+                <Text style={styles.metricUnitInline}>{t.stats.stepsPerDay}</Text>
               </View>
               <Text style={styles.metricLabel}>
-                {isSixMonths ? "Tháng năng động nhất" : `Trung bình ${getPreviousPeriodLabel(activeTabLabel)}`}
+                {isSixMonths ? t.stats.mostActiveMonth : t.stats.averagePeriod(getPreviousPeriodLabel(activeTabLabel))}
               </Text>
             </View>
           </View>
@@ -547,9 +585,9 @@ export default function StepsStatsScreen() {
                   const isMet = item.value >= item.goal;
                   return (
                     <View key={index} style={styles.circleCol}>
-                      <Text style={styles.circleDayLabel}>{item.label}</Text>
+                      <Text style={styles.circleDayLabel}>{translatePeriodLabel(item.label)}</Text>
                       <View style={[styles.circle, isMet ? styles.circleMet : styles.circleNotMet]} />
-                      <Text style={styles.circleStepsVal}>{item.value.toLocaleString("vi-VN")}</Text>
+                      <Text style={styles.circleStepsVal}>{item.value.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}</Text>
                     </View>
                   );
                 })}
@@ -559,11 +597,11 @@ export default function StepsStatsScreen() {
               <View style={styles.progressLegendRow}>
                 <View style={styles.legendDotItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.borderSoft }]} />
-                  <Text style={styles.legendDotLabel}>Chưa đạt</Text>
+                  <Text style={styles.legendDotLabel}>{t.stats.notMet}</Text>
                 </View>
                 <View style={styles.legendDotItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
-                  <Text style={styles.legendDotLabel}>Đạt mục tiêu</Text>
+                  <Text style={styles.legendDotLabel}>{t.stats.goalMet}</Text>
                 </View>
               </View>
 
@@ -585,7 +623,7 @@ export default function StepsStatsScreen() {
         {period === StepsPeriod.MONTH && (
           <View style={styles.motivationalBanner}>
             <Text style={styles.motivationalText}>
-              🏃 Bạn đang hình thành thói quen vận động rồi đấy! Thử tăng thêm mục tiêu xem sao 🎯
+              {t.stats.motivationalBanner.habit}
             </Text>
           </View>
         )}
@@ -593,7 +631,7 @@ export default function StepsStatsScreen() {
         {period === StepsPeriod.SIX_MONTHS && historyData.length > 0 && (
           <View style={styles.motivationalBanner}>
             <Text style={styles.motivationalText}>
-              👉 {getMostActiveMonthLabel() || "Tháng gần đây"} là tháng bạn hoạt động tích cực nhất. Thử lấy lại cảm hứng từ tháng đó xem sao!
+              👉 {getMostActiveMonthLabel() || (language === "vi" ? "Tháng gần đây" : "Recent month")} {language === "vi" ? "là tháng bạn hoạt động tích cực nhất. Thử lấy lại cảm hứng từ tháng đó xem sao!" : "was your most active. Try getting inspired by that progress!"}
             </Text>
           </View>
         )}
@@ -601,18 +639,18 @@ export default function StepsStatsScreen() {
         {/* Bước chân & mức độ hoạt động Card */}
         <View style={styles.card}>
           <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardTitle}>Bước chân & mức độ hoạt động</Text>
+            <Text style={styles.cardTitle}>{t.stats.stepsActivityLevel}</Text>
             <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} style={{ marginLeft: 8 }} />
           </View>
           
-          <ActivityLevelRow label="ÍT VẬN ĐỘNG" range="< 3,000" color={colors.danger} iconName="chair" />
-          <ActivityLevelRow label="NHẸ NHÀNG" range="3.000 - 6.499" color={colors.primary === "#A56CFF" ? "#F59E0B" : "#D97706"} iconName="walking" />
-          <ActivityLevelRow label="TRUNG BÌNH" range="6,500 - 9,999" color={colors.info} iconName="walking" />
-          <ActivityLevelRow label="RẤT NĂNG ĐỘNG" range="10,000 - 12,499" color={colors.success} iconName="running" />
-          <ActivityLevelRow label="CỰC KỲ NĂNG ĐỘNG" range="> 12,500" color={colors.primary} iconName="run-fast" iconFamily="MaterialCommunityIcons" />
+          <ActivityLevelRow label={t.stats.activityLevels.sedentary} range="< 3,000" color={colors.danger} iconName="chair" />
+          <ActivityLevelRow label={t.stats.activityLevels.light} range="3.000 - 6.499" color={colors.primary === "#A56CFF" ? "#F59E0B" : "#D97706"} iconName="walking" />
+          <ActivityLevelRow label={t.stats.activityLevels.moderate} range="6,500 - 9,999" color={colors.info} iconName="walking" />
+          <ActivityLevelRow label={t.stats.activityLevels.active} range="10,000 - 12,499" color={colors.success} iconName="running" />
+          <ActivityLevelRow label={t.stats.activityLevels.veryActive} range="> 12,500" color={colors.primary} iconName="run-fast" iconFamily="MaterialCommunityIcons" />
 
           <Text style={styles.activityDisclaimer}>
-            *** Bảng này giúp bạn hiểu bạn đang vận động ở mức nào dựa trên số bước trung bình mỗi ngày từ đó để hình dung mức calo tiêu hao tự nhiên (NEAT) của cơ thể.
+            {t.stats.activityDisclaimer}
           </Text>
         </View>
 
@@ -623,9 +661,9 @@ export default function StepsStatsScreen() {
             activeOpacity={0.7}
             onPress={() => setGoalModalVisible(true)}
           >
-            <Text style={styles.actionLabel}>Điều chỉnh mục tiêu</Text>
+            <Text style={styles.actionLabel}>{t.stats.adjustGoal}</Text>
             <View style={styles.actionRight}>
-              <Text style={styles.actionValue}>{stepGoal.toLocaleString("vi-VN")} bước</Text>
+              <Text style={styles.actionValue}>{stepGoal.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} {t.stats.stepsUnit}</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
@@ -637,9 +675,9 @@ export default function StepsStatsScreen() {
             activeOpacity={0.7}
             onPress={() => setHistoryModalVisible(true)}
           >
-            <Text style={styles.actionLabel}>Nhật ký bước chân</Text>
+            <Text style={styles.actionLabel}>{t.stats.stepsLog}</Text>
             <View style={styles.actionRight}>
-              <Text style={styles.actionValue}>Xem lịch sử</Text>
+              <Text style={styles.actionValue}>{t.stats.viewHistory}</Text>
               <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
@@ -658,7 +696,7 @@ export default function StepsStatsScreen() {
             <TouchableOpacity onPress={() => setGoalModalVisible(false)} style={styles.headerBackBtn}>
               <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.fullScreenModalTitle}>Điều chỉnh mục tiêu</Text>
+            <Text style={styles.fullScreenModalTitle}>{t.stats.adjustGoal}</Text>
             <TouchableOpacity 
               onPress={handleSaveGoal} 
               disabled={!isSaveActive}
@@ -668,7 +706,7 @@ export default function StepsStatsScreen() {
                 styles.headerSaveText,
                 isSaveActive ? styles.headerSaveTextActive : styles.headerSaveTextInactive
               ]}>
-                Lưu
+                {t.stats.save}
               </Text>
             </TouchableOpacity>
           </View>
@@ -676,7 +714,7 @@ export default function StepsStatsScreen() {
           <ScrollView style={styles.fullScreenModalBody}>
             {/* Input Row */}
             <View style={styles.inputRow}>
-              <Text style={styles.inputRowLabel}>Mục tiêu bước chân</Text>
+              <Text style={styles.inputRowLabel}>{t.stats.stepsGoal}</Text>
               <View style={styles.inputRowRight}>
                 <View style={styles.inputContainer}>
                   <TextInput
@@ -688,7 +726,7 @@ export default function StepsStatsScreen() {
                     placeholderTextColor={colors.textMuted}
                   />
                 </View>
-                <Text style={styles.inputRowUnit}>Bước</Text>
+                <Text style={styles.inputRowUnit}>{language === "vi" ? "Bước" : "Steps"}</Text>
               </View>
             </View>
 
@@ -696,49 +734,49 @@ export default function StepsStatsScreen() {
             <View style={styles.suggestionInfoBanner}>
               <Ionicons name="information-circle" size={22} color={colors.success} />
               <Text style={styles.suggestionInfoText}>
-                Dựa vào mức độ vận động bạn đã chọn, Wao gợi ý số bước phù hợp. Bạn vẫn có thể tự điều chỉnh mục tiêu theo nhu cầu.
+                {t.stats.suggestionBannerText}
               </Text>
             </View>
 
             {/* Suggestions Header */}
             <View style={styles.suggestionsHeader}>
-              <Text style={styles.suggestionsHeaderText}>Gợi ý mục tiêu bước chân</Text>
+              <Text style={styles.suggestionsHeaderText}>{t.stats.suggestionTitle}</Text>
               <Ionicons name="information-circle-outline" size={16} color={colors.textSecondary} style={{ marginLeft: 6 }} />
             </View>
 
             {/* Suggestions List Card */}
             <View style={styles.suggestionsCard}>
               <View style={styles.suggestionsTableHeader}>
-                <Text style={styles.suggestionsTableHeaderText}>Mức độ</Text>
-                <Text style={styles.suggestionsTableHeaderText}>Bước chân gợi ý</Text>
+                <Text style={styles.suggestionsTableHeaderText}>{t.stats.level}</Text>
+                <Text style={styles.suggestionsTableHeaderText}>{t.stats.suggestedSteps}</Text>
               </View>
 
               <SuggestionRow
-                label="Ít vận động"
+                label={language === "vi" ? "Ít vận động" : "Sedentary"}
                 value={3000}
                 iconName="chair"
                 onPress={(val) => setGoalInput(val.toString())}
               />
               <SuggestionRow
-                label="Nhẹ nhàng"
+                label={language === "vi" ? "Nhẹ nhàng" : "Light"}
                 value={5000}
                 iconName="walking"
                 onPress={(val) => setGoalInput(val.toString())}
               />
               <SuggestionRow
-                label="Trung bình"
+                label={language === "vi" ? "Trung bình" : "Moderate"}
                 value={8000}
                 iconName="walking"
                 onPress={(val) => setGoalInput(val.toString())}
               />
               <SuggestionRow
-                label="Rất năng động"
+                label={language === "vi" ? "Rất năng động" : "Very active"}
                 value={10000}
                 iconName="running"
                 onPress={(val) => setGoalInput(val.toString())}
               />
               <SuggestionRow
-                label="Cực kỳ năng động"
+                label={language === "vi" ? "Cực kỳ năng động" : "Super active"}
                 value={12000}
                 iconName="run-fast"
                 iconFamily="MaterialCommunityIcons"
@@ -760,13 +798,13 @@ export default function StepsStatsScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, styles.historyModalContent]}>
             <View style={styles.historyModalHeader}>
-              <Text style={styles.modalTitle}>Nhật ký bước chân</Text>
+              <Text style={styles.modalTitle}>{t.stats.stepsLog}</Text>
               <TouchableOpacity onPress={() => setHistoryModalVisible(false)} style={styles.closeBtn}>
                 <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSubtitle}>Lịch sử ghi nhận 30 ngày gần nhất</Text>
+            <Text style={styles.modalSubtitle}>{t.stats.historyLast30Days}</Text>
 
             {loadingHistoryList ? (
               <View style={styles.historyLoading}>
@@ -784,7 +822,9 @@ export default function StepsStatsScreen() {
                   const formattedDate = `${dateObj.getDate().toString().padStart(2, "0")}/${(dateObj.getMonth() + 1).toString().padStart(2, "0")}/${dateObj.getFullYear()}`;
                   
                   // Lấy thứ trong tuần
-                  const weekdayLabels = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+                  const weekdayLabels = language === "vi"
+                    ? ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"]
+                    : ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
                   const weekday = weekdayLabels[dateObj.getDay()];
 
                   return (
@@ -798,14 +838,14 @@ export default function StepsStatsScreen() {
                       </View>
                       
                       <View style={styles.historyItemRight}>
-                        <Text style={styles.historyItemSteps}>{item.steps.toLocaleString("vi-VN")}</Text>
-                        <Text style={styles.historyItemUnit}>bước</Text>
+                        <Text style={styles.historyItemSteps}>{item.steps.toLocaleString(language === "vi" ? "vi-VN" : "en-US")}</Text>
+                        <Text style={styles.historyItemUnit}>{t.stats.stepsUnit}</Text>
                       </View>
                     </View>
                   );
                 }}
                 ListEmptyComponent={
-                  <Text style={styles.emptyHistoryText}>Chưa có dữ liệu lịch sử bước chân</Text>
+                  <Text style={styles.emptyHistoryText}>{t.stats.emptyHistoryText}</Text>
                 }
               />
             )}
