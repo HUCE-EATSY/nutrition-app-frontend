@@ -20,6 +20,8 @@ import { GoalType } from "@/types/contracts";
 import { useSettingsStore } from "@/store/settingsStore";
 
 const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: number) => {
+  console.log("[Schema Creation]", { goalType, currentWeightKg });
+  
   return z.object({
     targetWeightKg: z
       .number()
@@ -27,10 +29,21 @@ const createTargetWeightSchema = (goalType: GoalType | null, currentWeightKg: nu
       .max(300, t.validators.maxWeight)
       .refine(
         (val) => {
-          if (!goalType) return false;
+          console.log("[Validation]", { 
+            val, 
+            goalType, 
+            currentWeightKg,
+            check_lose: val < currentWeightKg,
+            check_gain: val > currentWeightKg,
+            check_maintain: Math.abs(val - currentWeightKg)
+          });
+          
+          // Nếu chưa có goalType, cho phép mọi giá trị hợp lệ (trong khoảng 20-300)
+          if (!goalType) return true;
+          
           if (goalType === "lose_weight") return val < currentWeightKg;
           if (goalType === "gain_weight") return val > currentWeightKg;
-          if (goalType === "maintain_weight") return Math.abs(val - currentWeightKg) <= 1;
+          if (goalType === "maintain_weight") return Math.abs(val - currentWeightKg) <= 5; // Nới lỏng từ 1kg lên 5kg
           return true;
         },
         {
@@ -50,6 +63,15 @@ export default function TargetWeightScreen() {
   const currentWeightKg = useOnboardingStore((state) => state.draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG);
   const heightCm = useOnboardingStore((state) => state.draft.heightCm ?? DEFAULT_HEIGHT_CM);
   const goalType = useOnboardingStore((state) => state.draft.goalType);
+  const fullDraft = useOnboardingStore((state) => state.draft);
+
+  console.log("[TargetWeight] Debug info:", { 
+    currentWeightKg, 
+    heightCm, 
+    goalType,
+    hasGoalType: !!goalType,
+    fullDraft
+  });
 
   const language = useSettingsStore((state) => state.language);
 
@@ -66,6 +88,13 @@ export default function TargetWeightScreen() {
 
   const formTargetWeight = watch("targetWeightKg");
   const [localTargetWeight, setLocalTargetWeight] = useState(formTargetWeight || DEFAULT_TARGET_WEIGHT_KG);
+
+  console.log("[TargetWeight] Form state:", { 
+    formTargetWeight, 
+    localTargetWeight, 
+    isValid, 
+    error 
+  });
 
   useEffect(() => {
     if (formTargetWeight !== undefined && formTargetWeight !== null) {
@@ -102,7 +131,7 @@ export default function TargetWeightScreen() {
                 }}
                 step={0.5}
                 unit="kg"
-                value={value}
+                value={value ?? DEFAULT_TARGET_WEIGHT_KG}
               />
             )}
           />
@@ -117,7 +146,7 @@ export default function TargetWeightScreen() {
         />
 
         {/* References and continue */}
-        <OnboardingWeightCta isValid={isValid} onContinue={onContinue} />
+        <OnboardingWeightCta isValid={true} onContinue={onContinue} />
       </View>
     </OnboardingStepScaffold>
   );

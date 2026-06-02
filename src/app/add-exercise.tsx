@@ -10,21 +10,16 @@ import {
   TextInput,
   View,
   Image,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "@/constants/i18n";
 
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
 import { getTodayDateISO } from "@/utils/date";
 import { useSettingsStore } from "@/store/settingsStore";
 import { exerciseService, Exercise } from "@/services/exerciseService";
-import { useDiaryStore } from "@/store/diaryStore";
-import { useStepsStore } from "@/store/statsStore";
 
 export default function AddExerciseScreen() {
-  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
@@ -34,18 +29,6 @@ export default function AddExerciseScreen() {
   const [loading, setLoading] = useState(true);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Lấy dữ liệu từ store giống dashboard
-  const { exercises: exerciseLogs } = useDiaryStore();
-  const { todaySteps, isConnected, stepRecords } = useStepsStore();
-  
-  // Tính toán calo giống dashboard
-  const exerciseBurned = Math.round(exerciseLogs.reduce((sum, ex) => sum + ex.caloriesBurned, 0));
-  const todayStr = getTodayDateISO();
-  const stepsForSelectedDate = targetDate === todayStr ? todaySteps : ((stepRecords || {})[targetDate] || 0);
-  const stepBurned = isConnected ? Math.round(stepsForSelectedDate * 0.04) : 0;
-  const totalBurned = exerciseBurned + stepBurned;
-  const exerciseGoal = 500; // Mục tiêu mặc định, có thể lấy từ settings sau
 
   useEffect(() => {
     async function loadExercises() {
@@ -117,52 +100,17 @@ export default function AddExerciseScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="chevron-back" size={28} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t.exercise.addActivityHeader}</Text>
+        <Text style={styles.headerTitle}>Thêm hoạt động</Text>
         <View style={{ width: 28 }} />
       </View>
 
       <View style={styles.content}>
-        {/* Exercise Summary Card */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{t.stats.goal}</Text>
-              <View style={styles.summaryValueRow}>
-                <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
-                <Text style={styles.summaryValue}>{exerciseGoal}</Text>
-                <Text style={styles.summaryUnit}>kcal</Text>
-              </View>
-            </View>
-            
-            <View style={styles.summaryDivider} />
-            
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{t.exercise.burned}</Text>
-              <View style={styles.summaryValueRow}>
-                <MaterialCommunityIcons name="fire" size={16} color={colors.primary} />
-                <Text style={styles.summaryValue}>{totalBurned}</Text>
-                <Text style={styles.summaryUnit}>kcal</Text>
-              </View>
-            </View>
-          </View>
-          
-          {/* Progress Bar */}
-          <View style={styles.progressBarBg}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { width: `${Math.min(100, (totalBurned / exerciseGoal) * 100)}%` }
-              ]} 
-            />
-          </View>
-        </View>
-
         {/* Search */}
         <View style={styles.searchContainer}>
           <Ionicons color={colors.textMuted} name="search" size={20} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder={t.exercise.searchActivityPlaceholder}
+            placeholder="Tìm kiếm hoạt động"
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -184,16 +132,16 @@ export default function AddExerciseScreen() {
                 <>
                   {!searchQuery && (
                     <>
-                      <Text style={styles.sectionLabel}>{t.exercise.autoTracking}</Text>
+                      <Text style={styles.sectionLabel}>THEO DÕI TỰ ĐỘNG</Text>
                       <View style={styles.healthCard}>
                         <View style={styles.healthIconContainer}>
                           <Ionicons name="heart" size={32} color="#FF3B30" />
                         </View>
                         <View style={styles.healthTextContainer}>
                           <Text style={styles.healthText}>
-                            {t.exercise.connectHealthPrompt(Platform.OS === "ios" ? "Apple Health" : "Health Connect")}
+                            Kết nối Apple Health để Wao tự theo dõi calo hoạt động cho bạn.
                           </Text>
-                          <Text style={styles.healthLink}>{t.exercise.connectLink}</Text>
+                          <Text style={styles.healthLink}>Kết nối</Text>
                         </View>
                       </View>
                     </>
@@ -247,77 +195,23 @@ export default function AddExerciseScreen() {
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgBase },
+  container: { flex: 1, backgroundColor: "#151226" }, // Dark background like image
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  headerTitle: { ...typography.h3, color: colors.textPrimary, fontSize: 18 },
+  headerTitle: { ...typography.h3, color: "#FFFFFF", fontSize: 18 },
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
   },
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: spacing.sm,
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  summaryLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
-    fontWeight: "600",
-    marginBottom: 6,
-  },
-  summaryValueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  summaryValue: {
-    ...typography.bodyStrong,
-    color: colors.textPrimary,
-    fontSize: 20,
-  },
-  summaryUnit: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: colors.border,
-    marginHorizontal: spacing.md,
-  },
-  progressBarBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.surfaceAlt,
-    width: "100%",
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.08)",
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     height: 48,
@@ -328,7 +222,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: colors.textPrimary,
+    color: "#FFFFFF",
     ...typography.body,
     fontSize: 15,
   },
@@ -346,63 +240,59 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingRight: spacing.xl,
   },
   sectionLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
+    color: "#8E8E93",
+    fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.5,
     marginBottom: spacing.md,
   },
   healthCard: {
     flexDirection: "row",
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: "#2B1B54",
     borderRadius: radius.md,
     padding: spacing.md,
     alignItems: "center",
     marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   healthIconContainer: {
     width: 60,
     height: 60,
-    backgroundColor: colors.bgElevated,
+    backgroundColor: "#FFFFFF",
     borderRadius: radius.sm,
     justifyContent: "center",
     alignItems: "center",
     marginRight: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   healthTextContainer: {
     flex: 1,
     justifyContent: "center",
   },
   healthText: {
-    ...typography.body,
-    color: colors.textSecondary,
+    color: "#FFFFFF",
+    fontSize: 14,
     lineHeight: 20,
     marginBottom: 4,
   },
   healthLink: {
-    ...typography.bodyStrong,
-    color: colors.primary,
+    color: "#A56CFF",
     fontSize: 14,
+    fontWeight: "600",
   },
   sectionHeader: {
     paddingVertical: spacing.xs,
-    backgroundColor: colors.bgBase,
+    backgroundColor: "#151226",
   },
   sectionTitle: {
-    ...typography.bodyStrong,
-    color: colors.textMuted,
+    color: "#8E8E93",
     fontSize: 16,
+    fontWeight: "bold",
   },
   exerciseItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: "rgba(255,255,255,0.1)",
   },
   exerciseImage: {
     width: 40,
@@ -414,8 +304,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     flex: 1,
   },
   exerciseName: {
-    ...typography.body,
-    color: colors.textPrimary,
+    color: "#FFFFFF",
     fontSize: 16,
   },
   alphabetIndex: {
@@ -428,12 +317,12 @@ const getStyles = (colors: any) => StyleSheet.create({
     width: 24,
   },
   alphabetLetter: {
-    color: colors.textMuted,
+    color: "rgba(255,255,255,0.3)",
     fontSize: 11,
     fontWeight: "bold",
     marginVertical: 1,
   },
   alphabetLetterActive: {
-    color: colors.primary,
+    color: "#A56CFF",
   },
 });

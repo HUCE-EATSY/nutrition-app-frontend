@@ -26,6 +26,11 @@ if (Platform.OS === 'web') {
   require('../../global.css');
 }
 
+// Import dev tools in development mode
+if (__DEV__) {
+  require('@/utils/devTools');
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -173,7 +178,7 @@ export default function RootLayout() {
 
   // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động
   if (Platform.OS === "web") {
-    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+    const webClientId = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID ?? "";
     return (
       <GoogleOAuthProvider clientId={webClientId}>
         {stackContent}
