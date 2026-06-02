@@ -378,6 +378,35 @@ export default function ActivityStatsScreen() {
                       </View>
                     ))}
                   </View>
+
+                  {/* Nút Nhật ký luyện tập */}
+                  <TouchableOpacity 
+                    style={styles.journalButton}
+                    onPress={() => {
+                      const now = new Date();
+                      const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+                      const diffToMonday = now.getDate() - dayOfWeek + 1;
+                      const startDate = new Date(now.setDate(diffToMonday));
+                      startDate.setDate(startDate.getDate() + (offsetWeeks * 7));
+                      const startDateISO = startDate.toISOString().split('T')[0];
+                      const endDate = new Date(startDate);
+                      endDate.setDate(endDate.getDate() + 6);
+                      const endDateISO = endDate.toISOString().split('T')[0];
+                      
+                      router.push({
+                        pathname: "/stats/exercise-journal",
+                        params: { 
+                          period: "week",
+                          startDate: startDateISO,
+                          endDate: endDateISO
+                        }
+                      });
+                    }}
+                  >
+                    <Ionicons name="book-outline" size={20} color={colors.textPrimary} />
+                    <Text style={styles.journalButtonText}>Nhật ký luyện tập</Text>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
                 </>
               )}
 
@@ -425,16 +454,71 @@ export default function ActivityStatsScreen() {
                       ))}
                     </View>
                   </View>
+
+                  {/* Nút Nhật ký luyện tập */}
+                  <TouchableOpacity 
+                    style={styles.journalButton}
+                    onPress={() => {
+                      const now = new Date();
+                      const year = now.getFullYear();
+                      const month = now.getMonth();
+                      const startDate = new Date(year, month, 1);
+                      const startDateISO = startDate.toISOString().split('T')[0];
+                      const endDate = new Date(year, month + 1, 0);
+                      const endDateISO = endDate.toISOString().split('T')[0];
+                      
+                      router.push({
+                        pathname: "/stats/exercise-journal",
+                        params: { 
+                          period: "month",
+                          startDate: startDateISO,
+                          endDate: endDateISO
+                        }
+                      });
+                    }}
+                  >
+                    <Ionicons name="book-outline" size={20} color={colors.textPrimary} />
+                    <Text style={styles.journalButtonText}>Nhật ký luyện tập</Text>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
                 </>
               )}
 
               {/* TAB 6 THÁNG */}
               {activeTabLabel === "6 Tháng" && (
-                <View style={styles.insightBanner}>
-                  <Text style={styles.insightText}>
-                    🔥 Bạn từng làm được nhiều hơn trong tháng 5. Giờ là lúc thử lại nhé!
-                  </Text>
-                </View>
+                <>
+                  <View style={styles.insightBanner}>
+                    <Text style={styles.insightText}>
+                      🔥 Bạn từng làm được nhiều hơn trong tháng 5. Giờ là lúc thử lại nhé!
+                    </Text>
+                  </View>
+
+                  {/* Nút Nhật ký luyện tập */}
+                  <TouchableOpacity 
+                    style={styles.journalButton}
+                    onPress={() => {
+                      const now = new Date();
+                      const endDate = new Date(now);
+                      const endDateISO = endDate.toISOString().split('T')[0];
+                      const startDate = new Date(now);
+                      startDate.setMonth(startDate.getMonth() - 6);
+                      const startDateISO = startDate.toISOString().split('T')[0];
+                      
+                      router.push({
+                        pathname: "/stats/exercise-journal",
+                        params: { 
+                          period: "6months",
+                          startDate: startDateISO,
+                          endDate: endDateISO
+                        }
+                      });
+                    }}
+                  >
+                    <Ionicons name="book-outline" size={20} color={colors.textPrimary} />
+                    <Text style={styles.journalButtonText}>Nhật ký luyện tập</Text>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                </>
               )}
             </View>
           </View>
@@ -666,6 +750,24 @@ const styles = StyleSheet.create({
   },
   trackerDayCircleActive: {
     backgroundColor: colors.danger,
+  },
+
+  // Journal Button
+  journalButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#1e1b2e",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 20,
+    gap: 12,
+  },
+  journalButtonText: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 15,
+    fontWeight: "600",
   },
 
   // === STYLES CHO TAB THÁNG VÀ 6 THÁNG ===
