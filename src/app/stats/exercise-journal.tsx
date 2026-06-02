@@ -3,22 +3,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import { exerciseService } from "@/services/exerciseService";
+import { exerciseService, ExerciseLog } from "@/services/exerciseService";
 import { colors } from "@/constants";
 
-interface ExerciseLog {
-  id: string;
-  exerciseId: string;
-  exerciseNameVi: string;
-  exerciseNameEn: string;
-  exerciseIconUrl: string | null;
-  logDate: string;
-  durationMinutes: number;
-  intensity: number;
-  caloriesBurned: number;
-  notes: string | null;
-  createdAt: string;
-}
 
 interface GroupedLogs {
   date: string;
