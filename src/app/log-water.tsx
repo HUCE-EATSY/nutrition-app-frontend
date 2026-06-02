@@ -25,6 +25,8 @@ import { useWaterStore } from "@/store/waterStore";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useAuthStore } from "@/store/authStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const DEFAULT_WATER_DATA = {
   waterLogs: {} as Record<string, number>,
@@ -33,6 +35,8 @@ const DEFAULT_WATER_DATA = {
 };
 
 export default function LogWaterScreen() {
+  const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
@@ -73,7 +77,7 @@ export default function LogWaterScreen() {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
     const parsed = isNaN(val) ? 0 : val;
     if (parsed > 2000) {
-      Alert.alert("Lỗi giới hạn", "Lượng nước thêm mặc định không được vượt quá 2,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitDefaultError);
       setDefaultStep(2000);
     } else {
       setDefaultStep(parsed);
@@ -97,34 +101,34 @@ export default function LogWaterScreen() {
     // Validate date format YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(logDateStr)) {
-      Alert.alert("Lỗi định dạng", "Vui lòng nhập ngày đúng định dạng YYYY-MM-DD.\nVí dụ: 2026-05-20");
+      Alert.alert(t.water.formatErrorTitle, t.water.formatDateError);
       return;
     }
 
     if (isNaN(intake) || intake < 0) {
-      Alert.alert("Lỗi nhập liệu", "Lượng nước uống không hợp lệ.");
+      Alert.alert(t.water.inputErrorTitle, t.water.inputIntakeError);
       return;
     }
     if (intake > 10000) {
-      Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitTotalError);
       return;
     }
 
     if (isNaN(goal) || goal < 500) {
-      Alert.alert("Lỗi nhập liệu", "Mục tiêu nước uống tối thiểu phải từ 500 ml trở lên.");
+      Alert.alert(t.water.inputErrorTitle, t.water.inputGoalError);
       return;
     }
     if (goal > 10000) {
-      Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitGoalError);
       return;
     }
 
     if (isNaN(defaultStep) || defaultStep < 50) {
-      Alert.alert("Lỗi nhập liệu", "Dung tích thêm mặc định tối thiểu phải từ 50 ml trở lên.");
+      Alert.alert(t.water.inputErrorTitle, t.water.inputDefaultError);
       return;
     }
     if (defaultStep > 2000) {
-      Alert.alert("Lỗi giới hạn", "Dung tích thêm mặc định không được vượt quá 2,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitDefaultError);
       return;
     }
 
@@ -141,7 +145,7 @@ export default function LogWaterScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIntake((prev) => {
       if (prev + amount > 10000) {
-        Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+        Alert.alert(t.water.limitErrorTitle, t.water.limitTotalError);
         return 10000;
       }
       return prev + amount;
@@ -157,15 +161,15 @@ export default function LogWaterScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const val = parseInt(customAmount.replace(/[^0-9]/g, ""), 10);
     if (isNaN(val) || val <= 0) {
-      Alert.alert("Lỗi nhập liệu", "Vui lòng nhập lượng nước hợp lệ.");
+      Alert.alert(t.water.inputErrorTitle, t.water.inputCustomError);
       return;
     }
     if (val > 5000) {
-      Alert.alert("Lỗi giới hạn", "Lượng nước thêm mỗi lần không được vượt quá 5,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitCustomAddError);
       return;
     }
     if (intake + val > 10000) {
-      Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitTotalError);
       return;
     }
     setIntake((prev) => prev + val);
@@ -176,7 +180,7 @@ export default function LogWaterScreen() {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
     const parsed = isNaN(val) ? 0 : val;
     if (parsed > 10000) {
-      Alert.alert("Lỗi giới hạn", "Tổng lượng nước uống trong ngày không được vượt quá 10,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitTotalError);
       setIntake(10000);
     } else {
       setIntake(parsed);
@@ -187,7 +191,7 @@ export default function LogWaterScreen() {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
     const parsed = isNaN(val) ? 0 : val;
     if (parsed > 10000) {
-      Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
+      Alert.alert(t.water.limitErrorTitle, t.water.limitGoalError);
       setGoal(10000);
     } else {
       setGoal(parsed);
@@ -226,7 +230,7 @@ export default function LogWaterScreen() {
           <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={15}>
             <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>Nhật ký nước uống</Text>
+          <Text style={styles.headerTitle}>{t.water.logTitle}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -248,8 +252,8 @@ export default function LogWaterScreen() {
               </Text>
               <Text style={styles.progressSub}>
                 {progressPercentage >= 100
-                  ? "Đã hoàn thành xuất sắc mục tiêu! 🎉"
-                  : `Đạt ${progressPercentage}% mục tiêu ngày`}
+                  ? t.water.completedGoal
+                  : t.water.reachedGoalProgress(progressPercentage)}
               </Text>
             </View>
           </View>
@@ -257,7 +261,7 @@ export default function LogWaterScreen() {
           {/* Daily Goal row (Moved from bottom to top) */}
           <View style={styles.settingsSection}>
             <View style={[styles.settingsRow, { borderBottomWidth: 0 }]}>
-              <Text style={styles.settingsLabel}>Mục tiêu ngày</Text>
+              <Text style={styles.settingsLabel}>{t.water.dailyGoal}</Text>
               <View style={styles.goalInputContainer}>
                 <TextInput
                   style={styles.settingsInput}
@@ -273,7 +277,7 @@ export default function LogWaterScreen() {
 
           {/* Stepper controls */}
           <View style={styles.inputSection}>
-            <Text style={styles.sectionLabel}>Lượng nước đã uống</Text>
+            <Text style={styles.sectionLabel}>{t.water.consumedAmount}</Text>
 
             <View style={styles.stepperCard}>
               {/* Main Stepper Row */}
@@ -308,7 +312,7 @@ export default function LogWaterScreen() {
               <View style={styles.minimalistDefaultStepRow}>
                 <View style={styles.minimalistControls}>
                   <View style={styles.miniInputContainer}>
-                    <Text style={styles.minimalistLabel}>Mặc định: </Text>
+                    <Text style={styles.minimalistLabel}>{t.water.defaultLabel}</Text>
                     <TextInput
                       style={styles.miniInput}
                       value={String(defaultStep)}
@@ -326,14 +330,14 @@ export default function LogWaterScreen() {
 
           {/* Custom Add Section */}
           <View style={styles.customAddSection}>
-            <Text style={styles.sectionLabel}>Lượng nước vừa uống tùy chỉnh</Text>
+            <Text style={styles.sectionLabel}>{t.water.customAmountLabel}</Text>
             <View style={styles.customAddContainer}>
               <View style={[styles.customInputContainer, isFocused && styles.customInputContainerFocused]}>
                 <TextInput
                   style={styles.customInput}
                   value={customAmount}
                   onChangeText={setCustomAmount}
-                  placeholder="Số ml..."
+                  placeholder={t.water.customAmountPlaceholder}
                   placeholderTextColor={colors.textMuted}
                   keyboardType="numeric"
                   maxLength={5}
@@ -351,36 +355,36 @@ export default function LogWaterScreen() {
                 onPress={handleCustomAdd}
               >
                 <Ionicons name="add" size={20} color="#FFF" />
-                <Text style={styles.customAddBtnText}>Thêm</Text>
+                <Text style={styles.customAddBtnText}>{t.water.add}</Text>
               </Pressable>
             </View>
           </View>
 
           {/* Presets Grid */}
           <View style={styles.presetsSection}>
-            <Text style={styles.sectionLabel}>Thêm nhanh theo cốc/chai</Text>
+            <Text style={styles.sectionLabel}>{t.water.presetsTitle}</Text>
             <View style={styles.presetsGrid}>
               <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(150)}>
                 <MaterialCommunityIcons name="cup-water" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Cốc nhỏ</Text>
+                <Text style={styles.presetName}>{t.water.smallCup}</Text>
                 <Text style={styles.presetVal}>+150 ml</Text>
               </Pressable>
 
               <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(250)}>
                 <MaterialCommunityIcons name="cup" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Cốc tiêu chuẩn</Text>
+                <Text style={styles.presetName}>{t.water.standardCup}</Text>
                 <Text style={styles.presetVal}>+250 ml</Text>
               </Pressable>
 
               <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(500)}>
                 <MaterialCommunityIcons name="bottle-wine-outline" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Chai vừa</Text>
+                <Text style={styles.presetName}>{t.water.mediumBottle}</Text>
                 <Text style={styles.presetVal}>+500 ml</Text>
               </Pressable>
 
               <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(750)}>
                 <MaterialCommunityIcons name="bottle-wine" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>Chai lớn</Text>
+                <Text style={styles.presetName}>{t.water.largeBottle}</Text>
                 <Text style={styles.presetVal}>+750 ml</Text>
               </Pressable>
             </View>
@@ -391,7 +395,7 @@ export default function LogWaterScreen() {
 
       {/* Footer Save Button */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <GradientButton label="Lưu thay đổi" onPress={handleSave} />
+        <GradientButton label={t.common.saveChanges} onPress={handleSave} />
       </View>
     </SafeScreen>
   );

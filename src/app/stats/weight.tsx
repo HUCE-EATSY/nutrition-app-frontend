@@ -9,8 +9,12 @@ import { LineChart } from "@/components/charts/LineChart";
 import { ScreenBackground } from "@/components/layout/ScreenBackground";
 import { useWeightStore } from "@/store/statsStore";
 import { Image } from "react-native";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function WeightStatsScreen() {
+  const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
   const colors = useAppColors();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
   const router = useRouter();
@@ -53,7 +57,7 @@ export default function WeightStatsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thống kê cân nặng</Text>
+        <Text style={styles.headerTitle}>{t.stats.weightTitle}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -71,16 +75,16 @@ export default function WeightStatsScreen() {
         ) : !hasData ? (
           <View style={[styles.card, { paddingVertical: 48, alignItems: "center" }]}>
             <Ionicons name="scale-outline" size={40} color={colors.borderSoft} />
-            <Text style={{ color: colors.textSecondary, marginTop: 12 }}>Chưa có dữ liệu cân nặng</Text>
+            <Text style={{ color: colors.textSecondary, marginTop: 12 }}>{t.stats.noDataWeight}</Text>
             <Text style={{ color: colors.textMuted, fontSize: 12, marginTop: 4 }}>
-              Hãy ghi nhận cân nặng để xem biểu đồ
+              {t.stats.logWeightHint}
             </Text>
           </View>
         ) : (
           <>
             {/* Weight Chart Card */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Biểu đồ cân nặng</Text>
+              <Text style={styles.cardTitle}>{t.stats.weightChartTitle}</Text>
               <View style={styles.chartContainer}>
                 <LineChart
                   actualData={actualChartData}
@@ -92,12 +96,12 @@ export default function WeightStatsScreen() {
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.textPrimary }]} />
                   <Text style={{ color: colors.textSecondary }}>
-                    Mục tiêu {resolvedTarget ? `(${resolvedTarget} kg)` : ""}
+                    {t.stats.goal} {resolvedTarget ? `(${resolvedTarget} kg)` : ""}
                   </Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-                  <Text style={{ color: colors.textSecondary }}>Dữ liệu ghi nhận</Text>
+                  <Text style={{ color: colors.textSecondary }}>{t.stats.loggedData}</Text>
                 </View>
               </View>
             </View>
@@ -105,15 +109,15 @@ export default function WeightStatsScreen() {
             {/* Summary Row */}
             <View style={styles.summaryRow}>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>BAN ĐẦU</Text>
+                <Text style={styles.summaryLabel}>{t.stats.start}</Text>
                 <Text style={styles.summaryValuePurple}>{initialWeight} kg</Text>
               </View>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>HIỆN TẠI</Text>
+                <Text style={styles.summaryLabel}>{t.stats.current}</Text>
                 <Text style={styles.summaryValueWhite}>{currentWeight} kg</Text>
               </View>
               <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>THAY ĐỔI</Text>
+                <Text style={styles.summaryLabel}>{t.stats.change}</Text>
                 <Text style={[styles.summaryValuePurple, { color: weightChange >= 0 ? colors.danger : colors.success }]}>
                   {weightChange >= 0 ? "+" : ""}{weightChange} kg
                 </Text>
@@ -123,9 +127,9 @@ export default function WeightStatsScreen() {
             {/* Progress Image Section */}
             <View style={styles.imageSectionContainer}>
               <View style={styles.imageSectionHeader}>
-                <Text style={styles.imageSectionTitle}>Hình ảnh tiến trình</Text>
+                <Text style={styles.imageSectionTitle}>{t.stats.progressPhotos}</Text>
                 <TouchableOpacity onPress={() => router.push("/weight-history")} hitSlop={10}>
-                  <Text style={styles.viewAllText}>Xem thêm</Text>
+                  <Text style={styles.viewAllText}>{t.stats.viewMore}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -158,7 +162,7 @@ export default function WeightStatsScreen() {
             {/* BMI Card */}
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.cardTitle}>Chỉ số BMI</Text>
+                <Text style={styles.cardTitle}>{t.stats.bmiTitle}</Text>
                 <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} style={{ marginLeft: 8 }} />
               </View>
               <View style={styles.bmiHeader}>
@@ -173,7 +177,7 @@ export default function WeightStatsScreen() {
                   </Text>
                 </View>
                 <Text style={styles.bmiTrend}>
-                  Xu hướng: {bmiChange >= 0 ? "+" : ""}{bmiChange}
+                  {t.stats.trend}: {bmiChange >= 0 ? "+" : ""}{bmiChange}
                 </Text>
               </View>
 
@@ -193,7 +197,7 @@ export default function WeightStatsScreen() {
         {/* Footer nav */}
         <View style={styles.footerNav}>
           <TouchableOpacity style={styles.footerLink} onPress={() => router.push("/weight-history")}>
-            <Text style={styles.footerLinkText}>Nhật ký & Lịch sử cân nặng</Text>
+            <Text style={styles.footerLinkText}>{t.stats.logHistory}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>

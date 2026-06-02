@@ -6,10 +6,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useWeightStore } from "@/store/statsStore";
 import { useAppColors } from "@/hooks/useAppColors";
 import { SafeScreen } from "@/components/layout/SafeScreen";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function WeightHistoryScreen() {
   const router = useRouter();
   const colors = useAppColors();
+  const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   
@@ -25,8 +29,11 @@ export default function WeightHistoryScreen() {
       if (dateParts.length >= 2) {
         const year = dateParts[0];
         const month = dateParts[1];
-        // Format label vd "Tháng 05, 2026"
-        const sectionTitle = `Tháng ${parseInt(month, 10)}, ${year}`;
+        // Format label vd "Tháng 05, 2026" / "May, 2026"
+        const monthNames = language === "vi"
+          ? ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"]
+          : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const sectionTitle = `${monthNames[parseInt(month, 10) - 1]}, ${year}`;
         if (!groups[sectionTitle]) {
           groups[sectionTitle] = [];
         }
@@ -39,11 +46,8 @@ export default function WeightHistoryScreen() {
       data: groups[title].sort((a, b) => new Date(b.log_date).getTime() - new Date(a.log_date).getTime()),
     }));
 
-    // Sắp xếp các tháng theo thời gian giảm dần
-    // (Bằng cách parse ngược title hoặc đơn giản là vì ta đã sort logs ban đầu)
-    // Giả sử dữ liệu trả về mới nhất trước
     return result;
-  }, [weightLogs]);
+  }, [weightLogs, language]);
 
   const formatDate = (dateString: string) => {
     const parts = dateString.split("-");
@@ -60,7 +64,7 @@ export default function WeightHistoryScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={10}>
           <Ionicons name="chevron-back" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Lịch sử cân nặng</Text>
+        <Text style={styles.headerTitle}>{t.stats.weightHistoryTitle}</Text>
         <View style={styles.headerRightEmpty} />
       </View>
 
@@ -95,7 +99,7 @@ export default function WeightHistoryScreen() {
                   <Text style={styles.weightText}>{item.weight_kg} kg</Text>
                   <View style={styles.sourceRow}>
                     <Ionicons name="phone-portrait-outline" size={12} color={colors.textSecondary} />
-                    <Text style={styles.sourceText}>Ghi bởi Wao</Text>
+                    <Text style={styles.sourceText}>{t.stats.recordedByWao}</Text>
                   </View>
                 </View>
               </View>
@@ -111,7 +115,7 @@ export default function WeightHistoryScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="scale-outline" size={48} color={colors.borderSoft} />
-            <Text style={styles.emptyText}>Chưa có lịch sử cân nặng</Text>
+            <Text style={styles.emptyText}>{t.stats.noWeightHistory}</Text>
           </View>
         }
       />

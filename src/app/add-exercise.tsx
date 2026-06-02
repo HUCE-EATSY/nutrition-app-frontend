@@ -10,8 +10,10 @@ import {
   TextInput,
   View,
   Image,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "@/constants/i18n";
 
 import { spacing, typography, radius } from "@/constants";
 import { useAppColors } from "@/hooks/useAppColors";
@@ -22,6 +24,7 @@ import { useDiaryStore } from "@/store/diaryStore";
 import { useStepsStore } from "@/store/statsStore";
 
 export default function AddExerciseScreen() {
+  const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
@@ -114,7 +117,7 @@ export default function AddExerciseScreen() {
         <Pressable hitSlop={12} onPress={() => router.back()}>
           <Ionicons color={colors.textPrimary} name="chevron-back" size={28} />
         </Pressable>
-        <Text style={styles.headerTitle}>Thêm hoạt động</Text>
+        <Text style={styles.headerTitle}>{t.exercise.addActivityHeader}</Text>
         <View style={{ width: 28 }} />
       </View>
 
@@ -123,7 +126,7 @@ export default function AddExerciseScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Mục tiêu</Text>
+              <Text style={styles.summaryLabel}>{t.stats.goal}</Text>
               <View style={styles.summaryValueRow}>
                 <MaterialCommunityIcons name="fire" size={16} color={colors.danger} />
                 <Text style={styles.summaryValue}>{exerciseGoal}</Text>
@@ -134,7 +137,7 @@ export default function AddExerciseScreen() {
             <View style={styles.summaryDivider} />
             
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Đã đốt</Text>
+              <Text style={styles.summaryLabel}>{t.exercise.burned}</Text>
               <View style={styles.summaryValueRow}>
                 <MaterialCommunityIcons name="fire" size={16} color={colors.primary} />
                 <Text style={styles.summaryValue}>{totalBurned}</Text>
@@ -159,7 +162,7 @@ export default function AddExerciseScreen() {
           <Ionicons color={colors.textMuted} name="search" size={20} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm kiếm hoạt động"
+            placeholder={t.exercise.searchActivityPlaceholder}
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -181,16 +184,16 @@ export default function AddExerciseScreen() {
                 <>
                   {!searchQuery && (
                     <>
-                      <Text style={styles.sectionLabel}>THEO DÕI TỰ ĐỘNG</Text>
+                      <Text style={styles.sectionLabel}>{t.exercise.autoTracking}</Text>
                       <View style={styles.healthCard}>
                         <View style={styles.healthIconContainer}>
                           <Ionicons name="heart" size={32} color="#FF3B30" />
                         </View>
                         <View style={styles.healthTextContainer}>
                           <Text style={styles.healthText}>
-                            Kết nối Apple Health để Wao tự theo dõi calo hoạt động cho bạn.
+                            {t.exercise.connectHealthPrompt(Platform.OS === "ios" ? "Apple Health" : "Health Connect")}
                           </Text>
-                          <Text style={styles.healthLink}>Kết nối</Text>
+                          <Text style={styles.healthLink}>{t.exercise.connectLink}</Text>
                         </View>
                       </View>
                     </>

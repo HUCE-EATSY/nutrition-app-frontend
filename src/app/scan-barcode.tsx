@@ -10,8 +10,10 @@ import { FoodDetailModal } from "@/components/meal/FoodDetailModal";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { useDiaryStore } from "@/store/diaryStore";
 import { useAppColors } from "@/hooks/useAppColors";
+import { useTranslation } from "@/constants/i18n";
 
 export default function ScanBarcodeScreen() {
+  const t = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,12 +34,12 @@ export default function ScanBarcodeScreen() {
     return (
       <View style={styles.containerCenter}>
         <Ionicons name="camera-outline" size={64} color={colors.textMuted} />
-        <Text style={styles.permissionText}>Chúng tôi cần quyền truy cập Camera để quét mã vạch.</Text>
+        <Text style={styles.permissionText}>{t.barcode.permissionText}</Text>
         <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Cấp quyền Camera</Text>
+          <Text style={styles.permissionButtonText}>{t.barcode.requestPermission}</Text>
         </Pressable>
         <Pressable style={styles.cancelButton} onPress={() => router.back()}>
-          <Text style={styles.cancelButtonText}>Quay lại</Text>
+          <Text style={styles.cancelButtonText}>{t.barcode.back}</Text>
         </Pressable>
       </View>
     );
@@ -63,7 +65,7 @@ export default function ScanBarcodeScreen() {
       setIsProcessing(false);
       console.error("Lỗi khi quét mã:", error);
       // Hiển thị UI lỗi thay vì Alert
-      setErrorMessage("Có lỗi xảy ra khi tìm kiếm thông tin sản phẩm. Vui lòng thử lại.");
+      setErrorMessage(t.barcode.errorSearch);
     }
   };
 
@@ -87,7 +89,7 @@ export default function ScanBarcodeScreen() {
       router.replace("/(tabs)/diary");
     } catch (error) {
       console.error("Lỗi khi lưu bữa ăn:", error);
-      setErrorMessage("Không thể lưu bữa ăn. Vui lòng thử lại.");
+      setErrorMessage(t.barcode.errorSave);
     }
   };
 
@@ -97,7 +99,7 @@ export default function ScanBarcodeScreen() {
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
           <Ionicons name="close" size={28} color={colors.textPrimary} />
         </Pressable>
-        <Text style={styles.title}>Quét Mã Vạch</Text>
+        <Text style={styles.title}>{t.barcode.scanTitle}</Text>
         <View style={{ width: 28 }} />
       </View>
 
@@ -119,7 +121,7 @@ export default function ScanBarcodeScreen() {
         {isProcessing && (
           <View style={styles.processingOverlay}>
             <ActivityIndicator size="large" color="#FFF" />
-            <Text style={styles.processingText}>Đang tra cứu...</Text>
+            <Text style={styles.processingText}>{t.barcode.searching}</Text>
           </View>
         )}
 
@@ -128,16 +130,16 @@ export default function ScanBarcodeScreen() {
           <View style={styles.errorOverlay}>
             <View style={styles.errorBox}>
               <Ionicons name="search-outline" size={48} color={colors.textMuted} />
-              <Text style={styles.errorTitle}>Không tìm thấy</Text>
+              <Text style={styles.errorTitle}>{t.barcode.notFound}</Text>
               <Text style={styles.errorDesc}>
-                Mã vạch [{notFoundBarcode}] chưa có trong dữ liệu. Bạn muốn làm gì tiếp theo?
+                {t.barcode.notFoundDesc(notFoundBarcode)}
               </Text>
               <View style={styles.errorButtons}>
                 <Pressable
                   style={[styles.errorBtn, { backgroundColor: colors.surface }]}
                   onPress={() => { setNotFoundBarcode(null); setScanned(false); }}
                 >
-                  <Text style={[styles.errorBtnText, { color: colors.textPrimary }]}>Quét lại</Text>
+                  <Text style={[styles.errorBtnText, { color: colors.textPrimary }]}>{t.barcode.rescan}</Text>
                 </Pressable>
                 <Pressable
                   style={[styles.errorBtn, { backgroundColor: colors.primary }]}
@@ -146,7 +148,7 @@ export default function ScanBarcodeScreen() {
                     setShowFoodSelector(true);
                   }}
                 >
-                  <Text style={styles.errorBtnText}>Tìm kiếm</Text>
+                  <Text style={styles.errorBtnText}>{t.barcode.search}</Text>
                 </Pressable>
               </View>
             </View>
@@ -158,13 +160,13 @@ export default function ScanBarcodeScreen() {
           <View style={styles.errorOverlay}>
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
-              <Text style={styles.errorTitle}>Đã xảy ra lỗi</Text>
+              <Text style={styles.errorTitle}>{t.barcode.errorTitle}</Text>
               <Text style={styles.errorDesc}>{errorMessage}</Text>
               <Pressable
                 style={[styles.errorBtn, { backgroundColor: colors.primary, width: "100%", marginTop: spacing.md }]}
                 onPress={() => { setErrorMessage(null); setScanned(false); }}
               >
-                <Text style={styles.errorBtnText}>Đóng</Text>
+                <Text style={styles.errorBtnText}>{t.barcode.close}</Text>
               </Pressable>
             </View>
           </View>
@@ -179,8 +181,8 @@ export default function ScanBarcodeScreen() {
           setScanned(false); // Cho phép quét lại
         }}
         onAdd={handleSaveMeal}
-        submitButtonText="Thêm vào nhật ký"
-        headerTitle="Thêm món quét được"
+        submitButtonText={t.barcode.addToDiary}
+        headerTitle={t.barcode.addScannedFood}
       />
 
       <FoodSelectorModal

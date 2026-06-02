@@ -455,8 +455,14 @@ export default function PhysicalProfileScreen() {
                       goalType: (activeGoal?.goalType ?? activeGoal?.GoalType) ? goalTypeMapInverse[activeGoal?.goalType ?? activeGoal?.GoalType] : null,
                       targetWeightKg: (activeGoal?.goalWeightKg ?? activeGoal?.GoalWeightKg) ? Number(activeGoal?.goalWeightKg ?? activeGoal?.GoalWeightKg) : null,
                       activityLevel: (activeGoal?.activityLevel ?? activeGoal?.ActivityLevel) ? activityLevelMapInverse[activeGoal?.activityLevel ?? activeGoal?.ActivityLevel] : null,
+                      completedSteps: [],
+                    });
+                  } else {
+                    useOnboardingStore.getState().updateDraft({
+                      completedSteps: [],
                     });
                   }
+                  useOnboardingStore.setState({ hasCompletedOnboarding: false });
                   router.push("/(onboarding)/goal-type");
                 }}
               >

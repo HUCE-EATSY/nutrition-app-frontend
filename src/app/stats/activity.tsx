@@ -14,10 +14,14 @@ import { exerciseService } from "@/services/exerciseService";
 import { getTodayDateISO } from "@/utils/date";
 import { useAppColors } from "@/hooks/useAppColors";
 import { spacing, typography, radius } from "@/constants";
+import { useTranslation } from "@/constants/i18n";
+import { useSettingsStore } from "@/store/settingsStore";
 
 export default function ActivityStatsScreen() {
   const router = useRouter();
   const colors = useAppColors();
+  const t = useTranslation();
+  const language = useSettingsStore((state) => state.language);
   const styles = useMemo(() => getStyles(colors), [colors]);
   const { activeTabLabel, tabs, handleTabChange } = useActivityStats();
   const [loading, setLoading] = useState(true);
@@ -27,7 +31,7 @@ export default function ActivityStatsScreen() {
 
   useEffect(() => {
     loadWeeklyData();
-  }, []);
+  }, [language]); // Reload data if language changes (for labels)
 
   async function loadWeeklyData() {
     try {
@@ -52,7 +56,15 @@ export default function ActivityStatsScreen() {
       });
 
       // Tạo data cho 7 ngày
-      const dayLabels = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+      const dayLabels = [
+        t.stats.days.mon,
+        t.stats.days.tue,
+        t.stats.days.wed,
+        t.stats.days.thu,
+        t.stats.days.fri,
+        t.stats.days.sat,
+        t.stats.days.sun
+      ];
       const chartData: { label: string; value: number }[] = [];
       const statusData: { day: string; hasData: boolean }[] = [];
       let totalDuration = 0;
@@ -89,7 +101,7 @@ export default function ActivityStatsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thống kê hoạt động</Text>
+        <Text style={styles.headerTitle}>{t.stats.workoutTitle}</Text>
         <TouchableOpacity 
           style={styles.backBtn}
           onPress={() => router.push("/add-exercise")}
@@ -105,12 +117,12 @@ export default function ActivityStatsScreen() {
           onChange={handleTabChange} 
         />
         
-        <DateNavigator label="7 ngày gần nhất" />
+        <DateNavigator label={language === "vi" ? "7 ngày gần nhất" : "Last 7 days"} />
 
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+            <Text style={styles.loadingText}>{t.common.loadingData}</Text>
           </View>
         ) : (
           <>
@@ -125,9 +137,9 @@ export default function ActivityStatsScreen() {
             />
             
             {weekData.every(d => d.value === 0) ? (
-              <InsightBox message="Hãy bắt đầu ghi nhận các bài tập để theo dõi tiến độ của bạn nhé!" />
+              <InsightBox message={t.stats.logWorkoutPrompt} />
             ) : (
-              <InsightBox message={`Bạn đã tập luyện trung bình ${weeklyAverage} phút/ngày trong tuần này!`} />
+              <InsightBox message={t.stats.workoutSummaryInsight(weeklyAverage)} />
             )}
           </>
         )}
