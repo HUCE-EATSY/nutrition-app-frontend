@@ -35,6 +35,8 @@ const showAlert = (title: string, message: string, buttons?: AlertButton[]) => {
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { SafeScreen } from "@/components/layout/SafeScreen";
+import { HeroPlanCard } from "@/components/meal/HeroPlanCard";
+import { useRouter } from "expo-router";
 import { SegmentedPillTabs } from "@/components/meal/SegmentedPillTabs";
 import { useTranslation } from "@/constants/i18n";
 import { useAppColors } from "@/hooks/useAppColors";
@@ -54,15 +56,17 @@ import {
 } from "@/hooks/queries/useMenus";
 
 export default function MealPlanScreen() {
+  const router = useRouter();
   const t = useTranslation();
   const colors = useAppColors();
   const { isNarrowWidth } = useResponsiveLayout();
   const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState("daily");
+  const [activeTab, setActiveTab] = useState("discover");
   const tabs = [
     { key: "daily", label: "Hằng ngày" },
+    { key: "discover", label: "Khám phá" },
     { key: "saved", label: "Tự tạo" },
   ];
 
@@ -515,6 +519,45 @@ export default function MealPlanScreen() {
     );
   };
 
+
+  const renderDiscoverTab = () => {
+    return (
+      <View style={styles.tabContent}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 16 }}>
+          {["2200 Cal", "2200-2400 Cal", "2400-2600 Cal", "Giảm cân", "Tăng cơ"].map((filter, i) => (
+            <View key={i} style={{ backgroundColor: i === 0 ? "#A56CFF" : colors.surface, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: i === 0 ? 0 : 1, borderColor: colors.borderSoft }}>
+              <Text style={{ color: i === 0 ? "#fff" : colors.textPrimary, fontWeight: "600" }}>{filter}</Text>
+            </View>
+          ))}
+        </ScrollView>
+        <HeroPlanCard 
+          title="Meal plan chuẩn gym: Tăng cơ, Giảm mỡ, Sống khỏe"
+          subtitle="4 bữa/ngày"
+          calories="2400 - 2600 cal / ngày"
+          badges={["Ít tinh bột", "Tăng đạm"]}
+          imageUrl="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=1000&auto=format&fit=crop"
+          onPress={() => router.push("/menu-detail?menuId=discover_1")}
+        />
+        <HeroPlanCard 
+          title="Eat Clean dành cho dân văn phòng bận rộn"
+          subtitle="4 bữa/ngày"
+          calories="1200 - 1400 cal / ngày"
+          badges={["Eat Clean", "Nhanh gọn"]}
+          imageUrl="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1000&auto=format&fit=crop"
+          onPress={() => router.push("/menu-detail?menuId=discover_2")}
+        />
+        <HeroPlanCard 
+          title="Thực đơn Keto giảm cân cấp tốc 7 ngày"
+          subtitle="3 bữa/ngày"
+          calories="1000 - 1200 cal / ngày"
+          badges={["Keto", "Ít carb"]}
+          imageUrl="https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1000&auto=format&fit=crop"
+          onPress={() => router.push("/menu-detail?menuId=discover_3")}
+        />
+      </View>
+    );
+  };
+
   return (
     <SafeScreen scrollable>
       <View style={styles.screen}>
@@ -529,7 +572,9 @@ export default function MealPlanScreen() {
 
         <SegmentedPillTabs activeKey={activeTab} items={tabs} onChange={setActiveTab} />
 
-        {activeTab === "daily" ? renderDailyPlanTab() : renderSavedPlansTab()}
+        {activeTab === "daily" && renderDailyPlanTab()}
+        {activeTab === "discover" && renderDiscoverTab()}
+        {activeTab === "saved" && renderSavedPlansTab()}
 
         {/* Floating Toast Alert */}
         <Toast
