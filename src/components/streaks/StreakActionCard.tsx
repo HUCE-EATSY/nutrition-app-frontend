@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
 
 import { SurfaceCard } from "@/components/common/SurfaceCard";
 import { radius, spacing, typography } from "@/constants";
@@ -9,12 +9,16 @@ import { useAppColors } from "@/hooks/useAppColors";
 
 type StreakActionCardProps = {
   onPressAdd?: () => void;
+  isLoading?: boolean;
+  isLogged?: boolean;
 };
 
-export function StreakActionCard({ onPressAdd }: StreakActionCardProps) {
+export function StreakActionCard({ onPressAdd, isLoading, isLogged }: StreakActionCardProps) {
   const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const subtitle = isLogged ? "Đã duy trì chuỗi hôm nay! 🎉" : t.streaks.maintainStreak;
 
   return (
     <SurfaceCard style={styles.actionCard}>
@@ -24,12 +28,29 @@ export function StreakActionCard({ onPressAdd }: StreakActionCardProps) {
         </View>
         <View>
           <Text style={styles.actionTitle}>{t.streaks.logFoodNow}</Text>
-          <Text style={styles.actionSubtitle}>{t.streaks.maintainStreak}</Text>
+          <Text style={styles.actionSubtitle}>{subtitle}</Text>
         </View>
       </View>
-      <Pressable onPress={onPressAdd} style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}>
-        <MaterialCommunityIcons name="plus" size={24} color={colors.textPrimary} />
-      </Pressable>
+      {isLogged ? (
+        <View style={styles.actionLoggedContainer}>
+          <MaterialCommunityIcons name="check-circle" size={24} color={colors.success} />
+        </View>
+      ) : (
+        <Pressable 
+          onPress={onPressAdd} 
+          disabled={isLoading}
+          style={({ pressed }) => [
+            styles.actionBtn, 
+            pressed && styles.pressed
+          ]}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="small" color={colors.textPrimary} />
+          ) : (
+            <MaterialCommunityIcons name="plus" size={24} color={colors.textPrimary} />
+          )}
+        </Pressable>
+      )}
     </SurfaceCard>
   );
 }
@@ -72,6 +93,12 @@ const getStyles = (colors: any) => StyleSheet.create({
     height: 40,
     borderRadius: radius.pill,
     backgroundColor: colors.bgElevated,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionLoggedContainer: {
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
   },

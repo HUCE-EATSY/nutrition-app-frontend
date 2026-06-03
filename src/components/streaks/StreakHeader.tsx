@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { radius, spacing, typography } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
@@ -14,12 +15,17 @@ type StreakHeaderProps = {
 export function StreakHeader({ streakDays, onBack }: StreakHeaderProps) {
   const t = useTranslation();
   const colors = useAppColors();
+  const router = useRouter();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   return (
     <View style={styles.header}>
       <Pressable hitSlop={15} onPress={onBack} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
         <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+      </Pressable>
+
+      <Pressable hitSlop={15} onPress={() => router.push("/leaderboard")} style={({ pressed }) => [styles.leaderboardButton, pressed && styles.pressed]}>
+        <Ionicons name="trophy" size={24} color={colors.warning} />
       </Pressable>
 
       <View style={styles.headerContent}>
@@ -43,6 +49,18 @@ const getStyles = (colors: any) => StyleSheet.create({
   backButton: {
     position: "absolute",
     left: 0,
+    top: spacing.lg,
+    width: 44,
+    height: 44,
+    backgroundColor: colors.surface,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
+  leaderboardButton: {
+    position: "absolute",
+    right: 0,
     top: spacing.lg,
     width: 44,
     height: 44,
