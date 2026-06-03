@@ -8,6 +8,7 @@ import { StreakActionCard } from "@/components/streaks/StreakActionCard";
 import { StreakChallengeSection } from "@/components/streaks/StreakChallengeSection";
 import { StreakHeader } from "@/components/streaks/StreakHeader";
 import { StreakStatsRow } from "@/components/streaks/StreakStatsRow";
+import { StreakMilestoneCard } from "@/components/streaks/StreakMilestoneCard";
 import { WeeklyProgressCard } from "@/components/streaks/WeeklyProgressCard";
 import Toast from "@/components/common/Toast";
 import { radius, spacing, typography } from "@/constants";
@@ -108,6 +109,21 @@ export default function StreaksScreen() {
         <WeeklyProgressCard daysOfWeek={daysOfWeek} weeklyProgress={weeklyProgress} onPressDay={handlePressDay} />
         
         <StreakStatsRow currentStreak={currentStreak} shieldCount={shieldCount} />
+
+        <StreakMilestoneCard currentStreak={currentStreak} />
+
+        {/* Nút xem lịch sử chi tiết */}
+        <TouchableOpacity
+          onPress={() => router.push("/streak-history")}
+          activeOpacity={0.8}
+          style={[styles.historyBtn, { backgroundColor: colors.surface }]}
+        >
+          <MaterialCommunityIcons name="history" size={20} color={colors.primary} />
+          <Text style={[styles.historyBtnText, { color: colors.textPrimary }]}>
+            Xem lịch sử & cột mốc chi tiết
+          </Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary ?? "#999"} />
+        </TouchableOpacity>
       </View>
 
       {/* Floating Toast Notification */}
@@ -149,5 +165,23 @@ const styles = StyleSheet.create({
     ...typography.bodyStrong,
     color: "#fff",
     fontWeight: "700",
+  },
+  historyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  historyBtnText: {
+    ...typography.bodyStrong,
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
   },
 });
