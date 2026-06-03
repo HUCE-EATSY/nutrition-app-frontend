@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thực Đơn Tăng Cơ Bulking Khoa Học – WAO Nutrition</title>
+  <meta name="description" content="Hướng dẫn chi tiết xây dựng thực đơn tăng cơ nách (clean bulking) hiệu quả cao cho gymer và vận động viên." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0b0f19;
+      --bg-card: #131a30;
+      --bg-elevated: #1b2545;
+      --primary: #f97316; /* Orange color for energy/muscle-building */
+      --primary-dark: #ea580c;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --border: rgba(255,255,255,0.08);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; overflow-x: hidden; }
+
+    /* CUSTOM SCROLLBAR */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    /* HERO */
+    .hero {
+      min-height: 600px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      padding: 80px 24px 70px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #1e110a 0%, #0d1326 60%, #0b0f19 100%);
+    }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.3; }
+    .orb-1 { width: 550px; height: 550px; background: var(--primary); top: -180px; left: -100px; }
+    .orb-2 { width: 350px; height: 350px; background: var(--accent-purple); bottom: -80px; right: 15%; }
+
+    .hero-content { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; width: 100%; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(249,115,22,0.15);
+      border: 1px solid rgba(249,115,22,0.4);
+      color: var(--primary);
+      font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 6px 18px; border-radius: 999px; margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: clamp(32px, 5.5vw, 60px);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #f8fafc 40%, #f97316 90%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc { font-size: 18px; color: var(--text-secondary); max-width: 650px; margin-bottom: 35px; }
+    
+    .hero-metrics {
+      display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 40px;
+    }
+    .metric-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 10px 20px; border-radius: 999px;
+      font-size: 14px; font-weight: 600; color: var(--text-secondary);
+    }
+    .metric-pill .val { color: var(--primary); font-weight: 800; }
+
+    /* LAYOUT */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* SECTIONS & HEADINGS */
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 30px; padding-top: 70px; }
+    .s-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .s-icon.orange { background: rgba(249,115,22,0.15); color: var(--primary); }
+    .s-icon.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+    .s-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+    .s-icon.green { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+    
+    .s-title-group { display: flex; flex-direction: column; }
+    .s-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .s-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    p.intro-text { font-size: 16px; color: var(--text-secondary); margin-bottom: 24px; }
+
+    /* CARDS */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 36px; }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(249,115,22,0.3);
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.5);
+    }
+    .card-icon { font-size: 32px; margin-bottom: 18px; display: inline-block; }
+    .card h3 { font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+    .card p { font-size: 14px; color: var(--text-secondary); }
+
+    /* DYNAMIC CALCULATOR WIDGET */
+    .calc-container {
+      background: linear-gradient(180deg, var(--bg-card) 0%, rgba(19,26,48,0.7) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      margin: 40px 0;
+      position: relative;
+    }
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    @media (max-width: 768px) {
+      .calc-grid { grid-template-columns: 1fr; gap: 30px; }
+    }
+    .form-group { margin-bottom: 24px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.5px; }
+    .input-range { width: 100%; accent-color: var(--primary); height: 6px; border-radius: 999px; background: var(--bg-elevated); outline: none; margin-bottom: 8px; }
+    .range-val-container { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+    .range-val { color: var(--primary); font-weight: 800; font-size: 16px; }
+    
+    .radio-group { display: flex; gap: 12px; }
+    .radio-group label {
+      flex: 1; text-align: center; background: var(--bg-elevated); border: 1px solid var(--border);
+      padding: 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 700;
+      transition: var(--transition); color: var(--text-secondary); text-transform: none; margin: 0;
+    }
+    .radio-group input { display: none; }
+    .radio-group input:checked + label {
+      background: rgba(249,115,22,0.15); border-color: var(--primary); color: var(--primary);
+    }
+
+    .calc-result {
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border: 1px dashed rgba(255,255,255,0.1);
+    }
+    .res-num { font-size: 48px; font-weight: 900; color: var(--primary); line-height: 1.1; margin-bottom: 6px; }
+    .res-lbl { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 1px; margin-bottom: 24px; }
+    
+    .macro-bar-container { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .macro-bar-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .macro-bar { height: 8px; width: 100%; background: var(--bg); border-radius: 999px; overflow: hidden; }
+    .macro-progress { height: 100%; border-radius: 999px; transition: width 0.5s ease-out; }
+    .macro-progress.protein { background: var(--primary); }
+    .macro-progress.carbs { background: var(--accent-blue); }
+    .macro-progress.fat { background: var(--accent-purple); }
+
+    /* INTERACTIVE MEAL PLANNER */
+    .planner-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 30px; }
+    .planner-tab-btn {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      padding: 12px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: var(--transition); white-space: nowrap;
+    }
+    .planner-tab-btn:hover { background: var(--bg-elevated); border-color: rgba(255,255,255,0.15); }
+    .planner-tab-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 4px 14px rgba(249,115,22,0.3); }
+
+    .day-panel { display: none; animation: fadeIn 0.4s ease forwards; }
+    .day-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .meal-timeline { position: relative; padding-left: 32px; border-left: 2px solid var(--border); margin-left: 12px; }
+    .meal-item { position: relative; margin-bottom: 32px; }
+    .meal-item:last-child { margin-bottom: 0; }
+    .meal-dot {
+      position: absolute; left: -41px; top: 4px; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 3px solid var(--primary); box-shadow: 0 0 0 4px var(--bg-card);
+    }
+    .meal-time { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 6px; }
+    .meal-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 22px 26px; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    }
+    .meal-card:hover { border-color: rgba(255,255,255,0.15); background: var(--bg-elevated); cursor: pointer; }
+    .meal-info h4 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .meal-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    
+    .meal-macros { display: flex; gap: 12px; }
+    .meal-macro-pill {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .meal-macro-pill.p { background: rgba(249,115,22,0.1); color: var(--primary); }
+    .meal-macro-pill.c { background: rgba(59,130,246,0.1); color: var(--accent-blue); }
+    .meal-macro-pill.f { background: rgba(139,92,246,0.1); color: var(--accent-purple); }
+    
+    .meal-view-recipe-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: var(--transition); white-space: nowrap;
+    }
+    .meal-view-recipe-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* GROCERY LIST WITH PROGRESS */
+    .grocery-container {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 30px; margin-top: 40px;
+    }
+    .grocery-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+    .grocery-title { font-size: 18px; font-weight: 800; }
+    
+    .grocery-progress-container { width: 220px; display: flex; flex-direction: column; gap: 6px; }
+    .grocery-progress-lbl { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+    .grocery-progress-bg { height: 6px; background: var(--bg-elevated); border-radius: 999px; overflow: hidden; }
+    .grocery-progress-bar { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.3s ease; }
+
+    .grocery-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; }
+    .grocery-tab {
+      background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 700;
+      padding: 8px 16px; cursor: pointer; transition: var(--transition); border-radius: var(--radius-sm);
+    }
+    .grocery-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
+    .grocery-tab.active { color: var(--primary); background: rgba(249,115,22,0.1); }
+
+    .grocery-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) {
+      .grocery-list { grid-template-columns: 1fr; }
+    }
+    .grocery-item-wrapper { display: none; }
+    .grocery-item-wrapper.active { display: block; }
+    
+    .grocery-item {
+      display: flex; align-items: center; gap: 12px; background: var(--bg-elevated);
+      padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;
+      user-select: none; transition: var(--transition);
+    }
+    .grocery-item:hover { border-color: rgba(255,255,255,0.12); }
+    .grocery-checkbox {
+      width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--text-muted);
+      display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent;
+      transition: var(--transition);
+    }
+    .grocery-item.checked { opacity: 0.55; }
+    .grocery-item.checked .grocery-checkbox {
+      background: var(--accent-green); border-color: var(--accent-green); color: #fff;
+    }
+    .grocery-item.checked span { text-decoration: line-through; }
+    .grocery-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .grocery-qty { font-size: 12px; color: var(--text-secondary); margin-left: auto; background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; }
+
+    /* WORKOUT SCHEDULE TRACKER */
+    .schedule-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 30px 0; }
+    @media (max-width: 768px) {
+      .schedule-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .sched-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 20px; text-align: center; transition: var(--transition); cursor: pointer;
+    }
+    .sched-card:hover { border-color: var(--primary); }
+    .sched-card.rest { border-color: dashed rgba(255,255,255,0.1); background: transparent; }
+    .sched-day { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .sched-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .sched-focus { font-size: 12px; color: var(--text-secondary); }
+
+    /* FAQ ACCORDION */
+    .faq-container { margin: 40px 0; }
+    .faq-item {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 12px; overflow: hidden; transition: var(--transition);
+    }
+    .faq-question {
+      padding: 20px 24px; font-size: 15px; font-weight: 700; display: flex; justify-content: space-between;
+      align-items: center; cursor: pointer; user-select: none;
+    }
+    .faq-arrow { font-size: 12px; transition: transform 0.3s; color: var(--text-muted); }
+    .faq-answer {
+      max-height: 0; overflow: hidden; padding: 0 24px;
+      transition: all 0.3s cubic-bezier(0, 1, 0, 1);
+      font-size: 14px; color: var(--text-secondary); line-height: 1.8;
+    }
+    .faq-item.open { border-color: rgba(249,115,22,0.2); background: var(--bg-elevated); }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); color: var(--primary); }
+    .faq-item.open .faq-answer { max-height: 1000px; padding: 0 24px 20px; transition: all 0.3s cubic-bezier(1, 0, 1, 0); }
+
+    /* MODAL FOR RECIPE DETAILS WITH TIMER */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .modal-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+      padding: 32px; position: relative; transform: translateY(20px); transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal-card { transform: translateY(0); }
+    
+    .modal-close {
+      position: absolute; top: 20px; right: 24px; font-size: 24px; color: var(--text-muted);
+      cursor: pointer; background: none; border: none; font-weight: 300; transition: var(--transition);
+    }
+    .modal-close:hover { color: var(--text); }
+    
+    .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 16px; color: var(--primary); }
+    
+    .modal-section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); margin: 24px 0 10px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    
+    .recipe-meta { display: flex; gap: 14px; margin-bottom: 20px; }
+    .recipe-meta-item { font-size: 13px; color: var(--text-secondary); background: var(--bg-elevated); padding: 6px 12px; border-radius: 6px; font-weight: 600; }
+    
+    .ing-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .ing-list li { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--text-secondary); padding-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+    .ing-list li span.val { color: var(--text); font-weight: 600; }
+
+    .step-list { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+    .step-list li { display: flex; gap: 14px; font-size: 13.5px; color: var(--text-secondary); }
+    .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    
+    /* COOKING TIMER IN MODAL */
+    .timer-container {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 16px; margin-top: 24px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .timer-info { display: flex; flex-direction: column; gap: 2px; }
+    .timer-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+    .timer-clock { font-size: 24px; font-weight: 800; font-family: monospace; color: var(--primary); }
+    
+    .timer-buttons { display: flex; gap: 8px; }
+    .timer-btn {
+      padding: 6px 14px; font-size: 12px; font-weight: 700; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05); color: var(--text); border-radius: 4px; cursor: pointer;
+      transition: var(--transition);
+    }
+    .timer-btn:hover { background: var(--bg); }
+    .timer-btn.active-run { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
+
+    /* BULKING DIARY SIMULATOR */
+    .diary-container {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 30px; margin: 40px 0;
+    }
+    .diary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .diary-title { font-size: 18px; font-weight: 800; }
+    
+    .diary-controls { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .diary-input {
+      background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; outline: none;
+      transition: var(--transition); flex: 1; min-width: 120px;
+    }
+    .diary-input:focus { border-color: var(--primary); }
+    .diary-btn {
+      background: var(--primary); border: none; color: #fff; font-weight: 700; font-size: 13px;
+      padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
+    }
+    .diary-btn:hover { background: var(--primary-dark); }
+    
+    .diary-logs { max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
+    .diary-log-row {
+      display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;
+      border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .diary-log-row:last-child { border-bottom: none; }
+    .diary-log-row .weight { font-weight: 800; color: var(--primary); }
+    .diary-log-row .cals { font-weight: 600; color: var(--accent-blue); }
+    .diary-log-row .del { color: var(--accent-red); cursor: pointer; background: none; border: none; font-size: 14px; padding: 2px 6px; }
+
+    /* BACK TO HOME LINK */
+    .back-btn-container { display: flex; justify-content: center; margin: 60px 0; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); text-decoration: none;
+      font-weight: 600; font-size: 14px; border: 1px solid var(--border); background: var(--bg-card);
+      padding: 12px 28px; border-radius: 999px; transition: var(--transition);
+    }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateX(-4px); }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 60px 24px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">🧬 Kế hoạch tăng cơ bền vững</div>
+      <h1 class="hero-title">Thực Đơn Tăng Cơ Bulking Khoa Học</h1>
+      <p class="hero-desc">Đạt được mục tiêu kích thước cơ bắp lớn hơn mà không tích tụ mỡ thừa bằng phương pháp Clean Bulking chuẩn y khoa.</p>
+      
+      <div class="hero-metrics">
+        <div class="metric-pill">🎯 Mục tiêu: <span class="val">Tăng cơ (Hypertrophy)</span></div>
+        <div class="metric-pill">🥩 Protein/ngày: <span class="val">~1.8g - 2.2g / kg</span></div>
+        <div class="metric-pill">⚡ Thặng dư Calo: <span class="val">+300 - 500 kcal</span></div>
+        <div class="metric-pill">⏳ Thời gian: <span class="val">8 - 12 tuần</span></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    
+    <!-- SECTION 1: NGUYÊN TẮC DINH DƯỠNG -->
+    <div class="section-header">
+      <div class="s-icon orange">🥩</div>
+      <div class="s-title-group">
+        <h2 class="s-title">3 Nguyên Tắc Cốt Lõi Khi Bulking</h2>
+        <span class="s-sub">Quy tắc vàng để tăng cơ, hạn chế tích mỡ</span>
+      </div>
+    </div>
+    
+    <p class="intro-text">
+      Tăng cơ bắp đòi hỏi sự kết hợp chặt chẽ giữa việc kích thích cơ bắp qua tập luyện (tải trọng tăng dần) và cung cấp đầy đủ chất dinh dưỡng để tái cấu trúc sợi cơ. Dưới đây là 3 nguyên tắc bất di bất dịch giúp bạn Clean Bulk thành công.
+    </p>
+
+    <div class="grid-2">
+      <div class="card">
+        <span class="card-icon">⚡</span>
+        <h3>Thặng Dư Calo Kiểm Soát</h3>
+        <p>Để xây dựng mô cơ mới, cơ thể cần ở trạng thái đồng hóa bằng cách ăn nhiều hơn mức tiêu thụ TDEE khoảng 300 - 500 calo mỗi ngày. Tránh việc ăn vô tội vạ (Dirty Bulk) khiến mỡ thừa tích tụ quá nhiều.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🍗</span>
+        <h3>Tối Ưu Hóa Hàm Lượng Protein</h3>
+        <p>Protein cung cấp axit amin - nguyên liệu cấu thành sợi cơ cơ bản. Đảm bảo nạp đủ lượng protein chất lượng cao từ 1.8g đến 2.2g trên mỗi kg trọng lượng cơ thể để tối đa hóa quá trình tổng hợp cơ.</p>
+      </div>
+    </div>
+
+    <!-- SECTION 2: CALORIE & MACRO CALCULATOR -->
+    <div class="section-header">
+      <div class="s-icon purple">🧮</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Tính Toán Calo & Macros Bulking</h2>
+        <span class="s-sub">Nhập thông tin để nhận kế hoạch cụ thể</span>
+      </div>
+    </div>
+
+    <div class="calc-container">
+      <div class="calc-grid">
+        <div class="calc-form">
+          <div class="form-group">
+            <label>Cân nặng hiện tại</label>
+            <input type="range" class="input-range" id="weight-slider" min="40" max="120" value="65" />
+            <div class="range-val-container">
+              <span>Cân nặng:</span>
+              <span class="range-val" id="weight-lbl">65 kg</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Mức độ vận động</label>
+            <div class="radio-group">
+              <input type="radio" name="act-level" id="act-1" value="1.2" />
+              <label for="act-1">Ít vận động</label>
+              
+              <input type="radio" name="act-level" id="act-2" value="1.55" checked />
+              <label for="act-2">Vừa phải (Tập 3-5 ngày)</label>
+              
+              <input type="radio" name="act-level" id="act-3" value="1.725" />
+              <label for="act-3">Nặng (Tập 6-7 ngày)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Chế độ tăng cơ</label>
+            <div class="radio-group">
+              <input type="radio" name="bulk-goal" id="goal-1" value="300" checked />
+              <label for="goal-1">Clean Bulk (+300 kcal)</label>
+              
+              <input type="radio" name="bulk-goal" id="goal-2" value="500" />
+              <label for="goal-2">Aggressive Bulk (+500 kcal)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-result">
+          <span class="res-lbl">Calo cần tiêu thụ mỗi ngày</span>
+          <div class="res-num" id="total-cals">2,850</div>
+          <span style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 24px;">Kcal / Ngày</span>
+          
+          <div class="macro-bar-container">
+            <div>
+              <div class="macro-bar-row">
+                <span>🥩 Đạm (Protein)</span>
+                <span id="prot-val">143g (572 kcal)</span>
+              </div>
+              <div class="macro-bar">
+                <div class="macro-progress protein" id="prot-bar" style="width: 20%;"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="macro-bar-row">
+                <span>🍚 Tinh bột (Carbs)</span>
+                <span id="carb-val">392g (1568 kcal)</span>
+              </div>
+              <div class="macro-bar">
+                <div class="macro-progress carbs" id="carb-bar" style="width: 55%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="macro-bar-row">
+                <span>🥑 Chất béo (Fats)</span>
+                <span id="fat-val">79g (710 kcal)</span>
+              </div>
+              <div class="macro-bar">
+                <div class="macro-progress fat" id="fat-bar" style="width: 25%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: MEAL PLAN SCHEDULER -->
+    <div class="section-header">
+      <div class="s-icon blue">📅</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Thực Đơn Tăng Cơ Chi Tiết 7 Ngày</h2>
+        <span class="s-sub">Chia nhỏ 4-5 bữa để cơ thể luôn duy trì đồng hóa</span>
+      </div>
+    </div>
+
+    <div class="planner-tabs">
+      <button class="planner-tab-btn active" data-day="t2">Thứ 2 & 5</button>
+      <button class="planner-tab-btn" data-day="t3">Thứ 3 & 6</button>
+      <button class="planner-tab-btn" data-day="t4">Thứ 4 & 7</button>
+      <button class="planner-tab-btn" data-day="cn">Chủ Nhật</button>
+    </div>
+
+    <!-- THỨ 2 & 5 -->
+    <div class="day-panel active" id="day-t2">
+      <div class="meal-timeline">
+        
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 07:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Cháo yến mạch, chuối chín và Whey Protein</h4>
+              <p class="meal-desc">Nguồn carbs phức hợp dồi dào giải phóng chậm cung cấp năng lượng dài hạn.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 38g</span>
+                <span class="meal-macro-pill c">C: 65g</span>
+                <span class="meal-macro-pill f">F: 8g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('oatmeal')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa trưa - 12:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Ức gà áp chảo, cơm gạo lứt và súp lơ xanh</h4>
+              <p class="meal-desc">Bữa trưa truyền thống giàu protein nạc và chất xơ, vitamin chống viêm.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 45g</span>
+                <span class="meal-macro-pill c">C: 70g</span>
+                <span class="meal-macro-pill f">F: 6g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('chicken')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa xế (Pre-Workout) - 15:30</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Bánh mì đen kẹp bơ đậu phộng và chuối</h4>
+              <p class="meal-desc">Nạp năng lượng tức thì trước tập 90-120 phút giúp buổi tập sung mãn hơn.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 12g</span>
+                <span class="meal-macro-pill c">C: 45g</span>
+                <span class="meal-macro-pill f">F: 15g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('pb-toast')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa tối - 19:30</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Cá hồi nướng tiêu chanh, khoai tây nghiền và măng tây</h4>
+              <p class="meal-desc">Chất béo Omega-3 từ cá hồi giúp giảm viêm khớp và phục hồi cơ bắp trong đêm.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 36g</span>
+                <span class="meal-macro-pill c">C: 50g</span>
+                <span class="meal-macro-pill f">F: 18g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('salmon')">Xem Công Thức</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- THỨ 3 & 6 -->
+    <div class="day-panel" id="day-t3">
+      <div class="meal-timeline">
+        
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 07:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Bánh mì ốp la (3 quả) và nước cam ép</h4>
+              <p class="meal-desc">Nguồn protein toàn diện từ trứng cùng vi chất, lecithin và vitamin C dồi dào.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 24g</span>
+                <span class="meal-macro-pill c">C: 38g</span>
+                <span class="meal-macro-pill f">F: 16g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('eggs')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa trưa - 12:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Thịt bò thăn xào bông cải xanh và cơm trắng</h4>
+              <p class="meal-desc">Thịt bò cung cấp dồi dào kẽm, sắt và creatine tự nhiên hỗ trợ nâng tạ nặng.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 42g</span>
+                <span class="meal-macro-pill c">C: 75g</span>
+                <span class="meal-macro-pill f">F: 12g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('beef')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa tối - 19:30</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Cá rô phi áp chảo, khoai lang luộc và salad bơ đậu đỏ</h4>
+              <p class="meal-desc">Nguồn cá nạc ít béo kết hợp khoai lang giải phóng tinh bột chậm lý tưởng.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 35g</span>
+                <span class="meal-macro-pill c">C: 58g</span>
+                <span class="meal-macro-pill f">F: 9g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('fish')">Xem Công Thức</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- THỨ 4 & 7 -->
+    <div class="day-panel" id="day-t4">
+      <div class="meal-timeline">
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 07:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Sinh tố chuối, bơ đậu phộng, hạt chia và Whey</h4>
+              <p class="meal-desc">Sinh tố sánh đặc cung cấp mật độ calo cao dễ hấp thụ vào buổi sáng sớm.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 35g</span>
+                <span class="meal-macro-pill c">C: 55g</span>
+                <span class="meal-macro-pill f">F: 14g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('smoothie')">Xem Công Thức</button>
+          </div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa trưa - 12:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Tôm xào tỏi ớt, cơm và đậu quả xào hành</h4>
+              <p class="meal-desc">Protein từ hải sản giàu khoáng chất thiết yếu hỗ trợ trao đổi chất cơ.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 38g</span>
+                <span class="meal-macro-pill c">C: 70g</span>
+                <span class="meal-macro-pill f">F: 8g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('shrimp')">Xem Công Thức</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHỦ NHẬT (REST DAY) -->
+    <div class="day-panel" id="day-cn">
+      <div class="meal-timeline">
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 08:30</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Pancake yến mạch tự làm và mật ong rừng</h4>
+              <p class="meal-desc">Bữa sáng cuối tuần thảnh thơi dồi dào năng lượng lành mạnh.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 20g</span>
+                <span class="meal-macro-pill c">C: 80g</span>
+                <span class="meal-macro-pill f">F: 10g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('pancake')">Xem Công Thức</button>
+          </div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa trưa - 12:30</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Lẩu bò nhúng dấm nhiều rau xanh (Bữa ăn xả Cheat Meal nhẹ)</h4>
+              <p class="meal-desc">Nạp lại năng lượng cơ bắp dự trữ (Glycogen) cho tuần tập tiếp theo.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 50g</span>
+                <span class="meal-macro-pill c">C: 90g</span>
+                <span class="meal-macro-pill f">F: 22g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('hotpot')">Xem Công Thức</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: INTERACTIVE GROCERY CHECKLIST -->
+    <div class="section-header">
+      <div class="s-icon green">🛒</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Danh Sách Mua Sắm Thực Phẩm</h2>
+        <span class="s-sub">Chuẩn bị nguyên liệu đầy đủ cho cả tuần</span>
+      </div>
+    </div>
+
+    <div class="grocery-container">
+      <div class="grocery-header">
+        <h3 class="grocery-title">Giỏ đi chợ tăng cơ</h3>
+        <div class="grocery-progress-container">
+          <div class="grocery-progress-lbl">
+            <span>Đã mua</span>
+            <span id="grocery-pct">0%</span>
+          </div>
+          <div class="grocery-progress-bg">
+            <div class="grocery-progress-bar" id="grocery-progress-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grocery-tabs">
+        <button class="grocery-tab active" onclick="switchGroceryTab('protein')">Nguồn Đạm (Meat)</button>
+        <button class="grocery-tab" onclick="switchGroceryTab('carbs')">Tinh Bột (Carbs)</button>
+        <button class="grocery-tab" onclick="switchGroceryTab('fats')">Chất béo & Rau (Fats/Veg)</button>
+      </div>
+
+      <!-- PROTEIN PRODUCTS -->
+      <div class="grocery-list grocery-tab-panel" id="g-protein">
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Ức gà phi lê</span>
+          <span class="grocery-qty">2.5 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Thịt thăn bò tươi</span>
+          <span class="grocery-qty">1.2 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Cá hồi tươi phi lê</span>
+          <span class="grocery-qty">800g</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Trứng gà ta hộp</span>
+          <span class="grocery-qty">30 quả</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Whey Protein Isolate</span>
+          <span class="grocery-qty">1 Hũ</span>
+        </div>
+      </div>
+
+      <!-- CARBS PRODUCTS -->
+      <div class="grocery-list grocery-tab-panel" id="g-carbs" style="display:none;">
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Yến mạch cán dẹt</span>
+          <span class="grocery-qty">1.5 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Gạo lứt đỏ/đen</span>
+          <span class="grocery-qty">2 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Khoai lang mật</span>
+          <span class="grocery-qty">3 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Chuối tiêu chín</span>
+          <span class="grocery-qty">3 Nải</span>
+        </div>
+      </div>
+
+      <!-- FATS & VEGETABLES -->
+      <div class="grocery-list grocery-tab-panel" id="g-fats" style="display:none;">
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Bơ đậu phộng mịn</span>
+          <span class="grocery-qty">1 Hũ</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Dầu ô-liu Extra Virgin</span>
+          <span class="grocery-qty">1 Chai</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Súp lơ xanh/Trắng</span>
+          <span class="grocery-qty">2 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Măng tây tươi</span>
+          <span class="grocery-qty">1 Kg</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: WORKOUT PLAN TIMELINE -->
+    <div class="section-header">
+      <div class="s-icon orange">💪</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Kế Hoạch Tập Luyện Đồng Hành</h2>
+        <span class="s-sub">Không có kích thích cơ bắp, chất dinh dưỡng sẽ hóa mỡ</span>
+      </div>
+    </div>
+    <p class="intro-text">
+      Chế độ ăn tăng cơ chỉ phát huy tác dụng kích thích phì đại sợi cơ khi được kết hợp với một chương trình tập luyện kháng lực có cường độ tăng dần đều (Progressive Overload).
+    </p>
+
+    <div class="schedule-grid">
+      <div class="sched-card">
+        <div class="sched-day">Thứ 2 / 5</div>
+        <div class="sched-title">Push Day</div>
+        <div class="sched-focus">Ngực, Vai, Tay sau</div>
+      </div>
+      <div class="sched-card">
+        <div class="sched-day">Thứ 3 / 6</div>
+        <div class="sched-title">Pull Day</div>
+        <div class="sched-focus">Lưng xô, Tay trước</div>
+      </div>
+      <div class="sched-card">
+        <div class="sched-day">Thứ 4 / 7</div>
+        <div class="sched-title">Legs Day</div>
+        <div class="sched-focus">Đùi trước, sau, Mông</div>
+      </div>
+      <div class="sched-card rest">
+        <div class="sched-day">Chủ Nhật</div>
+        <div class="sched-title">Nghỉ Ngơi</div>
+        <div class="sched-focus">Tĩnh dưỡng, ngủ đủ</div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: INTERACTIVE BULKING DIARY -->
+    <div class="section-header">
+      <div class="s-icon purple">📊</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Nhật Ký Theo Dõi Tăng Cân</h2>
+        <span class="s-sub">Ghi lại chỉ số để theo dõi mức độ Clean Bulk</span>
+      </div>
+    </div>
+
+    <div class="diary-container">
+      <div class="diary-header">
+        <h3 class="diary-title">Ghi chép cân nặng hàng tuần</h3>
+      </div>
+      <div class="diary-controls">
+        <input type="text" class="diary-input" id="diary-week" placeholder="Ví dụ: Tuần 1" />
+        <input type="number" step="0.1" class="diary-input" id="diary-weight" placeholder="Cân nặng (kg)" />
+        <input type="number" class="diary-input" id="diary-cal" placeholder="Lượng calo trung bình" />
+        <button class="diary-btn" onclick="addDiaryLog()">Thêm Bản Ghi</button>
+      </div>
+
+      <div class="diary-logs" id="diary-logs">
+        <!-- Mock logs -->
+        <div class="diary-log-row">
+          <span>Tuần khởi động</span>
+          <span><span class="weight">64.5 kg</span> - <span class="cals">2,700 kcal</span></span>
+          <button class="del" onclick="deleteLog(this)">×</button>
+        </div>
+        <div class="diary-log-row">
+          <span>Tuần 1</span>
+          <span><span class="weight">64.9 kg</span> - <span class="cals">2,850 kcal</span></span>
+          <button class="del" onclick="deleteLog(this)">×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: FAQ ACCORDION -->
+    <div class="section-header">
+      <div class="s-icon blue">❓</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Những Câu Hỏi Thường Gặp (FAQ)</h2>
+        <span class="s-sub">Giải đáp khuất mắc thường thấy khi xả cơ tăng cân</span>
+      </div>
+    </div>
+
+    <div class="faq-container">
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Tôi có thể ăn đồ ăn nhanh để xả cơ nhanh hơn (Dirty Bulking) không?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Mặc dù Dirty Bulking giúp bạn dễ dàng đạt thặng dư calo thông qua các thức ăn giàu năng lượng (pizza, khoai tây chiên, gà rán), nó cũng sẽ tích tụ một lượng mỡ cực kỳ lớn làm che mất mô cơ của bạn. Clean bulking với các nguồn carbs sạch, đạm nạc sẽ mất nhiều thời gian hơn để chuẩn bị nhưng kết quả mang lại sẽ là mô cơ thuần, giảm thiểu tối đa giai đoạn Cutting mệt mỏi về sau.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Tôi nên làm gì nếu bị chững cân, không thể tăng thêm?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Khi cơ thể nặng hơn, mức chuyển hóa năng lượng cơ bản (BMR) cũng tăng theo. Hãy tăng thêm 150 - 200 kcal vào thực đơn hàng ngày của bạn từ các nguồn bơ hạt, yến mạch hoặc dầu ô-liu để tiếp tục kích hoạt đà tăng trưởng của cơ bắp.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Uống Whey Protein lúc nào là hiệu quả nhất để xây dựng cơ bắp?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Whey Protein hấp thụ rất nhanh, cực kỳ phù hợp khi dùng ngay sau khi thức dậy vào buổi sáng hoặc trong vòng 30 - 45 phút ngay sau khi kết thúc buổi tập để kịp thời bù đắp và kích thích tổng hợp cơ bắp (Muscle Protein Synthesis - MPS).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACK BUTTON -->
+    <div class="back-btn-container">
+      <a href="../index.html" class="back-btn">← Quay về Trang Chủ</a>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 WAO Nutrition App. Bảo lưu mọi quyền.</p>
+    <p>Thiết kế bởi Đội ngũ AI Antigravity cho bài tập lớn Lập trình đa nền tảng.</p>
+  </footer>
+
+  <!-- RECIPE MODAL DETAIL -->
+  <div class="modal-overlay" id="recipe-modal" onclick="closeRecipeModal(event)">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeRecipeModal(event, true)">×</button>
+      <div id="recipe-modal-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Slider values synchronization
+    const weightSlider = document.getElementById('weight-slider');
+    const weightLbl = document.getElementById('weight-lbl');
+    
+    if (weightSlider && weightLbl) {
+      weightSlider.addEventListener('input', (e) => {
+        weightLbl.textContent = e.target.value + ' kg';
+        calculateMacros();
+      });
+    }
+
+    const activityRadio = document.getElementsByName('act-level');
+    const goalRadio = document.getElementsByName('bulk-goal');
+
+    activityRadio.forEach(radio => radio.addEventListener('change', calculateMacros));
+    goalRadio.forEach(radio => radio.addEventListener('change', calculateMacros));
+
+    function calculateMacros() {
+      const weight = parseFloat(weightSlider.value);
+      let actMultiplier = 1.55;
+      activityRadio.forEach(r => { if(r.checked) actMultiplier = parseFloat(r.value); });
+      
+      let surplus = 300;
+      goalRadio.forEach(r => { if(r.checked) surplus = parseFloat(r.value); });
+
+      // Harris-Benedict formula for BMR (Male model representation for sports nutrition)
+      const bmr = 88.362 + (13.397 * weight) + (4.799 * 175) - (5.677 * 25);
+      const tdee = Math.round(bmr * actMultiplier);
+      const totalCal = tdee + surplus;
+
+      document.getElementById('total-cals').textContent = totalCal.toLocaleString('en-US');
+
+      // Calorie division for Bulking: 20% Protein, 55% Carbs, 25% Fats
+      const protCal = Math.round(totalCal * 0.20);
+      const carbCal = Math.round(totalCal * 0.55);
+      const fatCal = Math.round(totalCal * 0.25);
+
+      const protGram = Math.round(protCal / 4);
+      const carbGram = Math.round(carbCal / 4);
+      const fatGram = Math.round(fatCal / 9);
+
+      document.getElementById('prot-val').textContent = `${protGram}g (${protCal} kcal)`;
+      document.getElementById('carb-val').textContent = `${carbGram}g (${carbCal} kcal)`;
+      document.getElementById('fat-val').textContent = `${fatGram}g (${fatCal} kcal)`;
+
+      document.getElementById('prot-bar').style.width = '20%';
+      document.getElementById('carb-bar').style.width = '55%';
+      document.getElementById('fat-bar').style.width = '25%';
+    }
+
+    // Run on startup
+    calculateMacros();
+
+    // Tab switcher for Meal plan
+    const tabBtns = document.querySelectorAll('.planner-tab-btn');
+    const dayPanels = document.querySelectorAll('.day-panel');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        dayPanels.forEach(p => p.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const day = btn.getAttribute('data-day');
+        document.getElementById(`day-${day}`).classList.add('active');
+      });
+    });
+
+    // Grocery List tab switching
+    function switchGroceryTab(tabName) {
+      document.querySelectorAll('.grocery-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.grocery-tab-panel').forEach(p => p.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById(`g-${tabName}`).style.display = 'grid';
+    }
+
+    // Toggle grocery item checkbox
+    function toggleGrocery(element) {
+      element.classList.toggle('checked');
+      updateGroceryProgress();
+    }
+
+    function updateGroceryProgress() {
+      const items = document.querySelectorAll('.grocery-item');
+      const checkedItems = document.querySelectorAll('.grocery-item.checked');
+      const pct = items.length > 0 ? Math.round((checkedItems.length / items.length) * 100) : 0;
+      
+      document.getElementById('grocery-pct').textContent = pct + '%';
+      document.getElementById('grocery-progress-bar').style.width = pct + '%';
+    }
+    updateGroceryProgress(); // init
+
+    // FAQ Accordion Toggle
+    function toggleFaq(element) {
+      const parent = element.parentElement;
+      const isOpen = parent.classList.contains('open');
+      
+      document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('open'));
+      if(!isOpen) {
+        parent.classList.add('open');
+      }
+    }
+
+    // Add weight logs
+    function addDiaryLog() {
+      const week = document.getElementById('diary-week').value.trim();
+      const weight = document.getElementById('diary-weight').value.trim();
+      const cal = document.getElementById('diary-cal').value.trim();
+
+      if(!week || !weight) {
+        alert('Vui lòng điền đủ thông tin Tuần và Cân nặng!');
+        return;
+      }
+
+      const logRow = document.createElement('div');
+      logRow.className = 'diary-log-row';
+      logRow.innerHTML = `
+        <span>${week}</span>
+        <span><span class="weight">${weight} kg</span>${cal ? ` - <span class="cals">${Number(cal).toLocaleString()} kcal</span>` : ''}</span>
+        <button class="del" onclick="deleteLog(this)">×</button>
+      `;
+
+      document.getElementById('diary-logs').appendChild(logRow);
+      document.getElementById('diary-week').value = '';
+      document.getElementById('diary-weight').value = '';
+      document.getElementById('diary-cal').value = '';
+    }
+
+    function deleteLog(btn) {
+      btn.parentElement.remove();
+    }
+
+    // Dynamic recipes data
+    const recipesData = {
+      oatmeal: {
+        title: "Cháo yến mạch và Whey Protein",
+        servings: "1 Bữa ăn",
+        prepTime: "5 phút",
+        cookTime: "5 phút",
+        ingredients: [
+          { name: "Yến mạch cán dẹt (Rolled Oats)", qty: "80g" },
+          { name: "Sữa tươi không đường tách béo", qty: "250ml" },
+          { name: "Bột Whey Protein Isolate (Vị Vani/Socola)", qty: "1 Muỗng (30g)" },
+          { name: "Chuối chín tiêu cắt lát", qty: "1 quả" },
+          { name: "Hạt chia hữu cơ", qty: "1 muỗng cafe" }
+        ],
+        steps: [
+          "Cho yến mạch và sữa tươi vào bát sứ, khuấy đều rồi cho vào lò vi sóng quay trong 2-3 phút (hoặc đun sôi nhỏ lửa trên bếp lò).",
+          "Đợi cháo yến mạch ấm nguội bớt (tầm 60 độ C) để tránh vón cục Whey, trút 1 muỗng Whey Protein vào và đánh thật đều.",
+          "Xếp chuối tiêu chín thái lát lên bề mặt, rắc hạt chia lên và thưởng thức trực tiếp."
+        ],
+        timerSec: 300
+      },
+      chicken: {
+        title: "Ức gà áp chảo sốt bơ chanh & Cơm gạo lứt",
+        servings: "1 Bữa ăn",
+        prepTime: "15 phút",
+        cookTime: "15 phút",
+        ingredients: [
+          { name: "Ức gà phi lê bỏ da", qty: "200g" },
+          { name: "Gạo lứt đỏ chín", qty: "200g (1 bát to)" },
+          { name: "Súp lơ xanh hấp chín", qty: "150g" },
+          { name: "Dầu ô-liu chưng cất lạnh", qty: "1 muỗng cafe" },
+          { name: "Tiêu đen, tỏi băm, muối hồng", qty: "Vừa đủ" }
+        ],
+        steps: [
+          "Ức gà rửa sạch, khứa nhẹ bề mặt, ướp với chút muối hồng, tiêu đen và tỏi băm trong 15 phút.",
+          "Làm nóng chảo chống dính, quét lớp dầu ô-liu mỏng, cho gà vào áp chảo lửa vừa mỗi mặt từ 5-6 phút đến khi chín vàng đều.",
+          "Ăn kèm với cơm gạo lứt dẻo nóng hổi và súp lơ xanh luộc chấm muối tiêu chanh ngon miệng."
+        ],
+        timerSec: 900
+      },
+      salmon: {
+        title: "Cá hồi áp chảo sốt bơ tỏi măng tây",
+        servings: "1 Bữa ăn",
+        prepTime: "10 phút",
+        cookTime: "12 phút",
+        ingredients: [
+          { name: "Cá hồi tươi phi lê còn da", qty: "180g" },
+          { name: "Măng tây tươi bỏ gốc già", qty: "100g" },
+          { name: "Khoai tây hấp chín nghiền nhuyễn", qty: "150g" },
+          { name: "Dầu ô-liu thơm ngon", qty: "1.5 muỗng cafe" },
+          { name: "Tỏi cắt lát, muối và tiêu đen", qty: "Một ít" }
+        ],
+        steps: [
+          "Cá hồi dùng khăn thấm thật khô nước, rắc đều muối hồng và tiêu lên cả hai mặt.",
+          "Cho dầu ô-liu vào chảo nóng, áp chảo phần da cá hồi trước trong 4 phút cho giòn rụm, lật mặt áp chảo tiếp trong 3 phút.",
+          "Lấy cá ra đĩa. Trút tỏi băm và măng tây vào xào nhanh với phần dầu mỡ cá còn sót lại trong chảo trong 3 phút rồi trình bày ra đĩa ăn kèm khoai tây nghiền."
+        ],
+        timerSec: 720
+      }
+    };
+
+    // Modal Control logic with active cooking countdown timer
+    let activeInterval = null;
+    let timerRemaining = 0;
+
+    function openRecipe(id) {
+      const recipe = recipesData[id];
+      if(!recipe) return;
+
+      clearInterval(activeInterval);
+      document.getElementById('recipe-modal').classList.add('active');
+
+      const ingredientsHTML = recipe.ingredients.map(ing => `
+        <li>
+          <span>${ing.name}</span>
+          <span class="val">${ing.qty}</span>
+        </li>
+      `).join('');
+
+      const stepsHTML = recipe.steps.map((step, idx) => `
+        <li>
+          <div class="step-num">${idx + 1}</div>
+          <div>${step}</div>
+        </li>
+      `).join('');
+
+      timerRemaining = recipe.timerSec;
+      const min = Math.floor(timerRemaining / 60);
+      const sec = timerRemaining % 60;
+      const timeStr = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+
+      const content = `
+        <h3 class="modal-title">${recipe.title}</h3>
+        <div class="recipe-meta">
+          <div class="recipe-meta-item">⏱️ Chuẩn bị: ${recipe.prepTime}</div>
+          <div class="recipe-meta-item">🍳 Nấu: ${recipe.cookTime}</div>
+          <div class="recipe-meta-item">🍽️ Khẩu phần: ${recipe.servings}</div>
+        </div>
+
+        <h4 class="modal-section-title">Nguyên Liệu Cần Thiết</h4>
+        <ul class="ing-list">${ingredientsHTML}</ul>
+
+        <h4 class="modal-section-title">Các Bước Chế Biến</h4>
+        <ol class="step-list">${stepsHTML}</ol>
+
+        <div class="timer-container">
+          <div class="timer-info">
+            <span class="timer-title">⏰ Bấm Giờ Nấu Thực Tế</span>
+            <span class="timer-clock" id="modal-clock">${timeStr}</span>
+          </div>
+          <div class="timer-buttons">
+            <button class="timer-btn" id="timer-toggle-btn" onclick="toggleCookingTimer()">Bắt Đầu</button>
+            <button class="timer-btn" onclick="resetCookingTimer(${recipe.timerSec})">Đặt Lại</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('recipe-modal-content').innerHTML = content;
+    }
+
+    function closeRecipeModal(event, force = false) {
+      if(force || event.target === document.getElementById('recipe-modal')) {
+        document.getElementById('recipe-modal').classList.remove('active');
+        clearInterval(activeInterval);
+      }
+    }
+
+    function toggleCookingTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (activeInterval) {
+        // Pause timer
+        clearInterval(activeInterval);
+        activeInterval = null;
+        btn.textContent = 'Tiếp Tục';
+        btn.classList.remove('active-run');
+      } else {
+        // Start/Resume timer
+        btn.textContent = 'Tạm Dừng';
+        btn.classList.add('active-run');
+        activeInterval = setInterval(() => {
+          if (timerRemaining > 0) {
+            timerRemaining--;
+            const min = Math.floor(timerRemaining / 60);
+            const sec = timerRemaining % 60;
+            document.getElementById('modal-clock').textContent = 
+              `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+          } else {
+            clearInterval(activeInterval);
+            activeInterval = null;
+            btn.textContent = 'Hoàn Thành!';
+            btn.classList.remove('active-run');
+            alert('Thời gian nấu ăn đã hết! Món ăn của bạn đã sẵn sàng thưởng thức.');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetCookingTimer(originalSeconds) {
+      clearInterval(activeInterval);
+      activeInterval = null;
+      timerRemaining = originalSeconds;
+      const min = Math.floor(timerRemaining / 60);
+      const sec = timerRemaining % 60;
+      document.getElementById('modal-clock').textContent = 
+        `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+      
+      const btn = document.getElementById('timer-toggle-btn');
+      btn.textContent = 'Bắt Đầu';
+      btn.classList.remove('active-run');
+    }
+  </script>
+</body>
+</html>
