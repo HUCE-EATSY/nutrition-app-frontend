@@ -251,7 +251,21 @@ export default function PhysicalProfileScreen() {
     }
   };
 
-  const estimatedDate = calcEstimatedDate(goalWeightKg as number, weightKg as number, weeklyGoalKg);
+  const targetDateISO = activeGoal?.targetDate ?? activeGoal?.TargetDate;
+  const estimatedDate = React.useMemo(() => {
+    // Nếu mục tiêu là Giữ cân, không có ngày hoàn thành
+    if (goalType === 3 || draft.goalType === "maintain_weight") {
+      return t.physicalProfile.estimatedMaintaining;
+    }
+    // Ưu tiên ngày mục tiêu từ Backend
+    if (targetDateISO) {
+      const d = new Date(targetDateISO);
+      const lang = useSettingsStore.getState?.()?.language || "vi";
+      return d.toLocaleDateString(lang === "vi" ? "vi-VN" : "en-US", { day: "numeric", month: "long", year: "numeric" });
+    }
+    // Fallback: Tự tính toán nếu Backend chưa có
+    return calcEstimatedDate(goalWeightKg as number, weightKg as number, weeklyGoalKg);
+  }, [targetDateISO, goalWeightKg, weightKg, weeklyGoalKg, goalType, draft.goalType, t.physicalProfile.estimatedMaintaining]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
