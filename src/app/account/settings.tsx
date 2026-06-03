@@ -226,6 +226,42 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Custom Personal Reminders */}
+        <View style={styles.divider} />
+        <Pressable
+          style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/reminders");
+          }}
+        >
+          <View style={styles.rowLeftIcon}>
+            <Ionicons color={colors.primary} name="alarm-outline" size={22} />
+            <Text style={styles.rowTitle}>Nhắc nhở cá nhân (Nước/Ăn)</Text>
+          </View>
+          <View style={styles.rowRight}>
+            <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
+          </View>
+        </Pressable>
+
+        {/* Connection Diagnostics */}
+        <View style={styles.divider} />
+        <Pressable
+          style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.borderSoft }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/diagnostics");
+          }}
+        >
+          <View style={styles.rowLeftIcon}>
+            <Ionicons color={colors.primary} name="construct-outline" size={22} />
+            <Text style={styles.rowTitle}>Chẩn đoán kết nối hệ thống</Text>
+          </View>
+          <View style={styles.rowRight}>
+            <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
+          </View>
+        </Pressable>
+
         {/* Dynamic child notification configurations */}
         {notificationsEnabled && (
           <Animated.View
