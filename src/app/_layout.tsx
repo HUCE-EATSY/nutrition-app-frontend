@@ -20,6 +20,7 @@ import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useAppColors } from "@/hooks/useAppColors";
+import { useSubscriptionQuery } from "@/hooks/queries/useSubscriptionQuery";
 
 // Import global CSS for web
 if (Platform.OS === 'web') {
@@ -46,6 +47,14 @@ const queryClient = new QueryClient({
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <InnerLayout />
+    </QueryClientProvider>
+  );
+}
+
+function InnerLayout() {
   const themeMode = useSettingsStore((state) => state.theme);
   const settingsHydrated = useSettingsStore((state) => state.hydrated);
   useSettingsStore((state) => state.language); // Force layout and child screen tree to re-render on language change
@@ -76,6 +85,9 @@ export default function RootLayout() {
   const isVerifyingProfile = useAuthStore((state) => state.isVerifyingProfile);
 
   usePushNotifications(isAuthenticated);
+
+  // Fetch subscription status sau khi login → tự động sync vào authStore
+  useSubscriptionQuery();
 
   const segments = useSegments();
   const router = useRouter();
@@ -154,26 +166,24 @@ export default function RootLayout() {
   }
 
   const stackContent = (
-    <QueryClientProvider client={queryClient}>
-      <PaperProvider theme={paperTheme}>
-        <StatusBar style={themeMode === "light" ? "dark" : "light"} />
-        <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(public)" />
-          <Stack.Screen name="(onboarding)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="quick-add" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
-          <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
-          <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
-          <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
-          <Stack.Screen name="log-water" options={{ presentation: "modal" }} />
-          <Stack.Screen name="create-food" options={{ presentation: "modal" }} />
-          <Stack.Screen name="create-recipe" options={{ presentation: "modal" }} />
-          <Stack.Screen name="webview" options={{ presentation: "modal" }} />
-          <Stack.Screen name="detect-food" options={{ presentation: "modal" }} />
-        </Stack>
-      </PaperProvider>
-    </QueryClientProvider>
+    <PaperProvider theme={paperTheme}>
+      <StatusBar style={themeMode === "light" ? "dark" : "light"} />
+      <Stack screenOptions={{ contentStyle: { backgroundColor: colors.bgBase }, headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(public)" />
+        <Stack.Screen name="(onboarding)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="quick-add" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+        <Stack.Screen name="calendar" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+        <Stack.Screen name="guide/[type]" options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }} />
+        <Stack.Screen name="log-weight" options={{ presentation: "modal" }} />
+        <Stack.Screen name="log-water" options={{ presentation: "modal" }} />
+        <Stack.Screen name="create-food" options={{ presentation: "modal" }} />
+        <Stack.Screen name="create-recipe" options={{ presentation: "modal" }} />
+        <Stack.Screen name="webview" options={{ presentation: "modal" }} />
+        <Stack.Screen name="detect-food" options={{ presentation: "modal" }} />
+      </Stack>
+    </PaperProvider>
   );
 
   // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động

@@ -25,7 +25,7 @@ export default function AccountScreen() {
   const t = useTranslation();
   const queryClient = useQueryClient();
   const { draft, serverPlan } = useOnboardingStore();
-  const { userInfo } = useAuthStore();
+  const { userInfo, isPremium, premiumExpiresAt } = useAuthStore();
   const { data: serverUserInfo } = useGetUserInfo();
 
   const colors = useAppColors();
@@ -173,23 +173,60 @@ export default function AccountScreen() {
         <Text style={styles.joinedText}>{t.account.joinedDate(joinedDate)}</Text>
       </View>
 
-      {/* Premium Banner */}
-      <LinearGradient
-        colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
-        end={{ x: 1, y: 0.5 }}
-        start={{ x: 0, y: 0.5 }}
-        style={styles.premiumBanner}
-      >
-        <View style={styles.premiumContent}>
-          <Text style={styles.premiumTitle}>{t.account.premium.bannerTitle}</Text>
-          <Pressable style={styles.premiumButton}>
-            <Text style={styles.premiumButtonText}>{t.account.premium.cta}</Text>
-          </Pressable>
-        </View>
-        <View style={styles.premiumIconContainer}>
-          <Ionicons color="#FF9500" name="flame" size={64} />
-        </View>
-      </LinearGradient>
+      {/* Premium Banner / Badge */}
+      {isPremium ? (
+        // ── User Premium: Badge xanh hiển thị trạng thái active
+        <LinearGradient
+          colors={themeMode === "light" ? ["#E8FFF0", "#C6F6D5"] : ["#1a3a2a", "#0f2d1e"]}
+          end={{ x: 1, y: 0.5 }}
+          start={{ x: 0, y: 0.5 }}
+          style={styles.premiumBanner}
+        >
+          <View style={styles.premiumContent}>
+            <View style={styles.premiumActiveBadge}>
+              <Text style={styles.premiumActiveBadgeText}>✨ PREMIUM ACTIVE</Text>
+            </View>
+            <Text style={styles.premiumActiveDesc}>
+              {premiumExpiresAt
+                ? `Hết hạn: ${new Date(premiumExpiresAt).toLocaleDateString(
+                    language === "vi" ? "vi-VN" : "en-US",
+                    { day: "2-digit", month: "short", year: "numeric" }
+                  )}`
+                : "Đặc quyền không giới hạn"}
+            </Text>
+          </View>
+          <View style={styles.premiumIconContainer}>
+            <Ionicons color="#22c55e" name="shield-checkmark" size={56} />
+          </View>
+        </LinearGradient>
+      ) : (
+        // ── User thường: Banner vàng mời nâng cấp
+        <LinearGradient
+          colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
+          end={{ x: 1, y: 0.5 }}
+          start={{ x: 0, y: 0.5 }}
+          style={styles.premiumBanner}
+        >
+          <View style={styles.premiumContent}>
+            <Text style={styles.premiumTitle}>{t.account.premium.bannerTitle}</Text>
+            <Pressable
+              style={styles.premiumButton}
+              onPress={() =>
+                Alert.alert(
+                  "Nâng cấp Premium 👑",
+                  "Để được cấp quyền Premium, vui lòng liên hệ quản trị viên hệ thống.",
+                  [{ text: "Đã hiểu", style: "default" }]
+                )
+              }
+            >
+              <Text style={styles.premiumButtonText}>{t.account.premium.cta}</Text>
+            </Pressable>
+          </View>
+          <View style={styles.premiumIconContainer}>
+            <Ionicons color="#FF9500" name="flame" size={64} />
+          </View>
+        </LinearGradient>
+      )}
 
       {/* Stats Row */}
       <View style={styles.statsRow}>
@@ -492,6 +529,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   premiumContent: {
     flex: 1,
   },
+  // ── Free user banner styles
   premiumTitle: {
     ...typography.bodyStrong,
     color: "#2D2D2D",
@@ -507,6 +545,28 @@ const getStyles = (colors: any) => StyleSheet.create({
   premiumButtonText: {
     ...typography.bodyStrong,
     color: "#4A3400",
+  },
+  // ── Premium user badge styles
+  premiumActiveBadge: {
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+    alignSelf: "flex-start",
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.4)",
+  },
+  premiumActiveBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#22c55e",
+    letterSpacing: 0.5,
+  },
+  premiumActiveDesc: {
+    ...typography.caption,
+    color: "#166534",
+    fontWeight: "600",
   },
   premiumIconContainer: {
     marginLeft: spacing.md,

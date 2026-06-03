@@ -57,6 +57,10 @@ export const API_URLS = {
     logDetail: (id: string) => `${API_BASE}/api/exercises/logs/${id}`,
     dailySummary: (date: string) => `${API_BASE}/api/exercises/logs/daily/${date}`,
   },
+  /** Subscription / Premium */
+  subscription: {
+    me: `${API_BASE}/api/Subscription/me`,
+  },
   notifications: {
     settings: `${API_BASE}/api/notifications/settings`,
     list: `${API_BASE}/api/notifications`,

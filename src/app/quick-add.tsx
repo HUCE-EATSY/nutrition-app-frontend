@@ -10,6 +10,7 @@ import { useAppColors } from "@/hooks/useAppColors";
 import { useResponsiveLayout } from "@/constants/responsive";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useAuthStore } from "@/store/authStore";
 import { FoodSelectorModal } from "@/components/meal/FoodSelectorModal";
 import { FoodItem } from "@/hooks/queries/useFoodQueries";
 
@@ -25,6 +26,8 @@ export default function QuickAddModal() {
 
   const [showFoodSelector, setShowFoodSelector] = useState(false);
 
+  const isPremium = useAuthStore((state) => state.isPremium);
+
   const handleClose = () => {
     if (router.canGoBack()) {
       router.back();
@@ -39,6 +42,23 @@ export default function QuickAddModal() {
 
   const handleToast = (feature: string) => {
     Alert.alert(t.quickAdd.comingSoon, t.quickAdd.featureUnderDev(feature));
+  };
+
+  /**
+   * Xử lý bấm vào tính năng Premium.
+   * - User Premium: navigate bình thường.
+   * - User thường: hiện Alert thông báo liên hệ Admin.
+   */
+  const handlePremiumFeature = (navigateTo?: string) => {
+    if (isPremium) {
+      if (navigateTo) router.navigate(navigateTo);
+    } else {
+      Alert.alert(
+        "Tính năng Premium 👑",
+        "Tính năng nâng cao này cần đặc quyền Premium.\nVui lòng liên hệ Admin để được cấp quyền.",
+        [{ text: "Đã hiểu", style: "default" }]
+      );
+    }
   };
 
   // BlurView trên Android cực kỳ nặng và gây lag animation, ta dùng màu nền trong suốt làm fallback
@@ -64,23 +84,38 @@ export default function QuickAddModal() {
             <Text style={styles.primaryText}>{t.quickAdd.logMeal}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/scan-barcode")}>
+          <Pressable style={styles.primaryItem} onPress={() => handlePremiumFeature("/scan-barcode")}>
             <View style={[styles.primaryIconBox, { backgroundColor: "#3D8BFF" }]}>
               <Ionicons name="barcode-outline" size={24} color="#FFF" />
+              {!isPremium && (
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>👑</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.primaryText}>{t.quickAdd.scanCode}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleNavigate("/detect-food")}>
+          <Pressable style={styles.primaryItem} onPress={() => handlePremiumFeature("/detect-food")}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.success }]}>
               <Ionicons name="sparkles-outline" size={24} color="#FFF" />
+              {!isPremium && (
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>👑</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.primaryText}>{t.quickAdd.aiRecognize}</Text>
           </Pressable>
 
-          <Pressable style={styles.primaryItem} onPress={() => handleToast(t.quickAdd.voiceRecord)}>
+          <Pressable style={styles.primaryItem} onPress={() => handlePremiumFeature()}>
             <View style={[styles.primaryIconBox, { backgroundColor: colors.danger }]}>
               <Ionicons name="mic-outline" size={24} color="#FFF" />
+              {!isPremium && (
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>👑</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.primaryText}>{t.quickAdd.voiceRecord}</Text>
           </Pressable>
@@ -190,11 +225,32 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    position: "relative",
   },
   primaryText: {
     ...typography.caption,
     color: colors.textPrimary,
     textAlign: "center",
+  },
+  premiumBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "#FFD700",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  premiumBadgeText: {
+    fontSize: 10,
+    lineHeight: 12,
   },
   secondaryGrid: {
     flexDirection: "row",
