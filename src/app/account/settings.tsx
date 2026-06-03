@@ -22,7 +22,6 @@ import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useAppColors } from "@/hooks/useAppColors";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import { useGetNotificationSettings, useUpdateNotificationSetting } from "@/hooks/queries/useNotificationQueries";
 import { radius, spacing, typography } from "@/constants";
 import { setStringAsync } from "expo-clipboard";
 
@@ -40,19 +39,14 @@ export default function SettingsScreen() {
   const theme = useSettingsStore((state) => state.theme);
   const language = useSettingsStore((state) => state.language);
   const unit = useSettingsStore((state) => state.unit);
-  const notificationsEnabled = useSettingsStore((state) => state.notificationsEnabled);
 
   const setTheme = useSettingsStore((state) => state.setTheme);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
   const setUnit = useSettingsStore((state) => state.setUnit);
-  const setNotificationsEnabled = useSettingsStore((state) => state.setNotificationsEnabled);
 
   useEffect(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-  }, [theme, language, unit, notificationsEnabled]);
-
-  const { data: serverSettings = [], isLoading: isLoadingSettings } = useGetNotificationSettings();
-  const updateSettingMutation = useUpdateNotificationSetting();
+  }, [theme, language, unit]);
 
   // Dialog visibility states
   const [langDialogVisible, setLangDialogVisible] = useState(false);
@@ -205,63 +199,6 @@ export default function SettingsScreen() {
             <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
           </View>
         </Pressable>
-
-        <View style={styles.divider} />
-
-        {/* Notifications */}
-        <View style={styles.row}>
-          <View style={styles.rowLeft}>
-            <Text style={styles.rowTitle}>{t.settings.notifications}</Text>
-          </View>
-          <View style={styles.rowRight}>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={(val) => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setNotificationsEnabled(val);
-              }}
-              trackColor={{ false: "#767577", true: colors.primary }}
-              thumbColor={notificationsEnabled ? "#FFFFFF" : "#f4f3f4"}
-            />
-          </View>
-        </View>
-
-        {/* Dynamic child notification configurations */}
-        {notificationsEnabled && (
-          <Animated.View
-            entering={FadeInUp.duration(300)}
-            exiting={FadeOutDown.duration(200)}
-            style={styles.notificationChildren}
-          >
-            {isLoadingSettings ? (
-              <Text style={[styles.childRowTitle, { paddingVertical: spacing.xs, opacity: 0.7 }]}>
-                {language === "vi" ? "Đang tải cài đặt..." : "Loading settings..."}
-              </Text>
-            ) : (
-              serverSettings.map((item, index) => {
-                const displayName = language === "vi" ? item.notificationNameVi : item.notificationNameEn;
-                return (
-                  <View key={item.notificationTypeId || `setting-${index}`} style={styles.childRow}>
-                    <Text style={styles.childRowTitle}>{displayName}</Text>
-                    <Switch
-                      value={item.isEnabled}
-                      onValueChange={(val) => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        updateSettingMutation.mutate({
-                          notificationTypeId: item.notificationTypeId,
-                          isEnabled: val,
-                        });
-                      }}
-                      trackColor={{ false: "#767577", true: colors.primary }}
-                      thumbColor="#FFFFFF"
-                      disabled={updateSettingMutation.isPending}
-                    />
-                  </View>
-                );
-              })
-            )}
-          </Animated.View>
-        )}
       </View>
 
       {/* TÀI KHOẢN VÀ BẢO MẬT */}
