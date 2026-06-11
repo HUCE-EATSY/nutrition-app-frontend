@@ -8,9 +8,6 @@ import { spacing, typography } from "@/constants";
 import { useTranslation } from "@/constants/i18n";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useDiaryStore } from "@/store/diaryStore";
-import { useGetUnreadCount } from "@/hooks/queries/useNotificationQueries";
-import { useStreaks } from "@/hooks/useStreaks";
-import { getTodayDateISO } from "@/utils/date";
 
 export function HomeHeader() {
   const t = useTranslation();
@@ -20,8 +17,6 @@ export function HomeHeader() {
   const language = useSettingsStore((state) => state.language);
   
   const { selectedDate, setDate } = useDiaryStore();
-  const { data: unreadCount = 0 } = useGetUnreadCount();
-  const { currentStreak } = useStreaks();
   
   const todayStr = getTodayDateISO();
   const isToday = selectedDate === todayStr;
@@ -57,10 +52,6 @@ export function HomeHeader() {
           <Pressable hitSlop={10} onPress={() => router.push("/streaks")} style={({ pressed }) => [styles.badge, pressed && styles.badgePressed]}>
             <MaterialCommunityIcons name="fire" size={14} color={colors.warning} />
             <Text style={styles.badgeText}>{currentStreak}</Text>
-          </Pressable>
-          <Pressable hitSlop={10} onPress={() => router.push("/notifications")} style={styles.notifButton}>
-            <Ionicons name={unreadCount > 0 ? "notifications" : "notifications-outline"} size={20} color={unreadCount > 0 ? colors.primary : colors.textSecondary} />
-            {unreadCount > 0 && <View style={styles.badgeDot} />}
           </Pressable>
           <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
             <MaterialCommunityIcons name="calendar-blank-outline" size={20} color={colors.textSecondary} />

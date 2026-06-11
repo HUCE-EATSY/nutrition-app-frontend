@@ -15,7 +15,6 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { getDraftResumePath } from "@/utils/onboarding";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -74,8 +73,6 @@ export default function RootLayout() {
   const authHydrated = useAuthStore((state) => state.hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isVerifyingProfile = useAuthStore((state) => state.isVerifyingProfile);
-
-  usePushNotifications(isAuthenticated);
 
   const segments = useSegments();
   const router = useRouter();

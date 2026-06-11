@@ -26,7 +26,6 @@ import { useDiaryStore } from "@/store/diaryStore";
 import { useAuthStore } from "@/store/authStore";
 import { GradientButton } from "@/components/buttons/GradientButton";
 import { useTranslation } from "@/constants/i18n";
-import { useSettingsStore } from "@/store/settingsStore";
 
 const DEFAULT_WATER_DATA = {
   waterLogs: {} as Record<string, number>,
@@ -34,9 +33,18 @@ const DEFAULT_WATER_DATA = {
   defaultStep: 250,
 };
 
+const parseNumberInput = (text: string, maxLimit: number, onLimitExceeded: () => void) => {
+  const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
+  const parsed = isNaN(val) ? 0 : val;
+  if (parsed > maxLimit) {
+    onLimitExceeded();
+    return maxLimit;
+  }
+  return parsed;
+};
+
 export default function LogWaterScreen() {
   const t = useTranslation();
-  const language = useSettingsStore((state) => state.language);
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
@@ -48,8 +56,8 @@ export default function LogWaterScreen() {
 
   const { setWater, setWaterGoal, setDefaultStep: setStoreDefaultStep } = useWaterStore();
 
-  // Set date state based on diary selectedDate or today
-  const [logDateStr] = useState(selectedDate || getTodayDateISO());
+  // Date based on diary selectedDate or today
+  const logDateStr = selectedDate || getTodayDateISO();
 
   // Get initial values from the store
   const [intake, setIntake] = useState(0);
@@ -74,14 +82,9 @@ export default function LogWaterScreen() {
   const [defaultStep, setDefaultStep] = useState(userWater.defaultStep ?? 250);
 
   const handleDefaultStepChange = (text: string) => {
-    const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    const parsed = isNaN(val) ? 0 : val;
-    if (parsed > 2000) {
+    setDefaultStep(parseNumberInput(text, 2000, () => {
       Alert.alert(t.water.limitErrorTitle, t.water.limitDefaultError);
-      setDefaultStep(2000);
-    } else {
-      setDefaultStep(parsed);
-    }
+    }));
   };
 
   // When date or store changes, update locally
@@ -177,25 +180,15 @@ export default function LogWaterScreen() {
   };
 
   const handleTextChange = (text: string) => {
-    const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    const parsed = isNaN(val) ? 0 : val;
-    if (parsed > 10000) {
+    setIntake(parseNumberInput(text, 10000, () => {
       Alert.alert(t.water.limitErrorTitle, t.water.limitTotalError);
-      setIntake(10000);
-    } else {
-      setIntake(parsed);
-    }
+    }));
   };
 
   const handleGoalChange = (text: string) => {
-    const val = parseInt(text.replace(/[^0-9]/g, ""), 10);
-    const parsed = isNaN(val) ? 0 : val;
-    if (parsed > 10000) {
+    setGoal(parseNumberInput(text, 10000, () => {
       Alert.alert(t.water.limitErrorTitle, t.water.limitGoalError);
-      setGoal(10000);
-    } else {
-      setGoal(parsed);
-    }
+    }));
   };
 
   const progressPercentage = goal > 0 ? Math.round((intake / goal) * 100) : 0;
@@ -218,6 +211,13 @@ export default function LogWaterScreen() {
       height: `${animatedProgress.value}%`
     };
   });
+
+  const presets = useMemo(() => [
+    { name: t.water.smallCup, amount: 150, icon: "cup-water" as const },
+    { name: t.water.standardCup, amount: 250, icon: "cup" as const },
+    { name: t.water.mediumBottle, amount: 500, icon: "bottle-wine-outline" as const },
+    { name: t.water.largeBottle, amount: 750, icon: "bottle-wine" as const },
+  ], [t]);
 
   return (
     <SafeScreen contentContainerStyle={styles.container}>
@@ -364,29 +364,13 @@ export default function LogWaterScreen() {
           <View style={styles.presetsSection}>
             <Text style={styles.sectionLabel}>{t.water.presetsTitle}</Text>
             <View style={styles.presetsGrid}>
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(150)}>
-                <MaterialCommunityIcons name="cup-water" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>{t.water.smallCup}</Text>
-                <Text style={styles.presetVal}>+150 ml</Text>
-              </Pressable>
-
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(250)}>
-                <MaterialCommunityIcons name="cup" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>{t.water.standardCup}</Text>
-                <Text style={styles.presetVal}>+250 ml</Text>
-              </Pressable>
-
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(500)}>
-                <MaterialCommunityIcons name="bottle-wine-outline" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>{t.water.mediumBottle}</Text>
-                <Text style={styles.presetVal}>+500 ml</Text>
-              </Pressable>
-
-              <Pressable style={styles.presetItem} onPress={() => handleQuickAdd(750)}>
-                <MaterialCommunityIcons name="bottle-wine" size={24} color={colors.carbs} />
-                <Text style={styles.presetName}>{t.water.largeBottle}</Text>
-                <Text style={styles.presetVal}>+750 ml</Text>
-              </Pressable>
+              {presets.map((preset, index) => (
+                <Pressable key={index} style={styles.presetItem} onPress={() => handleQuickAdd(preset.amount)}>
+                  <MaterialCommunityIcons name={preset.icon} size={24} color={colors.carbs} />
+                  <Text style={styles.presetName}>{preset.name}</Text>
+                  <Text style={styles.presetVal}>+{preset.amount} ml</Text>
+                </Pressable>
+              ))}
             </View>
           </View>
 
