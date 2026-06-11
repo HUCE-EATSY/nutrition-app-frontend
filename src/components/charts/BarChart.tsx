@@ -1,7 +1,6 @@
-import React, { memo } from "react";
+import React from "react";
 import { View } from "react-native";
 import Svg, { Rect, Line as SvgLine, G, Text as SvgText, Circle } from "react-native-svg";
-import { useAppColors } from "@/hooks/useAppColors";
 
 export interface BarData {
   label: string;
@@ -20,7 +19,7 @@ interface BarChartProps {
   showAveragePill?: boolean;
 }
 
-export const BarChart: React.FC<BarChartProps> = memo(({
+export const BarChart: React.FC<BarChartProps> = ({
   data,
   height = 200,
   width = 300,
@@ -30,8 +29,6 @@ export const BarChart: React.FC<BarChartProps> = memo(({
   showYAxis = false,
   showAveragePill = false,
 }) => {
-  const colors = useAppColors();
-  const isDark = colors.bgBase === "#111020";
   const padding = { top: 20, bottom: 30, left: showYAxis ? 48 : 10, right: 10 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -67,8 +64,11 @@ export const BarChart: React.FC<BarChartProps> = memo(({
   const barWidth = data.length > 0 ? (chartWidth / data.length) * 0.45 : 15;
   const spacing = data.length > 0 ? chartWidth / data.length : 30;
 
+  // Tính vị trí giữa cột đầu tiên (T2) để đặt chấm xanh
+  const firstBarX = spacing * 0.5; // Trung tâm của cột đầu tiên
+
   return (
-    <View style={{ width, height }}>
+    <View style={{ width, height, overflow: 'visible' }}>
       <Svg width={width} height={height}>
         <G x={padding.left} y={padding.top}>
           {/* Grid lines & Y Axis Labels */}
@@ -81,7 +81,7 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                   y1={yPos}
                   x2={chartWidth}
                   y2={yPos}
-                  stroke={colors.border}
+                  stroke="rgba(255, 255, 255, 0.08)"
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
@@ -89,7 +89,7 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                   x={-12}
                   y={yPos + 4}
                   fontSize="10"
-                  fill={colors.textMuted}
+                  fill="#9CA3AF"
                   textAnchor="end"
                 >
                   {formatYLabel(tick)}
@@ -97,52 +97,6 @@ export const BarChart: React.FC<BarChartProps> = memo(({
               </G>
             );
           })}
-
-          {/* Average Line */}
-          {averageValue !== undefined && averageValue > 0 && (
-            <G>
-              <SvgLine
-                x1={0}
-                y1={chartHeight - (averageValue / max) * chartHeight}
-                x2={chartWidth}
-                y2={chartHeight - (averageValue / max) * chartHeight}
-                stroke={isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.3)"}
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-              />
-              
-              {showAveragePill && (
-                <G>
-                  <Rect
-                    x={-48}
-                    y={chartHeight - (averageValue / max) * chartHeight - 10}
-                    width={44}
-                    height={20}
-                    rx={10}
-                    fill={isDark ? "#FFFFFF" : colors.primary}
-                  />
-                  <SvgText
-                    x={-26}
-                    y={chartHeight - (averageValue / max) * chartHeight + 4}
-                    fill={isDark ? "#000000" : "#FFFFFF"}
-                    fontSize="10"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    {Math.round(averageValue)}
-                  </SvgText>
-                  <Circle
-                    cx={-2}
-                    cy={chartHeight - (averageValue / max) * chartHeight}
-                    r={3.5}
-                    fill={colors.info}
-                    stroke={isDark ? "#FFFFFF" : colors.bgElevated}
-                    strokeWidth={1}
-                  />
-                </G>
-              )}
-            </G>
-          )}
 
           {/* Bars */}
           {data.map((item, index) => {
@@ -184,7 +138,7 @@ export const BarChart: React.FC<BarChartProps> = memo(({
                     x={x + barWidth / 2}
                     y={chartHeight + 20}
                     fontSize="12"
-                    fill={colors.textMuted}
+                    fill="#9CA3AF"
                     textAnchor="middle"
                   >
                     {displayLabel}
@@ -193,8 +147,51 @@ export const BarChart: React.FC<BarChartProps> = memo(({
               </G>
             );
           })}
+
+          {/* Average Line with Label Bubble and Dot - VẼ SAU CÙNG ĐỂ ĐÈ LÊN TRÊN */}
+          {averageValue !== undefined && averageValue > 0 && (
+            <G>
+              {/* Vòng tròn trắng hiển thị số (position absolute, đẩy hẳn sang trái) */}
+              <Circle
+                cx={-38}
+                cy={chartHeight - (averageValue / max) * chartHeight}
+                r={10}
+                fill="#FFFFFF"
+                opacity={1}
+              />
+              <SvgText
+                x={-38}
+                y={chartHeight - (averageValue / max) * chartHeight + 4}
+                fill="#14121c"
+                fontSize="10"
+                fontWeight="bold"
+                textAnchor="middle"
+              >
+                {Math.round(averageValue)}
+              </SvgText>
+              
+              {/* Chấm xanh canh giữa cột đầu tiên (T2) */}
+              <Circle
+                cx={firstBarX}
+                cy={chartHeight - (averageValue / max) * chartHeight}
+                r={3}
+                fill="#3b82f6"
+              />
+              
+              {/* Đường nét đứt ngang (chạy từ chấm xanh đến cuối) */}
+              <SvgLine
+                x1={firstBarX + 5}
+                y1={chartHeight - (averageValue / max) * chartHeight}
+                x2={chartWidth}
+                y2={chartHeight - (averageValue / max) * chartHeight}
+                stroke="rgba(255, 255, 255, 0.8)"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+              />
+            </G>
+          )}
         </G>
       </Svg>
     </View>
   );
-});
+};

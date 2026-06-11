@@ -11,6 +11,7 @@ import { useTranslation } from "@/constants/i18n";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { useAuthStore } from "@/store/authStore";
 import { useGetUserInfo } from "@/hooks/queries/useUserQueries";
+import { useMySubscriptionQuery } from "@/hooks/queries/useSubscription";
 import { useQueryClient } from "@tanstack/react-query";
 import { radius, spacing, typography } from "@/constants";
 import { userService } from "@/services/userService";
@@ -27,6 +28,8 @@ export default function AccountScreen() {
   const { draft, serverPlan } = useOnboardingStore();
   const { userInfo } = useAuthStore();
   const { data: serverUserInfo } = useGetUserInfo();
+  const { data: subInfo } = useMySubscriptionQuery();
+  const isPremium = subInfo?.isPremium;
 
   const colors = useAppColors();
   const unit = useSettingsStore((state) => state.unit);
@@ -174,22 +177,28 @@ export default function AccountScreen() {
       </View>
 
       {/* Premium Banner */}
-      <LinearGradient
-        colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
-        end={{ x: 1, y: 0.5 }}
-        start={{ x: 0, y: 0.5 }}
-        style={styles.premiumBanner}
-      >
-        <View style={styles.premiumContent}>
-          <Text style={styles.premiumTitle}>{t.account.premium.bannerTitle}</Text>
-          <Pressable style={styles.premiumButton}>
-            <Text style={styles.premiumButtonText}>{t.account.premium.cta}</Text>
-          </Pressable>
-        </View>
-        <View style={styles.premiumIconContainer}>
-          <Ionicons color="#FF9500" name="flame" size={64} />
-        </View>
-      </LinearGradient>
+      <Pressable onPress={() => router.push("/premium")}>
+        <LinearGradient
+          colors={themeMode === "light" ? ["#FFFFFF", "#FFFDF0", "#FFEAC2"] : ["#FFFFFF", "#FFF5D1", "#FFD28D"]}
+          end={{ x: 1, y: 0.5 }}
+          start={{ x: 0, y: 0.5 }}
+          style={styles.premiumBanner}
+        >
+          <View style={styles.premiumContent}>
+            <Text style={styles.premiumTitle}>
+              {isPremium ? "Bạn đang sở hữu đặc quyền Premium 🌟" : t.account.premium.bannerTitle}
+            </Text>
+            <View style={styles.premiumButton}>
+              <Text style={styles.premiumButtonText}>
+                {isPremium ? "Xem chi tiết" : t.account.premium.cta}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.premiumIconContainer}>
+            <Ionicons color="#FF9500" name={isPremium ? "ribbon" : "flame"} size={64} />
+          </View>
+        </LinearGradient>
+      </Pressable>
 
       {/* Stats Row */}
       <View style={styles.statsRow}>
@@ -217,7 +226,7 @@ export default function AccountScreen() {
       </Pressable>
 
       {/* Your Journey Section */}
-      <SectionHeader title={t.account.yourJourney} />
+      <SectionHeader title={t.account.yourJourney} showChevron={false} />
       {(() => {
         const startWeight = activeGoal?.weightKg ?? profile?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
         const currentWeightVal = profile?.weightKg ?? activeGoal?.weightKg ?? draft.currentWeightKg ?? DEFAULT_CURRENT_WEIGHT_KG;
@@ -295,7 +304,7 @@ export default function AccountScreen() {
 
 
       {/* Nutrition Goals Section */}
-      <SectionHeader title={t.account.nutritionGoals} />
+      <SectionHeader title={t.account.nutritionGoals} showChevron={false} />
       <View style={styles.macroCard}>
         <View style={styles.macroContent}>
           <View style={styles.chartContainer}>
@@ -345,7 +354,7 @@ export default function AccountScreen() {
       </View>
 
       {/* Statistic Reports Section */}
-      <SectionHeader title={t.account.testReports} />
+      <SectionHeader title={t.account.testReports} showChevron={false} />
       <View style={styles.statsIconRow}>
         <StatIconButton color="#FFD95A" icon="restaurant" label={t.account.stats.nutrition} route="/stats/nutrition" />
         <StatIconButton color="#B07EFF" icon="barbell" label={t.account.stats.workout} route="/stats/activity" />
@@ -354,7 +363,7 @@ export default function AccountScreen() {
       </View>
 
       {/* Community Section */}
-      <SectionHeader title={t.account.community.title} />
+      <SectionHeader title={t.account.community.title} showChevron={false} />
       <View style={styles.communityCard}>
         <LinearGradient
           colors={themeMode === "light" ? ["#EFE5FD", "#DFCBFA"] : ["#4A1F76", "#2D1B4D"]}
@@ -409,6 +418,16 @@ export default function AccountScreen() {
         </View>
       </View>
 
+      {/* Support Center */}
+      <Pressable
+        onPress={() => router.push("/account/support")}
+        style={styles.supportButton}
+      >
+        <View style={styles.supportLeft}>
+          <Ionicons color={colors.textSecondary} name="help-buoy-outline" size={24} />
+          <Text style={styles.supportText}>{t.account.supportLabel}</Text>
+        </View>
+      </Pressable>
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerLogo}></Text>

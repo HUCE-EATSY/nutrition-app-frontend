@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thực Đơn Eat Clean 7 Ngày – WAO Nutrition</title>
+  <meta name="description" content="Kế hoạch ăn uống Eat Clean 7 ngày giúp cơ thể thanh lọc, cung cấp đủ dinh dưỡng và năng lượng lành mạnh cho cuộc sống hiện đại." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --bg-card: #1a1d27;
+      --bg-elevated: #21253a;
+      --primary: #6c63ff;
+      --primary-light: #8a83ff;
+      --accent: #34d399;
+      --accent2: #f59e0b;
+      --accent3: #f43f5e;
+      --text: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: rgba(255,255,255,0.07);
+      --shadow: 0 20px 60px rgba(0,0,0,0.4);
+      --radius: 16px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 520px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      padding: 60px 24px 56px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #1a1d27 0%, #0d1b2a 50%, #0f1117 100%);
+    }
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+    }
+    .hero-orb-1 { width: 420px; height: 420px; background: #6c63ff; top: -100px; right: -60px; }
+    .hero-orb-2 { width: 280px; height: 280px; background: #34d399; bottom: -80px; left: 10%; }
+    .hero-content { position: relative; z-index: 2; max-width: 760px; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.35);
+      color: var(--primary-light);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    .hero-badge::before { content: '🥗'; font-size: 14px; }
+
+    .hero-title {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin-bottom: 32px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .meta-chip .icon { font-size: 16px; }
+
+    .hero-stats {
+      display: flex;
+      gap: 2px;
+      margin-top: 36px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .stat-box {
+      flex: 1;
+      padding: 18px 20px;
+      background: rgba(255,255,255,0.03);
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-box:last-child { border-right: none; }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary-light);
+      display: block;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      padding-top: 60px;
+    }
+    .section-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .section-icon.green { background: rgba(52,211,153,0.15); }
+    .section-icon.purple { background: rgba(108,99,255,0.15); }
+    .section-icon.amber { background: rgba(245,158,11,0.15); }
+    .section-icon.pink { background: rgba(244,63,94,0.15); }
+
+    .section-title { font-size: 22px; font-weight: 800; color: var(--text); }
+    .section-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── INTRO BOX ── */
+    .intro-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .intro-box::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: 4px 0 0 4px;
+    }
+    .intro-box p { color: var(--text-secondary); font-size: 15px; line-height: 1.8; }
+    .intro-box p + p { margin-top: 12px; }
+
+    /* ── PRINCIPLE GRID ── */
+    .principle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .principle-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .principle-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(108,99,255,0.4);
+    }
+    .principle-icon { font-size: 30px; margin-bottom: 12px; display: block; }
+    .principle-name {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      margin-bottom: 6px;
+    }
+    .principle-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── DAY PLAN ── */
+    .day-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-bottom: 28px;
+      padding-bottom: 6px;
+    }
+    .day-nav::-webkit-scrollbar { height: 4px; }
+    .day-nav::-webkit-scrollbar-track { background: var(--bg-card); }
+    .day-nav::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+    .day-btn {
+      flex-shrink: 0;
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .day-btn:hover { border-color: var(--primary); color: var(--primary-light); }
+    .day-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .day-panel { display: none; }
+    .day-panel.active { display: block; animation: fadeIn 0.35s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .day-title { font-size: 18px; font-weight: 800; }
+    .day-cals {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .cals-num { font-size: 22px; font-weight: 900; }
+
+    .meal-list { display: flex; flex-direction: column; gap: 12px; }
+    .meal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .meal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .meal-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .meal-icon.breakfast { background: rgba(245,158,11,0.15); }
+    .meal-icon.lunch { background: rgba(52,211,153,0.15); }
+    .meal-icon.dinner { background: rgba(108,99,255,0.15); }
+    .meal-icon.snack { background: rgba(244,63,94,0.15); }
+    .meal-name { font-weight: 700; font-size: 15px; flex: 1; }
+    .meal-cals-badge {
+      background: rgba(255,255,255,0.07);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    .meal-chevron {
+      font-size: 14px;
+      color: var(--text-muted);
+      transition: transform 0.25s;
+    }
+    .meal-header.open .meal-chevron { transform: rotate(180deg); }
+
+    .meal-body { display: none; padding: 0 20px 18px; }
+    .meal-body.open { display: block; animation: fadeIn 0.2s; }
+
+    .food-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .food-item:last-child { border-bottom: none; }
+    .food-name { font-size: 14px; color: var(--text); font-weight: 500; }
+    .food-qty { font-size: 13px; color: var(--text-muted); }
+    .food-macro { display: flex; gap: 6px; }
+    .macro-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .macro-tag.cal { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .macro-tag.pro { background: rgba(52,211,153,0.15); color: #34d399; }
+    .macro-tag.carb { background: rgba(108,99,255,0.15); color: #8a83ff; }
+    .macro-tag.fat { background: rgba(244,63,94,0.15); color: #f43f5e; }
+
+    /* ── MACRO BAR ── */
+    .macro-summary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-top: 20px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .macro-item { flex: 1; min-width: 80px; }
+    .macro-name { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .macro-bar-bg { height: 6px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; }
+    .macro-bar { height: 100%; border-radius: 999px; transition: width 0.6s cubic-bezier(.25,.46,.45,.94); }
+    .macro-val { font-size: 16px; font-weight: 800; margin-top: 6px; }
+
+    /* ── TIPS GRID ── */
+    .tips-grid { display: grid; gap: 14px; margin-bottom: 40px; }
+    .tip-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+    }
+    .tip-num {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .tip-text { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+    .tip-text strong { color: var(--text); }
+
+    /* ── SHOPPING LIST ── */
+    .shopping-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .shopping-category {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .shopping-cat-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-light);
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .shopping-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .shopping-item:last-child { border-bottom: none; }
+    .shopping-item:hover { color: var(--text); }
+    .shopping-cb {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .shopping-item.checked .shopping-cb {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .shopping-item.checked .shopping-cb::after { content: '✓'; font-size: 11px; color: #fff; font-weight: 800; }
+    .shopping-item.checked span { text-decoration: line-through; opacity: 0.5; }
+
+    /* ── FAQ ── */
+    .faq-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 40px; }
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .faq-q {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      user-select: none;
+    }
+    .faq-q .toggle { font-size: 20px; color: var(--primary); transition: transform 0.3s; }
+    .faq-item.open .faq-q .toggle { transform: rotate(45deg); }
+    .faq-a {
+      display: none;
+      padding: 0 22px 18px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      border-top: 1px solid var(--border);
+    }
+    .faq-item.open .faq-a { display: block; }
+
+    /* ── FOOTER ── */
+    .post-footer {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin: 40px 0 60px;
+      text-align: center;
+    }
+    .post-footer p { color: var(--text-secondary); font-size: 14px; }
+    .post-footer strong { color: var(--accent); }
+
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+    .tag {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 600px) {
+      .hero { padding: 40px 16px 40px; }
+      .hero-stats { display: grid; grid-template-columns: 1fr 1fr; }
+      .container { padding: 0 16px; }
+      .macro-summary { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="hero-content container">
+    <div class="hero-badge">BÀI ĐĂNG #1 · THỰC ĐƠN</div>
+    <h1 class="hero-title">Thực Đơn Eat Clean<br/>7 Ngày Hoàn Chỉnh</h1>
+    <p class="hero-desc">Kế hoạch ăn uống lành mạnh, thanh lọc cơ thể và cung cấp năng lượng bền vững cho cả tuần. Phù hợp với mọi đối tượng từ người mới bắt đầu đến người muốn duy trì vóc dáng.</p>
+    <div class="hero-meta">
+      <span class="meta-chip"><span class="icon">📅</span>7 Ngày</span>
+      <span class="meta-chip"><span class="icon">🔥</span>1500–1800 kcal/ngày</span>
+      <span class="meta-chip"><span class="icon">⏱️</span>Chuẩn bị 30 phút/ngày</span>
+      <span class="meta-chip"><span class="icon">💪</span>Phù hợp mọi người</span>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-box"><span class="stat-num">7</span><span class="stat-lbl">Ngày</span></div>
+      <div class="stat-box"><span class="stat-num">28</span><span class="stat-lbl">Bữa ăn</span></div>
+      <div class="stat-box"><span class="stat-num">1650</span><span class="stat-lbl">kcal TB</span></div>
+      <div class="stat-box"><span class="stat-num">35%</span><span class="stat-lbl">Protein</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="section-header">
+    <div class="section-icon green">🥦</div>
+    <div>
+      <div class="section-title">Eat Clean Là Gì?</div>
+      <div class="section-sub">Tìm hiểu nền tảng của phương pháp ăn uống lành mạnh</div>
+    </div>
+  </div>
+
+  <div class="intro-box">
+    <p>Eat Clean (ăn sạch) là phương pháp ăn uống tập trung vào việc lựa chọn thực phẩm nguyên chất, ít qua chế biến, giàu dinh dưỡng. Mục tiêu là cung cấp cho cơ thể những dưỡng chất thiết yếu từ thiên nhiên thay vì từ thực phẩm đóng gói chứa nhiều phụ gia, đường và chất béo không lành mạnh.</p>
+    <p>Khác với các chế độ ăn kiêng thông thường, Eat Clean không đòi hỏi bạn phải đếm calo một cách cực đoan hay nhịn ăn. Thay vào đó, bạn sẽ học cách <strong>chọn lựa thực phẩm thông minh</strong>, kết hợp các nhóm chất theo tỷ lệ phù hợp và xây dựng thói quen ăn uống tốt lâu dài.</p>
+  </div>
+
+  <!-- PRINCIPLES -->
+  <div class="section-header">
+    <div class="section-icon purple">⚡</div>
+    <div>
+      <div class="section-title">5 Nguyên Tắc Vàng của Eat Clean</div>
+      <div class="section-sub">Những nguyên tắc cốt lõi giúp bạn bắt đầu đúng hướng</div>
+    </div>
+  </div>
+
+  <div class="principle-grid">
+    <div class="principle-card">
+      <span class="principle-icon">🌾</span>
+      <div class="principle-name">Ngũ cốc nguyên hạt</div>
+      <div class="principle-desc">Ưu tiên gạo lứt, yến mạch, quinoa, mì nguyên cám thay vì tinh bột đã qua xử lý.</div>
+    </div>
+    <div class="principle-card">
+      <span class="principle-icon">🥩</span>
+      <div class="principle-name">Đạm chất lượng cao</div>
+      <div class="principle-desc">Chọn ức gà, cá hồi, đậu hũ, trứng và các loại đậu cho nguồn protein sạch.</div>
+    </div>
+    <div class="principle-card">
+      <span class="principle-icon">🥑</span>
+      <div class="principle-name">Chất béo lành mạnh</div>
+      <div class="principle-desc">Dầu oliu, bơ, hạt chia, hạnh nhân, hạt óc chó cung cấp omega-3 và omega-9.</div>
+    </div>
+    <div class="principle-card">
+      <span class="principle-icon">🥦</span>
+      <div class="principle-name">Rau củ đa màu sắc</div>
+      <div class="principle-desc">Ít nhất 3 màu rau củ mỗi ngày để đảm bảo đa dạng vitamin và chất chống oxy hóa.</div>
+    </div>
+    <div class="principle-card">
+      <span class="principle-icon">💧</span>
+      <div class="principle-name">Uống đủ nước</div>
+      <div class="principle-desc">Tối thiểu 2 lít nước/ngày, ưu tiên nước lọc, trà xanh không đường và nước chanh.</div>
+    </div>
+  </div>
+
+  <!-- 7-DAY PLAN -->
+  <div class="section-header">
+    <div class="section-icon amber">📋</div>
+    <div>
+      <div class="section-title">Thực Đơn Chi Tiết 7 Ngày</div>
+      <div class="section-sub">Nhấn vào từng ngày để xem chi tiết bữa ăn</div>
+    </div>
+  </div>
+
+  <!-- Day Navigation -->
+  <div class="day-nav">
+    <button class="day-btn active" onclick="switchDay(1)">Thứ 2</button>
+    <button class="day-btn" onclick="switchDay(2)">Thứ 3</button>
+    <button class="day-btn" onclick="switchDay(3)">Thứ 4</button>
+    <button class="day-btn" onclick="switchDay(4)">Thứ 5</button>
+    <button class="day-btn" onclick="switchDay(5)">Thứ 6</button>
+    <button class="day-btn" onclick="switchDay(6)">Thứ 7</button>
+    <button class="day-btn" onclick="switchDay(7)">Chủ Nhật</button>
+  </div>
+
+  <!-- Day 1 -->
+  <div id="day-1" class="day-panel active">
+    <div class="day-header">
+      <div class="day-title">📅 Thứ 2 – Khởi Đầu Năng Lượng</div>
+      <div class="day-cals"><span class="cals-num">1620</span> kcal</div>
+    </div>
+    <div class="meal-list">
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon breakfast">🌅</div>
+          <span class="meal-name">Bữa Sáng</span>
+          <span class="meal-cals-badge">480 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body open">
+          <div class="food-item">
+            <div><div class="food-name">Yến mạch nấu sữa hạt</div><div class="food-qty">80g yến mạch + 200ml sữa hạnh nhân</div></div>
+            <div class="food-macro"><span class="macro-tag cal">295 kcal</span><span class="macro-tag pro">10g P</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Chuối + dâu tây</div><div class="food-qty">1 quả chuối + 100g dâu</div></div>
+            <div class="food-macro"><span class="macro-tag cal">120 kcal</span><span class="macro-tag carb">28g C</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Trứng luộc</div><div class="food-qty">2 quả trứng gà ta</div></div>
+            <div class="food-macro"><span class="macro-tag cal">140 kcal</span><span class="macro-tag pro">12g P</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Trà xanh không đường</div><div class="food-qty">300ml</div></div>
+            <div class="food-macro"><span class="macro-tag cal">5 kcal</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon snack">🍎</div>
+          <span class="meal-name">Bữa Phụ Sáng</span>
+          <span class="meal-cals-badge">180 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body">
+          <div class="food-item">
+            <div><div class="food-name">Táo đỏ</div><div class="food-qty">1 quả vừa (~200g)</div></div>
+            <div class="food-macro"><span class="macro-tag cal">95 kcal</span><span class="macro-tag carb">25g C</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Hạnh nhân rang không muối</div><div class="food-qty">15g (15 hạt)</div></div>
+            <div class="food-macro"><span class="macro-tag cal">87 kcal</span><span class="macro-tag fat">7g F</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon lunch">☀️</div>
+          <span class="meal-name">Bữa Trưa</span>
+          <span class="meal-cals-badge">560 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body">
+          <div class="food-item">
+            <div><div class="food-name">Cơm gạo lứt</div><div class="food-qty">180g cơm đã nấu</div></div>
+            <div class="food-macro"><span class="macro-tag cal">220 kcal</span><span class="macro-tag carb">47g C</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Ức gà nướng lá chanh</div><div class="food-qty">150g ức gà (sau khi nấu)</div></div>
+            <div class="food-macro"><span class="macro-tag cal">185 kcal</span><span class="macro-tag pro">35g P</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Salad rau xanh + cà chua bi</div><div class="food-qty">150g rau hỗn hợp, 50g cà chua</div></div>
+            <div class="food-macro"><span class="macro-tag cal">55 kcal</span><span class="macro-tag carb">9g C</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Dầu oliu sốt chanh</div><div class="food-qty">1 thìa canh (15ml)</div></div>
+            <div class="food-macro"><span class="macro-tag cal">120 kcal</span><span class="macro-tag fat">14g F</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon dinner">🌙</div>
+          <span class="meal-name">Bữa Tối</span>
+          <span class="meal-cals-badge">400 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body">
+          <div class="food-item">
+            <div><div class="food-name">Cá hồi áp chảo</div><div class="food-qty">120g cá hồi tươi</div></div>
+            <div class="food-macro"><span class="macro-tag cal">220 kcal</span><span class="macro-tag pro">25g P</span><span class="macro-tag fat">12g F</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Bí ngòi xào tỏi</div><div class="food-qty">200g bí ngòi + 1/2 thìa dầu</div></div>
+            <div class="food-macro"><span class="macro-tag cal">85 kcal</span><span class="macro-tag carb">8g C</span></div>
+          </div>
+          <div class="food-item">
+            <div><div class="food-name">Khoai lang hấp</div><div class="food-qty">100g khoai lang</div></div>
+            <div class="food-macro"><span class="macro-tag cal">86 kcal</span><span class="macro-tag carb">20g C</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="macro-summary">
+      <div class="macro-item">
+        <div class="macro-name">🔥 Calories</div>
+        <div class="macro-bar-bg"><div class="macro-bar" style="width: 90%; background: linear-gradient(90deg, #f59e0b, #f43f5e);"></div></div>
+        <div class="macro-val" style="color: #f59e0b;">1620 kcal</div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-name">💪 Protein</div>
+        <div class="macro-bar-bg"><div class="macro-bar" style="width: 75%; background: linear-gradient(90deg, #34d399, #10b981);"></div></div>
+        <div class="macro-val" style="color: #34d399;">95g</div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-name">⚡ Carbs</div>
+        <div class="macro-bar-bg"><div class="macro-bar" style="width: 65%; background: linear-gradient(90deg, #8a83ff, #6c63ff);"></div></div>
+        <div class="macro-val" style="color: #8a83ff;">180g</div>
+      </div>
+      <div class="macro-item">
+        <div class="macro-name">🥑 Chất béo</div>
+        <div class="macro-bar-bg"><div class="macro-bar" style="width: 40%; background: linear-gradient(90deg, #f43f5e, #e11d48);"></div></div>
+        <div class="macro-val" style="color: #f43f5e;">48g</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day 2–7 placeholders (simplified) -->
+  <div id="day-2" class="day-panel">
+    <div class="day-header">
+      <div class="day-title">📅 Thứ 3 – Ngày Nhẹ Nhàng</div>
+      <div class="day-cals"><span class="cals-num">1580</span> kcal</div>
+    </div>
+    <div class="meal-list">
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon breakfast">🌅</div>
+          <span class="meal-name">Bữa Sáng – Bánh mì nguyên cám + bơ</span>
+          <span class="meal-cals-badge">430 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body">
+          <div class="food-item"><div><div class="food-name">Bánh mì nguyên cám</div><div class="food-qty">2 lát (60g)</div></div><div class="food-macro"><span class="macro-tag cal">160 kcal</span><span class="macro-tag carb">30g C</span></div></div>
+          <div class="food-item"><div><div class="food-name">Bơ nghiền + muối hạt</div><div class="food-qty">1/2 quả bơ</div></div><div class="food-macro"><span class="macro-tag cal">120 kcal</span><span class="macro-tag fat">11g F</span></div></div>
+          <div class="food-item"><div><div class="food-name">Trứng ốp la (không dầu)</div><div class="food-qty">2 quả</div></div><div class="food-macro"><span class="macro-tag cal">150 kcal</span><span class="macro-tag pro">12g P</span></div></div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon lunch">☀️</div>
+          <span class="meal-name">Bữa Trưa – Bún bò Huế Eat Clean</span>
+          <span class="meal-cals-badge">540 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body">
+          <div class="food-item"><div><div class="food-name">Bún gạo lứt</div><div class="food-qty">200g</div></div><div class="food-macro"><span class="macro-tag cal">210 kcal</span><span class="macro-tag carb">46g C</span></div></div>
+          <div class="food-item"><div><div class="food-name">Bò thăn luộc thái mỏng</div><div class="food-qty">120g</div></div><div class="food-macro"><span class="macro-tag cal">180 kcal</span><span class="macro-tag pro">26g P</span></div></div>
+          <div class="food-item"><div><div class="food-name">Rau muống, giá, chuối hoa</div><div class="food-qty">100g hỗn hợp</div></div><div class="food-macro"><span class="macro-tag cal">35 kcal</span><span class="macro-tag carb">7g C</span></div></div>
+          <div class="food-item"><div><div class="food-name">Nước súp hầm xương ít mỡ</div><div class="food-qty">300ml</div></div><div class="food-macro"><span class="macro-tag cal">45 kcal</span></div></div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+          <div class="meal-icon dinner">🌙</div>
+          <span class="meal-name">Bữa Tối – Đậu hũ sốt cà chua</span>
+          <span class="meal-cals-badge">380 kcal</span>
+          <span class="meal-chevron">▼</span>
+        </div>
+        <div class="meal-body">
+          <div class="food-item"><div><div class="food-name">Đậu hũ non chiên giòn (ít dầu)</div><div class="food-qty">200g</div></div><div class="food-macro"><span class="macro-tag cal">160 kcal</span><span class="macro-tag pro">16g P</span></div></div>
+          <div class="food-item"><div><div class="food-name">Cà chua sốt tỏi gừng</div><div class="food-qty">150g cà chua</div></div><div class="food-macro"><span class="macro-tag cal">60 kcal</span><span class="macro-tag carb">12g C</span></div></div>
+          <div class="food-item"><div><div class="food-name">Cơm gạo lứt</div><div class="food-qty">150g</div></div><div class="food-macro"><span class="macro-tag cal">180 kcal</span><span class="macro-tag carb">38g C</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="day-3" class="day-panel">
+    <div class="day-header"><div class="day-title">📅 Thứ 4 – Protein Day</div><div class="day-cals"><span class="cals-num">1700</span> kcal</div></div>
+    <div class="intro-box"><p>Ngày Protein: Tăng cường lượng đạm để hỗ trợ cơ bắp và trao đổi chất. Tập trung vào ức gà, cá ngừ, trứng và đậu xanh.</p></div>
+  </div>
+  <div id="day-4" class="day-panel">
+    <div class="day-header"><div class="day-title">📅 Thứ 5 – Detox Day</div><div class="day-cals"><span class="cals-num">1450</span> kcal</div></div>
+    <div class="intro-box"><p>Ngày Detox: Nhẹ nhàng hơn, tập trung vào rau xanh, sinh tố và nước ép để thanh lọc cơ thể giữa tuần.</p></div>
+  </div>
+  <div id="day-5" class="day-panel">
+    <div class="day-header"><div class="day-title">📅 Thứ 6 – Healthy Prep Day</div><div class="day-cals"><span class="cals-num">1680</span> kcal</div></div>
+    <div class="intro-box"><p>Ngày chuẩn bị cuối tuần: Nấu batch cooking cho 2 ngày tới, tập trung vào khoai lang, gạo lứt và protein dự trữ trong tủ lạnh.</p></div>
+  </div>
+  <div id="day-6" class="day-panel">
+    <div class="day-header"><div class="day-title">📅 Thứ 7 – Cheat Meal Lành Mạnh</div><div class="day-cals"><span class="cals-num">1850</span> kcal</div></div>
+    <div class="intro-box"><p>Thứ 7 cho phép ăn một bữa cheat meal lành mạnh hơn: pizza nguyên cám, spaghetti bò gầy, hoặc sushi với cá tươi. Tận hưởng mà không cảm thấy tội lỗi.</p></div>
+  </div>
+  <div id="day-7" class="day-panel">
+    <div class="day-header"><div class="day-title">📅 Chủ Nhật – Nghỉ Ngơi & Reset</div><div class="day-cals"><span class="cals-num">1500</span> kcal</div></div>
+    <div class="intro-box"><p>Chủ nhật là ngày phục hồi. Ăn nhẹ và lành mạnh, chuẩn bị danh sách mua sắm cho tuần tiếp theo và nấu meal prep trước.</p></div>
+  </div>
+
+  <!-- SHOPPING LIST -->
+  <div class="section-header">
+    <div class="section-icon green">🛒</div>
+    <div>
+      <div class="section-title">Danh Sách Mua Sắm Tuần</div>
+      <div class="section-sub">Nhấn vào từng mục để đánh dấu đã mua</div>
+    </div>
+  </div>
+
+  <div class="shopping-grid">
+    <div class="shopping-category">
+      <div class="shopping-cat-title">🥩 Protein</div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Ức gà (800g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Cá hồi tươi (400g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Cá ngừ đóng hộp (2 lon)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Trứng gà ta (1 vỉ 10 quả)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Đậu hũ non (400g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Bò thăn (200g)</span></div>
+    </div>
+    <div class="shopping-category">
+      <div class="shopping-cat-title">🥦 Rau Củ</div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Bông cải xanh (500g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Cà chua bi (300g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Bí ngòi (2 quả)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Cải thìa (1 bó)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Salad mix (200g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Hành tây (2 củ)</span></div>
+    </div>
+    <div class="shopping-category">
+      <div class="shopping-cat-title">🌾 Tinh Bột & Ngũ Cốc</div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Gạo lứt (1kg)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Yến mạch (500g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Bánh mì nguyên cám (1 ổ)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Khoai lang (1kg)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Bún gạo lứt (300g)</span></div>
+    </div>
+    <div class="shopping-category">
+      <div class="shopping-cat-title">🍎 Trái Cây</div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Chuối (1 nải)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Táo đỏ (5 quả)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Dâu tây (200g)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Bơ (3 quả)</span></div>
+      <div class="shopping-item" onclick="toggleCheck(this)"><div class="shopping-cb"></div><span>Cam tươi (4 quả)</span></div>
+    </div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="section-header">
+    <div class="section-icon pink">💡</div>
+    <div>
+      <div class="section-title">10 Mẹo Thực Hành Eat Clean</div>
+      <div class="section-sub">Lời khuyên từ chuyên gia dinh dưỡng</div>
+    </div>
+  </div>
+
+  <div class="tips-grid">
+    <div class="tip-item"><div class="tip-num">1</div><div class="tip-text"><strong>Meal Prep vào Chủ Nhật:</strong> Nấu sẵn cơm gạo lứt, luộc trứng và ướp thịt trước để tiết kiệm 30 phút mỗi ngày trong tuần.</div></div>
+    <div class="tip-item"><div class="tip-num">2</div><div class="tip-text"><strong>Đọc nhãn thực phẩm:</strong> Tránh các sản phẩm có đường ẩn (glucose, fructose, maltose) và chất bảo quản trong 5 thành phần đầu tiên.</div></div>
+    <div class="tip-item"><div class="tip-num">3</div><div class="tip-text"><strong>Nấu với ít dầu:</strong> Sử dụng nồi chiên không dầu, hấp hoặc nướng lò thay vì chiên ngập dầu để giảm 40-60% lượng chất béo.</div></div>
+    <div class="tip-item"><div class="tip-num">4</div><div class="tip-text"><strong>Uống nước trước ăn:</strong> Uống 1 ly nước 300ml trước bữa ăn 15 phút để kiểm soát cảm giác đói và ăn ít hơn tự nhiên.</div></div>
+    <div class="tip-item"><div class="tip-num">5</div><div class="tip-text"><strong>Ăn chậm nhai kỹ:</strong> Đặt đũa xuống sau mỗi miếng ăn, nhai tối thiểu 20 lần. Não bộ cần 20 phút để nhận tín hiệu no.</div></div>
+    <div class="tip-item"><div class="tip-num">6</div><div class="tip-text"><strong>Đa dạng màu sắc:</strong> Mỗi bữa ăn nên có ít nhất 3 màu khác nhau từ rau củ để đảm bảo cung cấp đủ vi chất dinh dưỡng.</div></div>
+    <div class="tip-item"><div class="tip-num">7</div><div class="tip-text"><strong>Giới hạn muối:</strong> Mỗi ngày không quá 5g muối. Thay thế bằng rau thơm, chanh, tỏi và ớt tươi để tạo vị ngon tự nhiên.</div></div>
+    <div class="tip-item"><div class="tip-num">8</div><div class="tip-text"><strong>Snack thông minh:</strong> Thay thế snack bằng hạt điều, hạnh nhân, chuối hoặc sữa chua Hy Lạp không đường thay vì bánh snack đóng gói.</div></div>
+    <div class="tip-item"><div class="tip-num">9</div><div class="tip-text"><strong>Theo dõi tiến độ:</strong> Cân trọng lượng vào buổi sáng mỗi thứ 2 sau khi thức dậy và trước khi ăn để đánh giá kết quả chính xác nhất.</div></div>
+    <div class="tip-item"><div class="tip-num">10</div><div class="tip-text"><strong>Ngủ đủ giấc:</strong> Thiếu ngủ tăng hormone ghrelin (kích thích thèm ăn) lên 30%. Ngủ 7-8 tiếng/đêm là cần thiết để Eat Clean hiệu quả.</div></div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section-header">
+    <div class="section-icon amber">❓</div>
+    <div>
+      <div class="section-title">Câu Hỏi Thường Gặp</div>
+      <div class="section-sub">Giải đáp các thắc mắc phổ biến về Eat Clean</div>
+    </div>
+  </div>
+
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Eat Clean có cần nhịn ăn không?<span class="toggle">+</span></div>
+      <div class="faq-a">Không. Eat Clean không yêu cầu nhịn ăn. Thực ra, bạn nên ăn 4-5 bữa nhỏ mỗi ngày để duy trì trao đổi chất ổn định. Nhịn ăn quá mức có thể làm cơ thể tích trữ mỡ nhiều hơn.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Tôi có thể ăn nhà hàng khi Eat Clean không?<span class="toggle">+</span></div>
+      <div class="faq-a">Được. Hãy chọn món nướng/luộc/hấp thay vì chiên. Yêu cầu sốt riêng, hạn chế muối và tránh các món nhiều bột. Salad, grilled chicken, sashimi là những lựa chọn an toàn tại hầu hết nhà hàng.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Eat Clean bao lâu thì thấy kết quả?<span class="toggle">+</span></div>
+      <div class="faq-a">Hầu hết mọi người cảm nhận sự khác biệt về năng lượng sau 3-5 ngày. Kết quả về cân nặng và vóc dáng thường rõ ràng sau 3-4 tuần thực hiện nhất quán, kết hợp với vận động thể lực.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Chi phí Eat Clean có tốn kém không?<span class="toggle">+</span></div>
+      <div class="faq-a">Không nhất thiết. Thực tế, Eat Clean có thể tiết kiệm hơn nếu bạn tự nấu ăn tại nhà. Gạo lứt, trứng, đậu hũ, rau xanh theo mùa đều là những thực phẩm giá rẻ và dinh dưỡng cao. Ước tính khoảng 150.000-200.000 VND/ngày cho 3 bữa.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Có thể uống cà phê khi Eat Clean không?<span class="toggle">+</span></div>
+      <div class="faq-a">Có, nhưng nên uống cà phê đen không đường hoặc với sữa hạt thay vì đường sữa đặc. Giới hạn 1-2 ly/ngày và không uống sau 3 giờ chiều để không ảnh hưởng đến giấc ngủ.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <p>🎯 Bài viết được biên soạn bởi đội ngũ chuyên gia dinh dưỡng <strong>WAO Nutrition</strong></p>
+    <p style="margin-top: 8px;">Hãy bắt đầu hành trình Eat Clean của bạn ngay hôm nay – mỗi bữa ăn lành mạnh là một bước tiến về phía <strong>cơ thể khỏe mạnh hơn</strong>.</p>
+    <div class="tag-row">
+      <span class="tag">#EatClean</span>
+      <span class="tag">#ThựcĐơn7Ngày</span>
+      <span class="tag">#DiMỡ</span>
+      <span class="tag">#ĂnLành</span>
+      <span class="tag">#WaoNutrition</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchDay(n) {
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.day-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === n - 1);
+    });
+    const panel = document.getElementById('day-' + n);
+    if (panel) panel.classList.add('active');
+  }
+
+  function toggleMeal(header) {
+    const body = header.nextElementSibling;
+    const isOpen = body.classList.toggle('open');
+    header.classList.toggle('open', isOpen);
+  }
+
+  function toggleFaq(qEl) {
+    const item = qEl.closest('.faq-item');
+    item.classList.toggle('open');
+  }
+
+  function toggleCheck(item) {
+    item.classList.toggle('checked');
+  }
+
+  // Animate macro bars on load
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.macro-bar').forEach(bar => {
+      const width = bar.style.width;
+      bar.style.width = '0';
+      setTimeout(() => { bar.style.width = width; }, 300);
+    });
+  });
+</script>
+</body>
+</html>

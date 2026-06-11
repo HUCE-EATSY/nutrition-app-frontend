@@ -111,7 +111,11 @@ export function MacroRingChart({
 
       <View style={styles.chartCenter}>
         <Ionicons color={iconColor} name="flame" size={20} />
-        <Text style={[styles.calorieValue, { color: textColor }]}>
+        <Text 
+          style={[styles.calorieValue, { color: textColor }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
           {Math.round(calories).toLocaleString()}
         </Text>
       </View>

@@ -21,18 +21,18 @@ import { getTodayDateISO } from "@/utils/date";
 import { exerciseService, Exercise } from "@/services/exerciseService";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslation } from "@/constants/i18n";
-import { useOnboardingStore } from "@/store/onboardingStore";
+import { userService } from "@/services/userService";
 
 export default function ExerciseDetailScreen() {
   const t = useTranslation();
   const colors = useAppColors();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const language = useSettingsStore((state) => state.language);
-  const userWeight = useOnboardingStore((state) => state.draft.currentWeightKg) || 65;
   const { exerciseId, date } = useLocalSearchParams<{ exerciseId: string; date?: string }>();
   const targetDate = date ?? getTodayDateISO();
 
   const [exercise, setExercise] = useState<Exercise | null>(null);
+  const [userWeight, setUserWeight] = useState<number>(65); // Default weight
   const [loading, setLoading] = useState(true);
   const [intensity, setIntensity] = useState<1 | 2 | 3>(2);
   const [duration, setDuration] = useState("30");
@@ -40,20 +40,31 @@ export default function ExerciseDetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    async function loadExercise() {
+    async function loadData() {
       try {
         setLoading(true);
-        const data = await exerciseService.getExerciseById(exerciseId);
-        setExercise(data);
+        
+        // Load exercise details and user weight in parallel
+        const [exerciseData, userInfo] = await Promise.all([
+          exerciseService.getExerciseById(exerciseId),
+          userService.getUserInfo()
+        ]);
+        
+        setExercise(exerciseData);
+        
+        // Get weight from user profile (same source as backend)
+        const weight = userInfo?.profile?.weightKg || 65;
+        setUserWeight(weight);
+        
       } catch (error: any) {
-        console.error("Load exercise error:", error);
+        console.error("Load data error:", error);
         Alert.alert(t.common.error, t.exercise.loadDetailError);
         router.back();
       } finally {
         setLoading(false);
       }
     }
-    loadExercise();
+    loadData();
   }, [exerciseId, t]);
 
   const durationNum = parseFloat(duration) || 0;

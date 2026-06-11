@@ -28,7 +28,7 @@ export default function WaterTargetScreen() {
   const userId = useAuthStore((state) => state.userInfo?.id) || "guest";
   const userWaterData = useWaterStore((state) => state.userWaterData);
   const waterGoal = userWaterData[userId]?.waterGoal ?? 2000;
-  const { setWaterGoal } = useWaterStore();
+  const setWaterGoal = useWaterStore((state) => state.setWaterGoal);
 
   const [goal, setGoal] = useState(waterGoal);
 
@@ -46,7 +46,7 @@ export default function WaterTargetScreen() {
   };
 
   const handleQuickAdd = (amount: number) => {
-    setGoal((prev) => {
+    setGoal((prev: number) => {
       if (prev + amount > 10000) {
         Alert.alert("Lỗi giới hạn", "Mục tiêu nước uống không được vượt quá 10,000 ml.");
         return 10000;
@@ -56,8 +56,9 @@ export default function WaterTargetScreen() {
   };
 
   const handleQuickSubtract = (amount: number) => {
-    setGoal((prev) => Math.max(0, prev - amount));
+    setGoal((prev: number) => Math.max(0, prev - amount));
   };
+
 
   const handleGoalChange = (text: string) => {
     const val = parseInt(text.replace(/[^0-9]/g, ""), 10);

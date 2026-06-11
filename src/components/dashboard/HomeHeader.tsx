@@ -18,7 +18,7 @@ export function HomeHeader() {
   
   const { selectedDate, setDate } = useDiaryStore();
   
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayDateISO();
   const isToday = selectedDate === todayStr;
   
   const getFormattedDate = () => {
@@ -51,7 +51,7 @@ export function HomeHeader() {
         <View style={styles.iconRow}>
           <Pressable hitSlop={10} onPress={() => router.push("/streaks")} style={({ pressed }) => [styles.badge, pressed && styles.badgePressed]}>
             <MaterialCommunityIcons name="fire" size={14} color={colors.warning} />
-            <Text style={styles.badgeText}>0</Text>
+            <Text style={styles.badgeText}>{currentStreak}</Text>
           </Pressable>
           <Pressable hitSlop={10} onPress={() => router.push("/calendar")}>
             <MaterialCommunityIcons name="calendar-blank-outline" size={20} color={colors.textSecondary} />

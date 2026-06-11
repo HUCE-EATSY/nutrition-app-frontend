@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { useAppColors } from '@/hooks/useAppColors';
+import { radius, spacing, typography } from '@/constants';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ToastProps {
   message: string;
@@ -9,6 +12,13 @@ interface ToastProps {
   duration?: number;
 }
 
+const ICONS: Record<string, any> = {
+  success: 'checkmark-circle',
+  error: 'close-circle',
+  warning: 'warning',
+  info: 'information-circle',
+};
+
 const Toast: React.FC<ToastProps> = ({
   message,
   type = 'info',
@@ -16,45 +26,67 @@ const Toast: React.FC<ToastProps> = ({
   onHide,
   duration = 3000,
 }) => {
+  const colors = useAppColors();
   const opacity = React.useRef(new Animated.Value(0)).current;
+  const translateY = React.useRef(new Animated.Value(-12)).current;
 
   useEffect(() => {
     if (visible) {
-      Animated.sequence([
+      Animated.parallel([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 300,
+          duration: 250,
           useNativeDriver: true,
         }),
-        Animated.delay(duration),
-        Animated.timing(opacity, {
+        Animated.timing(translateY, {
           toValue: 0,
-          duration: 300,
+          duration: 250,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        onHide();
-      });
+      ]).start();
+
+      const timer = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(opacity, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(translateY, {
+            toValue: -12,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]).start(() => onHide());
+      }, duration);
+
+      return () => clearTimeout(timer);
     }
   }, [visible]);
 
   if (!visible) return null;
 
-  const backgroundColor = {
-    success: '#00ff88',
-    error: '#ff3b30',
-    warning: '#ff9500',
-    info: '#00d4ff',
+  const accentColor = {
+    success: colors.success,
+    error:   colors.danger,
+    warning: colors.warning,
+    info:    colors.primary,
   }[type];
 
   return (
     <Animated.View
       style={[
         styles.container,
-        { backgroundColor, opacity },
+        {
+          backgroundColor: colors.surface,
+          borderColor: accentColor,
+          opacity,
+          transform: [{ translateY }],
+        },
       ]}
     >
-      <Text style={styles.message}>{message}</Text>
+      <Ionicons name={ICONS[type]} size={20} color={accentColor} />
+      <Text style={[styles.message, { color: colors.textPrimary }]}>{message}</Text>
     </Animated.View>
   );
 };
@@ -63,23 +95,28 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 60,
-    left: 20,
-    right: 20,
-    padding: 16,
-    borderRadius: 12,
+    left: spacing.lg,
+    right: spacing.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderLeftWidth: 4,
     zIndex: 9999,
-    elevation: 10,
+    elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   message: {
-    color: '#1a1a2e',
+    ...typography.bodyStrong,
     fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
+    flex: 1,
   },
 });
 
 export default Toast;
+

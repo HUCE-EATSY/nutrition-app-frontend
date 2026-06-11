@@ -25,6 +25,11 @@ if (Platform.OS === 'web') {
   require('../../global.css');
 }
 
+// Import dev tools in development mode
+if (__DEV__) {
+  require('@/utils/devTools');
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -168,14 +173,16 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 
-  // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động
+  // Trên web: bọc thêm GoogleOAuthProvider để @react-oauth/google hoạt động (chỉ bọc khi có Client ID hợp lệ để tránh crash ứng dụng)
   if (Platform.OS === "web") {
-    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-    return (
-      <GoogleOAuthProvider clientId={webClientId}>
-        {stackContent}
-      </GoogleOAuthProvider>
-    );
+    const webClientId = process.env.EXPO_PUBLIC_WEB_GOOGLE_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
+    if (webClientId && webClientId.trim() !== "" && !webClientId.startsWith("your_")) {
+      return (
+        <GoogleOAuthProvider clientId={webClientId}>
+          {stackContent}
+        </GoogleOAuthProvider>
+      );
+    }
   }
 
   return stackContent;

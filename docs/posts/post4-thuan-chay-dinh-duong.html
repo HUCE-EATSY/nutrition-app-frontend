@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thực Đơn Thuần Chay Đủ Chất – WAO Nutrition</title>
+  <meta name="description" content="Hướng dẫn chi tiết xây dựng chế độ ăn thuần chay cân bằng dinh dưỡng, giàu protein thực vật cho mọi mục tiêu sức khỏe." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #090d16;
+      --bg-card: #111827;
+      --bg-elevated: #1f2937;
+      --primary: #10b981; /* Emerald Green for vegan theme */
+      --primary-dark: #059669;
+      --accent-blue: #3b82f6;
+      --accent-orange: #f97316;
+      --accent-teal: #14b8a6;
+      --text: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-muted: #6b7280;
+      --border: rgba(255,255,255,0.07);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; overflow-x: hidden; }
+
+    /* CUSTOM SCROLLBAR */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    /* HERO */
+    .hero {
+      min-height: 600px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      padding: 80px 24px 70px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #061e14 0%, #0d1222 65%, #090d16 100%);
+    }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.25; }
+    .orb-1 { width: 550px; height: 550px; background: var(--primary); top: -160px; left: -100px; }
+    .orb-2 { width: 350px; height: 350px; background: var(--accent-teal); bottom: -80px; right: 15%; }
+
+    .hero-content { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; width: 100%; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.4);
+      color: var(--primary);
+      font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 6px 18px; border-radius: 999px; margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-size: clamp(32px, 5.5vw, 60px);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #f9fafb 40%, #10b981 90%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc { font-size: 18px; color: var(--text-secondary); max-width: 650px; margin-bottom: 35px; }
+    
+    .hero-metrics {
+      display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 40px;
+    }
+    .metric-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 10px 20px; border-radius: 999px;
+      font-size: 14px; font-weight: 600; color: var(--text-secondary);
+    }
+    .metric-pill .val { color: var(--primary); font-weight: 800; }
+
+    /* LAYOUT */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* SECTIONS & HEADINGS */
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 30px; padding-top: 70px; }
+    .s-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .s-icon.green { background: rgba(16,185,129,0.15); color: var(--primary); }
+    .s-icon.teal { background: rgba(20,184,166,0.15); color: var(--accent-teal); }
+    .s-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+    .s-icon.orange { background: rgba(249,115,22,0.15); color: var(--accent-orange); }
+    
+    .s-title-group { display: flex; flex-direction: column; }
+    .s-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .s-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    p.intro-text { font-size: 16px; color: var(--text-secondary); margin-bottom: 24px; }
+
+    /* CARDS GRID */
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 36px; }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(16,185,129,0.3);
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.5);
+    }
+    .card-icon { font-size: 32px; margin-bottom: 18px; display: inline-block; }
+    .card h3 { font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+    .card p { font-size: 14px; color: var(--text-secondary); }
+
+    /* DYNAMIC VEGAN CALCULATOR WIDGET */
+    .calc-container {
+      background: linear-gradient(180deg, var(--bg-card) 0%, rgba(17,24,39,0.7) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      margin: 40px 0;
+    }
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    @media (max-width: 768px) {
+      .calc-grid { grid-template-columns: 1fr; gap: 30px; }
+    }
+    .form-group { margin-bottom: 24px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.5px; }
+    .input-range { width: 100%; accent-color: var(--primary); height: 6px; border-radius: 999px; background: var(--bg-elevated); outline: none; margin-bottom: 8px; }
+    .range-val-container { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+    .range-val { color: var(--primary); font-weight: 800; font-size: 16px; }
+    
+    .radio-group { display: flex; gap: 12px; }
+    .radio-group label {
+      flex: 1; text-align: center; background: var(--bg-elevated); border: 1px solid var(--border);
+      padding: 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 700;
+      transition: var(--transition); color: var(--text-secondary); text-transform: none; margin: 0;
+    }
+    .radio-group input { display: none; }
+    .radio-group input:checked + label {
+      background: rgba(16,185,129,0.15); border-color: var(--primary); color: var(--primary);
+    }
+
+    .calc-result {
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      border: 1px dashed rgba(255,255,255,0.1);
+    }
+    .res-num { font-size: 48px; font-weight: 900; color: var(--primary); line-height: 1.1; margin-bottom: 6px; }
+    .res-lbl { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 800; letter-spacing: 1px; margin-bottom: 24px; }
+    
+    .macro-bar-container { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .macro-bar-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .macro-bar { height: 8px; width: 100%; background: var(--bg); border-radius: 999px; overflow: hidden; }
+    .macro-progress { height: 100%; border-radius: 999px; transition: width 0.5s ease-out; }
+    .macro-progress.protein { background: var(--primary); }
+    .macro-progress.carbs { background: var(--accent-teal); }
+    .macro-progress.fat { background: var(--accent-orange); }
+
+    /* INTERACTIVE MEAL PLANNER */
+    .planner-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 30px; }
+    .planner-tab-btn {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      padding: 12px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer;
+      transition: var(--transition); white-space: nowrap;
+    }
+    .planner-tab-btn:hover { background: var(--bg-elevated); border-color: rgba(255,255,255,0.15); }
+    .planner-tab-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+
+    .day-panel { display: none; animation: fadeIn 0.4s ease forwards; }
+    .day-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .meal-timeline { position: relative; padding-left: 32px; border-left: 2px solid var(--border); margin-left: 12px; }
+    .meal-item { position: relative; margin-bottom: 32px; }
+    .meal-item:last-child { margin-bottom: 0; }
+    .meal-dot {
+      position: absolute; left: -41px; top: 4px; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--bg); border: 3px solid var(--primary); box-shadow: 0 0 0 4px var(--bg-card);
+    }
+    .meal-time { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 6px; }
+    .meal-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 22px 26px; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    }
+    .meal-card:hover { border-color: rgba(255,255,255,0.15); background: var(--bg-elevated); cursor: pointer; }
+    .meal-info h4 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .meal-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+    
+    .meal-macros { display: flex; gap: 12px; }
+    .meal-macro-pill {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .meal-macro-pill.p { background: rgba(16,185,129,0.1); color: var(--primary); }
+    .meal-macro-pill.c { background: rgba(20,184,166,0.1); color: var(--accent-teal); }
+    .meal-macro-pill.f { background: rgba(249,115,22,0.1); color: var(--accent-orange); }
+    
+    .meal-view-recipe-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: var(--transition); white-space: nowrap;
+    }
+    .meal-view-recipe-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* WATER TRACKER WIDGET */
+    .water-container {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 30px; margin: 40px 0; text-align: center;
+    }
+    .water-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .water-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    
+    .water-visual {
+      width: 120px; height: 120px; border-radius: 50%; border: 6px solid var(--bg-elevated);
+      margin: 0 auto 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      position: relative; overflow: hidden; background: rgba(59,130,246,0.05);
+    }
+    .water-wave {
+      position: absolute; bottom: 0; left: 0; right: 0; background: var(--accent-blue);
+      height: 0%; transition: height 0.5s ease; opacity: 0.6;
+    }
+    .water-text { position: relative; z-index: 2; font-size: 24px; font-weight: 900; color: var(--text); }
+    .water-target { position: relative; z-index: 2; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+    
+    .water-grid { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .water-cup {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition);
+    }
+    .water-cup:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+    .water-reset-btn {
+      background: none; border: none; font-size: 13px; color: var(--accent-orange); cursor: pointer; font-weight: 600; text-decoration: underline;
+    }
+
+    /* GROCERY LIST WITH PROGRESS */
+    .grocery-container {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 30px; margin-top: 40px;
+    }
+    .grocery-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+    .grocery-title { font-size: 18px; font-weight: 800; }
+    
+    .grocery-progress-container { width: 220px; display: flex; flex-direction: column; gap: 6px; }
+    .grocery-progress-lbl { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+    .grocery-progress-bg { height: 6px; background: var(--bg-elevated); border-radius: 999px; overflow: hidden; }
+    .grocery-progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+
+    .grocery-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; }
+    .grocery-tab {
+      background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 700;
+      padding: 8px 16px; cursor: pointer; transition: var(--transition); border-radius: var(--radius-sm);
+    }
+    .grocery-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
+    .grocery-tab.active { color: var(--primary); background: rgba(16,185,129,0.1); }
+
+    .grocery-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) {
+      .grocery-list { grid-template-columns: 1fr; }
+    }
+    .grocery-item-wrapper { display: none; }
+    .grocery-item-wrapper.active { display: block; }
+    
+    .grocery-item {
+      display: flex; align-items: center; gap: 12px; background: var(--bg-elevated);
+      padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;
+      user-select: none; transition: var(--transition);
+    }
+    .grocery-item:hover { border-color: rgba(255,255,255,0.12); }
+    .grocery-checkbox {
+      width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--text-muted);
+      display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent;
+      transition: var(--transition);
+    }
+    .grocery-item.checked { opacity: 0.55; }
+    .grocery-item.checked .grocery-checkbox {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .grocery-item.checked span { text-decoration: line-through; }
+    .grocery-name { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .grocery-qty { font-size: 12px; color: var(--text-secondary); margin-left: auto; background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; }
+
+    /* FAQ ACCORDION */
+    .faq-container { margin: 40px 0; }
+    .faq-item {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 12px; overflow: hidden; transition: var(--transition);
+    }
+    .faq-question {
+      padding: 20px 24px; font-size: 15px; font-weight: 700; display: flex; justify-content: space-between;
+      align-items: center; cursor: pointer; user-select: none;
+    }
+    .faq-arrow { font-size: 12px; transition: transform 0.3s; color: var(--text-muted); }
+    .faq-answer {
+      max-height: 0; overflow: hidden; padding: 0 24px;
+      transition: all 0.3s cubic-bezier(0, 1, 0, 1);
+      font-size: 14px; color: var(--text-secondary); line-height: 1.8;
+    }
+    .faq-item.open { border-color: rgba(16,185,129,0.2); background: var(--bg-elevated); }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); color: var(--primary); }
+    .faq-item.open .faq-answer { max-height: 1000px; padding: 0 24px 20px; transition: all 0.3s cubic-bezier(1, 0, 1, 0); }
+
+    /* MODAL FOR RECIPE DETAILS WITH TIMER */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    
+    .modal-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+      padding: 32px; position: relative; transform: translateY(20px); transition: transform 0.3s ease;
+    }
+    .modal-overlay.active .modal-card { transform: translateY(0); }
+    
+    .modal-close {
+      position: absolute; top: 20px; right: 24px; font-size: 24px; color: var(--text-muted);
+      cursor: pointer; background: none; border: none; font-weight: 300; transition: var(--transition);
+    }
+    .modal-close:hover { color: var(--text); }
+    
+    .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 16px; color: var(--primary); }
+    
+    .modal-section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); margin: 24px 0 10px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    
+    .recipe-meta { display: flex; gap: 14px; margin-bottom: 20px; }
+    .recipe-meta-item { font-size: 13px; color: var(--text-secondary); background: var(--bg-elevated); padding: 6px 12px; border-radius: 6px; font-weight: 600; }
+    
+    .ing-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .ing-list li { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--text-secondary); padding-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+    .ing-list li span.val { color: var(--text); font-weight: 600; }
+
+    .step-list { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+    .step-list li { display: flex; gap: 14px; font-size: 13.5px; color: var(--text-secondary); }
+    .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    
+    /* COOKING TIMER IN MODAL */
+    .timer-container {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 16px; margin-top: 24px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .timer-info { display: flex; flex-direction: column; gap: 2px; }
+    .timer-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+    .timer-clock { font-size: 24px; font-weight: 800; font-family: monospace; color: var(--primary); }
+    
+    .timer-buttons { display: flex; gap: 8px; }
+    .timer-btn {
+      padding: 6px 14px; font-size: 12px; font-weight: 700; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05); color: var(--text); border-radius: 4px; cursor: pointer;
+      transition: var(--transition);
+    }
+    .timer-btn:hover { background: var(--bg); }
+    .timer-btn.active-run { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+
+    /* BACK TO HOME LINK */
+    .back-btn-container { display: flex; justify-content: center; margin: 60px 0; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); text-decoration: none;
+      font-weight: 600; font-size: 14px; border: 1px solid var(--border); background: var(--bg-card);
+      padding: 12px 28px; border-radius: 999px; transition: var(--transition);
+    }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateX(-4px); }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 60px 24px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">🌿 Đủ chất lành mạnh</div>
+      <h1 class="hero-title">Thực Đơn Thuần Chay Dinh Dưỡng</h1>
+      <p class="hero-desc">Kế hoạch xây dựng chế độ ăn thực vật khoa học, đủ protein và vi chất thiết yếu như B12, sắt và kẽm.</p>
+      
+      <div class="hero-metrics">
+        <div class="metric-pill">🎯 Mục tiêu: <span class="val">Cân bằng & Tăng cơ nhẹ</span></div>
+        <div class="metric-pill">🌱 Protein: <span class="val">Thực vật hoàn chỉnh</span></div>
+        <div class="metric-pill">💧 Năng lượng: <span class="val">Chữa lành toàn diện</span></div>
+        <div class="metric-pill">⏳ Thời gian: <span class="val">Dài hạn / Trọn đời</span></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+    
+    <!-- SECTION 1: NGUYÊN TẮC DINH DƯỠNG -->
+    <div class="section-header">
+      <div class="s-icon green">🥗</div>
+      <div class="s-title-group">
+        <h2 class="s-title">3 Chìa Khóa Để Ăn Chay Đủ Chất</h2>
+        <span class="s-sub">Khắc phục triệt để tình trạng thiếu sắt và uể oải</span>
+      </div>
+    </div>
+    
+    <p class="intro-text">
+      Một chế độ ăn chay nghèo nàn sẽ dễ dẫn tới thiếu hụt đạm và các khoáng chất. Tuy nhiên, nếu biết kết hợp đa dạng các nhóm thực phẩm, bạn hoàn toàn có thể xây dựng cơ bắp săn chắc và tràn đầy sinh lực.
+    </p>
+
+    <div class="grid-3">
+      <div class="card">
+        <span class="card-icon">🫘</span>
+        <h3>Phối hợp Axit Amin</h3>
+        <p>Protein thực vật thường thiếu một vài axit amin thiết yếu. Việc ăn kết hợp giữa ngũ cốc (gạo, yến mạch) và các loại đậu (đậu nành, đậu gà) tạo ra protein hoàn chỉnh tương đương thịt bò.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🍋</span>
+        <h3>Tăng Hấp Thu Sắt</h3>
+        <p>Sắt từ thực vật (sắt non-heme) khó hấp thu hơn sắt động vật. Hãy bổ sung vitamin C (chanh, cam, ớt chuông) vào các bữa ăn chay để tăng cường gấp 3 lần tỷ lệ hấp thụ sắt tự nhiên.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">💊</span>
+        <h3>Bổ Sung Vitamin B12</h3>
+        <p>Vitamin B12 hầu như không có trong các thực phẩm thực vật tự nhiên trừ nấm men dinh dưỡng. Đảm bảo dùng sữa thực vật bổ sung vi chất hoặc thực phẩm bổ sung định kỳ.</p>
+      </div>
+    </div>
+
+    <!-- SECTION 2: CALCULATOR WIDGET -->
+    <div class="section-header">
+      <div class="s-icon teal">🧮</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Tính Toán Calo & Macros Thực Vật</h2>
+        <span class="s-sub">Điều chỉnh tỷ lệ carbs và chất béo lành mạnh</span>
+      </div>
+    </div>
+
+    <div class="calc-container">
+      <div class="calc-grid">
+        <div class="calc-form">
+          <div class="form-group">
+            <label>Cân nặng hiện tại</label>
+            <input type="range" class="input-range" id="weight-slider" min="40" max="120" value="60" />
+            <div class="range-val-container">
+              <span>Cân nặng:</span>
+              <span class="range-val" id="weight-lbl">60 kg</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Mục tiêu cá nhân</label>
+            <div class="radio-group">
+              <input type="radio" name="vegan-goal" id="goal-1" value="1500" checked />
+              <label for="goal-1">Giữ dáng nhẹ nhàng</label>
+              
+              <input type="radio" name="vegan-goal" id="goal-2" value="2000" />
+              <label for="goal-2">Xây dựng thể chất</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-result">
+          <span class="res-lbl">Lượng calo đề xuất hàng ngày</span>
+          <div class="res-num" id="total-cals">1,800</div>
+          <span style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 24px;">Kcal / Ngày</span>
+          
+          <div class="macro-bar-container">
+            <div>
+              <div class="macro-bar-row">
+                <span>🌱 Đạm thực vật</span>
+                <span id="prot-val">90g (360 kcal)</span>
+              </div>
+              <div class="macro-bar">
+                <div class="macro-progress protein" id="prot-bar" style="width: 20%;"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="macro-bar-row">
+                <span>🌾 Tinh bột phức hợp</span>
+                <span id="carb-val">247g (990 kcal)</span>
+              </div>
+              <div class="macro-bar">
+                <div class="macro-progress carbs" id="carb-bar" style="width: 55%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="macro-bar-row">
+                <span>🥑 Chất béo tốt</span>
+                <span id="fat-val">50g (450 kcal)</span>
+              </div>
+              <div class="macro-bar">
+                <div class="macro-progress fat" id="fat-bar" style="width: 25%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: MEAL SWITCHER -->
+    <div class="section-header">
+      <div class="s-icon blue">📅</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Thực Đơn Ăn Chay Đủ Chất 7 Ngày</h2>
+        <span class="s-sub">Lựa chọn nguyên liệu giàu protein và ngon miệng</span>
+      </div>
+    </div>
+
+    <div class="planner-tabs">
+      <button class="planner-tab-btn active" data-day="thu2">Thứ 2 - 4 - 6</button>
+      <button class="planner-tab-btn" data-day="thu3">Thứ 3 - 5 - 7</button>
+      <button class="planner-tab-btn" data-day="chunhat">Chủ Nhật</button>
+    </div>
+
+    <!-- THỨ 2 - 4 - 6 -->
+    <div class="day-panel active" id="day-thu2">
+      <div class="meal-timeline">
+        
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 07:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Bát yến mạch, sữa đậu nành và hạt điều</h4>
+              <p class="meal-desc">Bữa sáng đơn giản giàu axit béo omega-3 và magie hỗ trợ trí não tỉnh táo.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 18g</span>
+                <span class="meal-macro-pill c">C: 50g</span>
+                <span class="meal-macro-pill f">F: 12g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('oats-cashew')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa trưa - 12:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Cơm gạo lứt ăn kèm đậu hũ sốt cà chua và canh bí đỏ</h4>
+              <p class="meal-desc">Đậu hũ non cung cấp lượng canxi dồi dào kết hợp chất xơ từ bí đỏ ngọt mát.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 22g</span>
+                <span class="meal-macro-pill c">C: 60g</span>
+                <span class="meal-macro-pill f">F: 10g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('tofu-rice')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa tối - 19:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Salad quinoa, đậu gà và sốt dầu ô-liu chanh</h4>
+              <p class="meal-desc">Quinoa (diêm mạch) là một trong số ít thực vật chứa đầy đủ 9 axit amin thiết yếu.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 20g</span>
+                <span class="meal-macro-pill c">C: 45g</span>
+                <span class="meal-macro-pill f">F: 14g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('quinoa-salad')">Xem Công Thức</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- THỨ 3 - 5 - 7 -->
+    <div class="day-panel" id="day-thu3">
+      <div class="meal-timeline">
+        
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 07:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Bánh mì nướng quết bơ và hạt gai dầu</h4>
+              <p class="meal-desc">Cung cấp chất béo có lợi chống oxy hóa cực mạnh cho huyết áp ổn định.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 10g</span>
+                <span class="meal-macro-pill c">C: 35g</span>
+                <span class="meal-macro-pill f">F: 16g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('avocado-toast')">Xem Công Thức</button>
+          </div>
+        </div>
+
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa trưa - 12:00</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Cà ri đậu lăng nước cốt dừa và cơm gạo hoa vàng</h4>
+              <p class="meal-desc">Đậu lăng đỏ giàu chất sắt không heme, nấu kèm cốt dừa béo bùi kích thích vị giác.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 25g</span>
+                <span class="meal-macro-pill c">C: 72g</span>
+                <span class="meal-macro-pill f">F: 15g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('lentil-curry')">Xem Công Thức</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CHỦ NHẬT -->
+    <div class="day-panel" id="day-chunhat">
+      <div class="meal-timeline">
+        <div class="meal-item">
+          <div class="meal-dot"></div>
+          <div class="meal-time">Bữa sáng - 08:30</div>
+          <div class="meal-card">
+            <div class="meal-info">
+              <h4>Sinh tố xanh cải xoăn (Kale), chuối chín và hạt lanh</h4>
+              <p class="meal-desc">Thức uống thanh lọc cơ thể dồi dào chất diệp lục và vitamin K hỗ trợ đông máu.</p>
+              <div class="meal-macros">
+                <span class="meal-macro-pill p">P: 8g</span>
+                <span class="meal-macro-pill c">C: 42g</span>
+                <span class="meal-macro-pill f">F: 6g</span>
+              </div>
+            </div>
+            <button class="meal-view-recipe-btn" onclick="openRecipe('green-smoothie')">Xem Công Thức</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: HYDRATION LOG WIDGET -->
+    <div class="section-header">
+      <div class="s-icon orange">💧</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Theo Dõi Uống Nước Hàng Ngày</h2>
+        <span class="s-sub">Cấp ẩm đầy đủ để hỗ trợ tiêu hóa chất xơ</span>
+      </div>
+    </div>
+    
+    <div class="water-container">
+      <h3 class="water-title">Mục Tiêu Hydration</h3>
+      <p class="water-subtitle">Ăn chay chứa nhiều chất xơ, do đó cần uống đủ nước để tránh táo bón và tối ưu trao đổi chất.</p>
+      
+      <div class="water-visual">
+        <div class="water-wave" id="water-wave"></div>
+        <span class="water-text" id="water-current">0</span>
+        <span class="water-target">/ 2000 ml</span>
+      </div>
+      
+      <div class="water-grid">
+        <div class="water-cup" onclick="addWater(250)">+250ml (Cốc nhỏ)</div>
+        <div class="water-cup" onclick="addWater(500)">+500ml (Bình nước)</div>
+      </div>
+      <button class="water-reset-btn" onclick="resetWater()">Đặt Lại Tiến Trình</button>
+    </div>
+
+    <!-- SECTION 5: GROCERY LIST WITH PROGRESS -->
+    <div class="section-header">
+      <div class="s-icon green">🛒</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Danh Sách Thực Phẩm Chay Đủ Chất</h2>
+        <span class="s-sub">Mua sắm nguyên liệu đạm chay cho cả tuần</span>
+      </div>
+    </div>
+
+    <div class="grocery-container">
+      <div class="grocery-header">
+        <h3 class="grocery-title">Giỏ đi chợ thuần chay</h3>
+        <div class="grocery-progress-container">
+          <div class="grocery-progress-lbl">
+            <span>Đã mua</span>
+            <span id="grocery-pct">0%</span>
+          </div>
+          <div class="grocery-progress-bg">
+            <div class="grocery-progress-bar" id="grocery-progress-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grocery-tabs">
+        <button class="grocery-tab active" onclick="switchGroceryTab('protein')">Đạm Thực Vật</button>
+        <button class="grocery-tab" onclick="switchGroceryTab('carbs')">Hạt & Ngũ Cốc</button>
+        <button class="grocery-tab" onclick="switchGroceryTab('fats')">Chất béo & Rau Xanh</button>
+      </div>
+
+      <!-- PROTEIN -->
+      <div class="grocery-list grocery-tab-panel" id="g-protein">
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Đậu hũ non hữu cơ</span>
+          <span class="grocery-qty">5 bì</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Đậu gà đóng hộp</span>
+          <span class="grocery-qty">3 lon</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Đậu lăng đỏ khô</span>
+          <span class="grocery-qty">1 túi (500g)</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Sữa đậu nành không đường</span>
+          <span class="grocery-qty">4 hộp 1L</span>
+        </div>
+      </div>
+
+      <!-- CARBS -->
+      <div class="grocery-list grocery-tab-panel" id="g-carbs" style="display:none;">
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Quinoa (Diêm mạch)</span>
+          <span class="grocery-qty">500g</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Yến mạch cán dẹt</span>
+          <span class="grocery-qty">1 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Gạo lứt dẻo Nhật</span>
+          <span class="grocery-qty">2 Kg</span>
+        </div>
+      </div>
+
+      <!-- VEG -->
+      <div class="grocery-list grocery-tab-panel" id="g-fats" style="display:none;">
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Quả bơ sáp</span>
+          <span class="grocery-qty">1 Kg</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Cải xoăn (Kale)</span>
+          <span class="grocery-qty">800g</span>
+        </div>
+        <div class="grocery-item" onclick="toggleGrocery(this)">
+          <div class="grocery-checkbox">✓</div>
+          <span class="grocery-name">Hạt điều rang muối</span>
+          <span class="grocery-qty">300g</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ SECTION -->
+    <div class="section-header">
+      <div class="s-icon blue">❓</div>
+      <div class="s-title-group">
+        <h2 class="s-title">Hỏi Đáp Ăn Chay Khoa Học</h2>
+        <span class="s-sub">Giải đáp băn khoăn về năng lượng và sức bền</span>
+      </div>
+    </div>
+
+    <div class="faq-container">
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Ăn chay có khiến tôi bị rụng tóc và thiếu máu không?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Tình trạng rụng tóc và thiếu máu ở người ăn chay thường do thiếu sắt, kẽm và vitamin B12. Chỉ cần bạn chủ động bổ sung đậu gà, hạt bí, các loại rau lá xanh đậm kèm trái cây giàu vitamin C thì cơ thể sẽ sản sinh hồng cầu khỏe mạnh bình thường.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Các loại sữa hạt có thay thế được sữa bò về lượng protein không?</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-answer">
+          <p>Sữa đậu nành có lượng protein gần tương đương sữa bò (khoảng 7-8g protein mỗi cốc). Tuy nhiên các loại sữa hạnh nhân, sữa dừa có lượng protein rất thấp (chỉ 1-2g). Nếu cần protein, hãy ưu tiên chọn sữa đậu nành hoặc sữa hạt đậu hà lan.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACK BUTTON -->
+    <div class="back-btn-container">
+      <a href="../index.html" class="back-btn">← Quay về Trang Chủ</a>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 WAO Nutrition App. Bảo lưu mọi quyền.</p>
+    <p>Thiết kế bởi Đội ngũ AI Antigravity cho bài tập lớn Lập trình đa nền tảng.</p>
+  </footer>
+
+  <!-- RECIPE MODAL DETAIL -->
+  <div class="modal-overlay" id="recipe-modal" onclick="closeRecipeModal(event)">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeRecipeModal(event, true)">×</button>
+      <div id="recipe-modal-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Slider values synchronization
+    const weightSlider = document.getElementById('weight-slider');
+    const weightLbl = document.getElementById('weight-lbl');
+    
+    if (weightSlider && weightLbl) {
+      weightSlider.addEventListener('input', (e) => {
+        weightLbl.textContent = e.target.value + ' kg';
+        calculateMacros();
+      });
+    }
+
+    const goalRadios = document.getElementsByName('vegan-goal');
+    goalRadios.forEach(r => r.addEventListener('change', calculateMacros));
+
+    function calculateMacros() {
+      const weight = parseFloat(weightSlider.value);
+      let goalCal = 1800;
+      goalRadios.forEach(r => { if(r.checked) goalCal = parseInt(r.value); });
+
+      const totalCal = goalCal;
+      document.getElementById('total-cals').textContent = totalCal.toLocaleString('en-US');
+
+      // Balanced Vegan Diet: 20% Protein, 55% Carbs, 25% Fats
+      const protCal = Math.round(totalCal * 0.20);
+      const carbCal = Math.round(totalCal * 0.55);
+      const fatCal = Math.round(totalCal * 0.25);
+
+      const protGram = Math.round(protCal / 4);
+      const carbGram = Math.round(carbCal / 4);
+      const fatGram = Math.round(fatCal / 9);
+
+      document.getElementById('prot-val').textContent = `${protGram}g (${protCal} kcal)`;
+      document.getElementById('carb-val').textContent = `${carbGram}g (${carbCal} kcal)`;
+      document.getElementById('fat-val').textContent = `${fatGram}g (${fatCal} kcal)`;
+
+      document.getElementById('prot-bar').style.width = '20%';
+      document.getElementById('carb-bar').style.width = '55%';
+      document.getElementById('fat-bar').style.width = '25%';
+    }
+    calculateMacros();
+
+    // Tab switcher for Meal plan
+    const tabBtns = document.querySelectorAll('.planner-tab-btn');
+    const dayPanels = document.querySelectorAll('.day-panel');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        dayPanels.forEach(p => p.classList.remove('active'));
+        
+        btn.classList.add('active');
+        const day = btn.getAttribute('data-day');
+        document.getElementById(`day-${day}`).classList.add('active');
+      });
+    });
+
+    // Grocery List tab switching
+    function switchGroceryTab(tabName) {
+      document.querySelectorAll('.grocery-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.grocery-tab-panel').forEach(p => p.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById(`g-${tabName}`).style.display = 'grid';
+    }
+
+    // Toggle grocery item checkbox
+    function toggleGrocery(element) {
+      element.classList.toggle('checked');
+      updateGroceryProgress();
+    }
+
+    function updateGroceryProgress() {
+      const items = document.querySelectorAll('.grocery-item');
+      const checkedItems = document.querySelectorAll('.grocery-item.checked');
+      const pct = items.length > 0 ? Math.round((checkedItems.length / items.length) * 100) : 0;
+      
+      document.getElementById('grocery-pct').textContent = pct + '%';
+      document.getElementById('grocery-progress-bar').style.width = pct + '%';
+    }
+    updateGroceryProgress(); // init
+
+    // FAQ Accordion Toggle
+    function toggleFaq(element) {
+      const parent = element.parentElement;
+      const isOpen = parent.classList.contains('open');
+      
+      document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('open'));
+      if(!isOpen) {
+        parent.classList.add('open');
+      }
+    }
+
+    // Water Log logic
+    let waterAmt = 0;
+    function addWater(amount) {
+      waterAmt = Math.min(waterAmt + amount, 3000);
+      document.getElementById('water-current').textContent = waterAmt;
+      
+      const pct = Math.min((waterAmt / 2000) * 100, 100);
+      document.getElementById('water-wave').style.height = pct + '%';
+    }
+
+    function resetWater() {
+      waterAmt = 0;
+      document.getElementById('water-current').textContent = 0;
+      document.getElementById('water-wave').style.height = '0%';
+    }
+
+    // Recipes Data
+    const recipesData = {
+      'oats-cashew': {
+        title: "Bát Yến Mạch Sữa Đậu Nành Hạt Điều",
+        servings: "1 Bát ăn sáng",
+        prepTime: "5 phút",
+        cookTime: "5 phút",
+        ingredients: [
+          { name: "Yến mạch cán dẹt", qty: "60g" },
+          { name: "Sữa đậu nành organic không đường", qty: "200ml" },
+          { name: "Hạt điều rang chín cắt vụn", qty: "30g" },
+          { name: "Hạt lanh xay nhuyễn", qty: "1 muỗng cafe" },
+          { name: "Mật ong rừng nguyên chất (tùy chọn)", qty: "1 muỗng cafe" }
+        ],
+        steps: [
+          "Cho yến mạch và sữa đậu nành vào nồi nhỏ đun sôi nhỏ lửa trong 5 phút đến khi yến mạch mềm dẻo.",
+          "Múc cháo yến mạch ra bát sâu lòng, rắc đều hạt điều nghiền vụn và hạt lanh lên trên.",
+          "Rưới thêm chút mật ong rừng tạo vị ngọt thanh dễ ăn."
+        ],
+        timerSec: 300
+      },
+      'tofu-rice': {
+        title: "Đậu hũ non sốt cà ri chua ngọt & Cơm gạo lứt",
+        servings: "1 Suất ăn chính",
+        prepTime: "10 phút",
+        cookTime: "15 phút",
+        ingredients: [
+          { name: "Đậu hũ non cắt khối vuông", qty: "150g" },
+          { name: "Gạo lứt đỏ cẩm chín dẻo", qty: "150g" },
+          { name: "Cà chua chín băm nhỏ", qty: "2 quả" },
+          { name: "Hành baro thái nhỏ", qty: "1 cây" },
+          { name: "Muối tiêu, hạt nêm chay", qty: "Vừa đủ" }
+        ],
+        steps: [
+          "Cho chút dầu ăn thực vật vào chảo áp chảo đậu hũ non chín vàng các mặt rồi vớt ra.",
+          "Phi thơm hành baro, cho cà chua thái hạt lựu vào xào chín mềm tạo nước sốt sền sệt.",
+          "Trút đậu hũ vào om chung với nước sốt cà chua, nêm hạt nêm chay vừa miệng trong 5 phút để đậu hũ ngấm đều sốt."
+        ],
+        timerSec: 600
+      }
+    };
+
+    // Modal control logic with countdown timer
+    let activeInterval = null;
+    let timerRemaining = 0;
+
+    function openRecipe(id) {
+      const recipe = recipesData[id];
+      if(!recipe) return;
+
+      clearInterval(activeInterval);
+      document.getElementById('recipe-modal').classList.add('active');
+
+      const ingredientsHTML = recipe.ingredients.map(ing => `
+        <li>
+          <span>${ing.name}</span>
+          <span class="val">${ing.qty}</span>
+        </li>
+      `).join('');
+
+      const stepsHTML = recipe.steps.map((step, idx) => `
+        <li>
+          <div class="step-num">${idx + 1}</div>
+          <div>${step}</div>
+        </li>
+      `).join('');
+
+      timerRemaining = recipe.timerSec;
+      const min = Math.floor(timerRemaining / 60);
+      const sec = timerRemaining % 60;
+      const timeStr = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+
+      const content = `
+        <h3 class="modal-title">${recipe.title}</h3>
+        <div class="recipe-meta">
+          <div class="recipe-meta-item">⏱️ Chuẩn bị: ${recipe.prepTime}</div>
+          <div class="recipe-meta-item">🍳 Nấu: ${recipe.cookTime}</div>
+          <div class="recipe-meta-item">🍽️ Khẩu phần: ${recipe.servings}</div>
+        </div>
+
+        <h4 class="modal-section-title">Nguyên Liệu Cần Thiết</h4>
+        <ul class="ing-list">${ingredientsHTML}</ul>
+
+        <h4 class="modal-section-title">Các Bước Chế Biến</h4>
+        <ol class="step-list">${stepsHTML}</ol>
+
+        <div class="timer-container">
+          <div class="timer-info">
+            <span class="timer-title">⏰ Bấm Giờ Nấu Thực Tế</span>
+            <span class="timer-clock" id="modal-clock">${timeStr}</span>
+          </div>
+          <div class="timer-buttons">
+            <button class="timer-btn" id="timer-toggle-btn" onclick="toggleCookingTimer()">Bắt Đầu</button>
+            <button class="timer-btn" onclick="resetCookingTimer(${recipe.timerSec})">Đặt Lại</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('recipe-modal-content').innerHTML = content;
+    }
+
+    function closeRecipeModal(event, force = false) {
+      if(force || event.target === document.getElementById('recipe-modal')) {
+        document.getElementById('recipe-modal').classList.remove('active');
+        clearInterval(activeInterval);
+      }
+    }
+
+    function toggleCookingTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (activeInterval) {
+        // Pause timer
+        clearInterval(activeInterval);
+        activeInterval = null;
+        btn.textContent = 'Tiếp Tục';
+        btn.classList.remove('active-run');
+      } else {
+        // Start/Resume timer
+        btn.textContent = 'Tạm Dừng';
+        btn.classList.add('active-run');
+        activeInterval = setInterval(() => {
+          if (timerRemaining > 0) {
+            timerRemaining--;
+            const min = Math.floor(timerRemaining / 60);
+            const sec = timerRemaining % 60;
+            document.getElementById('modal-clock').textContent = 
+              `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+          } else {
+            clearInterval(activeInterval);
+            activeInterval = null;
+            btn.textContent = 'Hoàn Thành!';
+            btn.classList.remove('active-run');
+            alert('Thời gian nấu ăn đã hết! Món chay của bạn đã hoàn thành.');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetCookingTimer(originalSeconds) {
+      clearInterval(activeInterval);
+      activeInterval = null;
+      timerRemaining = originalSeconds;
+      const min = Math.floor(timerRemaining / 60);
+      const sec = timerRemaining % 60;
+      document.getElementById('modal-clock').textContent = 
+        `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+      
+      const btn = document.getElementById('timer-toggle-btn');
+      btn.textContent = 'Bắt Đầu';
+      btn.classList.remove('active-run');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thực Đơn Keto Giảm Cân 4 Tuần – WAO Nutrition</title>
+  <meta name="description" content="Kế hoạch ăn keto khoa học giúp đốt mỡ thừa, ổn định đường huyết và tăng năng lượng toàn diện." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0c0f1a;
+      --bg-card: #151928;
+      --bg-elevated: #1e2438;
+      --primary: #f59e0b;
+      --primary-dark: #d97706;
+      --accent-green: #10b981;
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --border: rgba(255,255,255,0.08);
+      --radius: 16px;
+      --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    /* HERO */
+    .hero {
+      min-height: 560px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      padding: 60px 24px 56px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #1a0e00 0%, #0c1420 60%, #0c0f1a 100%);
+    }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.3; }
+    .orb-1 { width: 500px; height: 500px; background: #f59e0b; top: -150px; left: -100px; }
+    .orb-2 { width: 300px; height: 300px; background: #10b981; bottom: -60px; right: 10%; }
+
+    .hero-content { position: relative; z-index: 2; max-width: 800px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,158,11,0.15);
+      border: 1px solid rgba(245,158,11,0.4);
+      color: var(--primary);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 6px 16px; border-radius: 999px; margin-bottom: 20px;
+    }
+    .hero-title {
+      font-size: clamp(30px, 5vw, 56px);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, #f8fafc 30%, #f59e0b 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc { font-size: 17px; color: var(--text-secondary); max-width: 560px; margin-bottom: 30px; }
+    .hero-metrics {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 36px;
+    }
+    .metric-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    }
+    .metric-pill .val { color: var(--primary); font-weight: 800; }
+    .macro-donut-row {
+      display: flex; gap: 24px; flex-wrap: wrap; margin-top: 32px;
+    }
+    .donut-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      min-width: 130px;
+      text-align: center;
+    }
+    .donut-pct { font-size: 32px; font-weight: 900; }
+    .donut-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* LAYOUT */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* SECTION */
+    .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; padding-top: 64px; }
+    .s-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .s-icon.amber { background: rgba(245,158,11,0.15); }
+    .s-icon.green { background: rgba(16,185,129,0.15); }
+    .s-icon.blue { background: rgba(59,130,246,0.15); }
+    .s-icon.red { background: rgba(239,68,68,0.15); }
+    .s-title { font-size: 22px; font-weight: 800; }
+    .s-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+    /* INFO BOX */
+    .info-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 36px;
+    }
+    .info-box.warning {
+      border-color: rgba(245,158,11,0.3);
+      background: rgba(245,158,11,0.06);
+    }
+    .info-box.success {
+      border-color: rgba(16,185,129,0.3);
+      background: rgba(16,185,129,0.06);
+    }
+    .info-box.danger {
+      border-color: rgba(239,68,68,0.3);
+      background: rgba(239,68,68,0.06);
+    }
+    .info-box-icon { font-size: 24px; margin-bottom: 10px; }
+    .info-box h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .info-box p, .info-box li { font-size: 14px; color: var(--text-secondary); line-height: 1.8; }
+    .info-box ul { padding-left: 18px; }
+    .info-box li + li { margin-top: 4px; }
+
+    /* FOOD ALLOWED / NOT ALLOWED */
+    .food-toggle-tabs {
+      display: flex; gap: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .food-tab {
+      flex: 1; padding: 14px; text-align: center;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      color: var(--text-muted);
+    }
+    .food-tab.active.allowed { background: rgba(16,185,129,0.15); color: #10b981; }
+    .food-tab.active.forbidden { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .food-panel { display: none; }
+    .food-panel.active { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; animation: fadeUp 0.3s ease; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .food-item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .food-item-card.allowed { border-left: 3px solid #10b981; }
+    .food-item-card.forbidden { border-left: 3px solid #ef4444; }
+    .food-item-card .fi-icon { font-size: 24px; flex-shrink: 0; }
+    .food-item-card .fi-name { font-size: 13px; font-weight: 600; }
+    .food-item-card .fi-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* WEEK PLAN TABLE */
+    .week-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 36px;
+    }
+    .week-table th {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .week-table td {
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      vertical-align: top;
+      background: var(--bg-card);
+    }
+    .week-table tr:hover td { background: var(--bg-elevated); }
+    .day-label { font-weight: 700; color: var(--text); font-size: 14px; }
+    .kcal-badge {
+      display: inline-block;
+      background: rgba(245,158,11,0.15);
+      color: var(--primary);
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      margin-top: 4px;
+    }
+
+    /* PROGRESS TRACKER */
+    .progress-tracker {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 36px;
+    }
+    .progress-tracker h3 { font-size: 18px; font-weight: 800; margin-bottom: 24px; }
+    .week-progress { margin-bottom: 20px; }
+    .wp-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+    .wp-label { font-weight: 600; }
+    .wp-val { color: var(--primary); font-weight: 700; }
+    .wp-bar { height: 8px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; }
+    .wp-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--accent-green)); transition: width 0.8s ease; }
+    .milestone-row { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .milestone {
+      flex: 1; min-width: 110px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    .milestone-icon { font-size: 24px; margin-bottom: 6px; }
+    .milestone-title { font-size: 12px; font-weight: 700; color: var(--text); }
+    .milestone-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* RECIPE CARDS */
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-bottom: 40px; }
+    .recipe-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .recipe-card:hover { transform: translateY(-4px); border-color: rgba(245,158,11,0.4); }
+    .recipe-top {
+      padding: 20px 20px 14px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(16,185,129,0.05));
+      text-align: center;
+      font-size: 48px;
+    }
+    .recipe-body { padding: 16px 20px 20px; }
+    .recipe-name { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+    .recipe-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .recipe-tag {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+    }
+    .recipe-tag.kcal { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .recipe-tag.fat { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .recipe-tag.protein { background: rgba(16,185,129,0.15); color: #10b981; }
+    .recipe-tag.carb { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .recipe-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .recipe-steps { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .recipe-step { display: flex; gap: 10px; padding: 6px 0; font-size: 12px; color: var(--text-secondary); }
+    .step-num { width: 20px; height: 20px; background: var(--primary); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0; }
+
+    /* SCIENCE CARDS */
+    .science-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .science-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+    }
+    .science-icon { font-size: 32px; margin-bottom: 12px; }
+    .science-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .science-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* FAQ */
+    .faq-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 40px; }
+    .faq-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .faq-q {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px; cursor: pointer; font-weight: 600; font-size: 14px; user-select: none;
+    }
+    .faq-q .toggle { font-size: 20px; color: var(--primary); transition: transform 0.3s; }
+    .faq-item.open .faq-q .toggle { transform: rotate(45deg); }
+    .faq-a {
+      display: none; padding: 0 22px 18px;
+      font-size: 14px; color: var(--text-secondary); line-height: 1.8;
+      border-top: 1px solid var(--border);
+    }
+    .faq-item.open .faq-a { display: block; animation: fadeUp 0.2s; }
+
+    /* WARNING BOX */
+    .side-effects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 40px; }
+    .se-card { background: var(--bg-card); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius-sm); padding: 18px; }
+    .se-title { font-size: 13px; font-weight: 700; color: #ef4444; margin-bottom: 6px; }
+    .se-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* FOOTER */
+    .post-footer { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin: 40px 0 60px; text-align: center; }
+    .post-footer p { color: var(--text-secondary); font-size: 14px; }
+    .post-footer strong { color: var(--primary); }
+    .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; justify-content: center; }
+    .tag { background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; font-size: 12px; color: var(--text-muted); }
+
+    @media (max-width: 600px) {
+      .hero { padding: 40px 16px 40px; }
+      .container { padding: 0 16px; }
+      .macro-donut-row { gap: 12px; }
+      .week-table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="hero-content container">
+    <div class="hero-badge">🥑 BÀI ĐĂNG #2 · CHẾ ĐỘ KETO</div>
+    <h1 class="hero-title">Thực Đơn Keto<br/>Khoa Học Giảm Mỡ</h1>
+    <p class="hero-desc">Kế hoạch ăn Ketogenic được thiết kế bởi chuyên gia: đốt mỡ thừa hiệu quả, ổn định đường huyết và tăng cường năng lượng não bộ. Không cần đói – chỉ cần thông minh.</p>
+    <div class="hero-metrics">
+      <span class="metric-pill">🔥 Calo: <span class="val">1400-1600 kcal</span></span>
+      <span class="metric-pill">🥑 Chất béo: <span class="val">70-75%</span></span>
+      <span class="metric-pill">🥩 Protein: <span class="val">20-25%</span></span>
+      <span class="metric-pill">🌾 Carbs: <span class="val">5-10%</span></span>
+    </div>
+    <div class="macro-donut-row">
+      <div class="donut-card">
+        <div class="donut-pct" style="color: #ef4444;">73%</div>
+        <div class="donut-label">🥑 Chất béo</div>
+      </div>
+      <div class="donut-card">
+        <div class="donut-pct" style="color: #10b981;">22%</div>
+        <div class="donut-label">🥩 Protein</div>
+      </div>
+      <div class="donut-card">
+        <div class="donut-pct" style="color: #3b82f6;">5%</div>
+        <div class="donut-label">🌾 Carbs</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- WHAT IS KETO -->
+  <div class="section-header">
+    <div class="s-icon amber">🧬</div>
+    <div><div class="s-title">Ketosis Là Gì?</div><div class="s-sub">Cơ chế sinh học đằng sau chế độ Keto</div></div>
+  </div>
+  <div class="info-box">
+    <div class="info-box-icon">⚡</div>
+    <h4>Trạng Thái Ketosis</h4>
+    <p>Khi lượng carbohydrate xuống dưới 50g/ngày, gan bắt đầu chuyển đổi chất béo thành các phân tử <strong>Ketone Bodies</strong> (acetoacetate, beta-hydroxybutyrate và acetone). Các ketone này trở thành nguồn nhiên liệu thay thế cho não bộ và cơ bắp, hiệu quả hơn glucose đến 25%.</p>
+    <p>Quá trình này thường mất <strong>2-7 ngày</strong> để đạt trạng thái ketosis hoàn toàn. Trong giai đoạn chuyển đổi, cơ thể có thể trải qua "Keto Flu" – một số triệu chứng nhẹ như mệt mỏi, đau đầu do cơ thể thải nước và muối.</p>
+  </div>
+
+  <!-- SCIENCE CARDS -->
+  <div class="section-header">
+    <div class="s-icon blue">🔬</div>
+    <div><div class="s-title">Lợi Ích Khoa Học Đã Chứng Minh</div><div class="s-sub">Dựa trên các nghiên cứu lâm sàng quốc tế</div></div>
+  </div>
+  <div class="science-grid">
+    <div class="science-card">
+      <div class="science-icon">🏋️</div>
+      <div class="science-title">Giảm Mỡ Nội Tạng</div>
+      <div class="science-text">Nghiên cứu 2020 (NEJM): Nhóm Keto giảm 3.7kg mỡ nội tạng sau 8 tuần, cao hơn 35% so với nhóm low-fat.</div>
+    </div>
+    <div class="science-card">
+      <div class="science-icon">🧠</div>
+      <div class="science-title">Cải Thiện Não Bộ</div>
+      <div class="science-text">Ketone là nhiên liệu hiệu quả hơn glucose cho não bộ, cải thiện tập trung, trí nhớ ngắn hạn và giảm "brain fog".</div>
+    </div>
+    <div class="science-card">
+      <div class="science-icon">💉</div>
+      <div class="science-title">Ổn Định Đường Huyết</div>
+      <div class="science-text">Giảm đáng kể đỉnh insulin sau ăn. Hiệu quả cao với người tiền tiểu đường và tiểu đường type 2.</div>
+    </div>
+    <div class="science-card">
+      <div class="science-icon">❤️</div>
+      <div class="science-title">Tim Mạch Cải Thiện</div>
+      <div class="science-text">Tăng HDL (cholesterol tốt), giảm triglycerides và LDL nhỏ (loại nguy hiểm) sau 12 tuần theo Keto.</div>
+    </div>
+    <div class="science-card">
+      <div class="science-icon">⚡</div>
+      <div class="science-title">Năng Lượng Bền Vững</div>
+      <div class="science-text">Không còn cảm giác "sụp" năng lượng sau bữa ăn. Ketone cung cấp năng lượng đều đặn suốt cả ngày.</div>
+    </div>
+    <div class="science-card">
+      <div class="science-icon">🔄</div>
+      <div class="science-title">Trao Đổi Chất Tăng</div>
+      <div class="science-text">Chuyển hóa chất béo làm tăng nhẹ nhiệt sản sinh (thermogenesis), đốt thêm 100-150 kcal/ngày so với low-fat.</div>
+    </div>
+  </div>
+
+  <!-- FOOD ALLOWED / FORBIDDEN -->
+  <div class="section-header">
+    <div class="s-icon green">🛒</div>
+    <div><div class="s-title">Thực Phẩm Được Phép & Cần Tránh</div><div class="s-sub">Nhấn tab để xem danh sách tương ứng</div></div>
+  </div>
+  <div class="food-toggle-tabs">
+    <div class="food-tab active allowed" onclick="switchFoodTab('allowed')">✅ Được Ăn</div>
+    <div class="food-tab forbidden" onclick="switchFoodTab('forbidden')">❌ Cần Tránh</div>
+  </div>
+  <div id="panel-allowed" class="food-panel active">
+    <div class="food-item-card allowed"><span class="fi-icon">🥑</span><div><div class="fi-name">Quả Bơ</div><div class="fi-note">Giàu chất béo lành mạnh</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🥚</span><div><div class="fi-name">Trứng gà / vịt</div><div class="fi-note">Protein + chất béo hoàn hảo</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🧀</span><div><div class="fi-name">Phô mai cứng</div><div class="fi-note">Cao béo, ít carbs</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🥓</span><div><div class="fi-name">Thịt ba chỉ không muối</div><div class="fi-note">Chọn loại ít đường ướp</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🐟</span><div><div class="fi-name">Cá hồi & Cá ngừ</div><div class="fi-note">Omega-3 dồi dào</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🥦</span><div><div class="fi-name">Rau xanh lá</div><div class="fi-note">Bông cải, cải thìa, spinach</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🫒</span><div><div class="fi-name">Dầu oliu & Dầu dừa</div><div class="fi-note">Chất béo chất lượng cao</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🥜</span><div><div class="fi-name">Hạt macadamia</div><div class="fi-note">Loại hạt ít carbs nhất</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🥥</span><div><div class="fi-name">Dừa & kem dừa</div><div class="fi-note">MCT oil tự nhiên</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🫀</span><div><div class="fi-name">Nội tạng sạch</div><div class="fi-note">Gan, tim gà – giàu vi chất</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">🫐</span><div><div class="fi-name">Quả mọng (ít)</div><div class="fi-note">Dâu tây, việt quất 50-80g/ngày</div></div></div>
+    <div class="food-item-card allowed"><span class="fi-icon">☕</span><div><div class="fi-name">Cà phê đen</div><div class="fi-note">Thêm kem tươi hoặc bơ ghee</div></div></div>
+  </div>
+  <div id="panel-forbidden" class="food-panel">
+    <div class="food-item-card forbidden"><span class="fi-icon">🍞</span><div><div class="fi-name">Bánh mì, bột mì</div><div class="fi-note">Quá nhiều carbs</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🍚</span><div><div class="fi-name">Cơm, mì, bún, phở</div><div class="fi-note">Tinh bột phá vỡ ketosis</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🍌</span><div><div class="fi-name">Chuối, xoài, dứa</div><div class="fi-note">Quả nhiều đường tự nhiên</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🥤</span><div><div class="fi-name">Nước ngọt, nước ép</div><div class="fi-note">Đường hấp thu nhanh</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🍫</span><div><div class="fi-name">Kẹo, chocolate sữa</div><div class="fi-note">Carbs và đường cao</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🍺</span><div><div class="fi-name">Bia, rượu ngọt</div><div class="fi-note">Carbs cao phá vỡ ketosis</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🫘</span><div><div class="fi-name">Đậu hà lan, ngô</div><div class="fi-note">Tinh bột cao trong rau củ</div></div></div>
+    <div class="food-item-card forbidden"><span class="fi-icon">🥛</span><div><div class="fi-name">Sữa tươi nguyên chất</div><div class="fi-note">Nhiều lactose (đường sữa)</div></div></div>
+  </div>
+
+  <!-- WEEK 1 PLAN TABLE -->
+  <div class="section-header">
+    <div class="s-icon amber">📋</div>
+    <div><div class="s-title">Thực Đơn Tuần 1 – Giai Đoạn Thích Nghi</div><div class="s-sub">Mục tiêu: Đạt trạng thái ketosis, giảm 0.5-1kg</div></div>
+  </div>
+  <table class="week-table">
+    <thead>
+      <tr>
+        <th>Ngày</th>
+        <th>Sáng</th>
+        <th>Trưa</th>
+        <th>Tối</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="day-label">Thứ 2</div><span class="kcal-badge">1450 kcal</span></td>
+        <td>🥚 Trứng chiên bơ (3 quả) + cà phê bơ ghee</td>
+        <td>🐟 Cá hồi áp chảo + rau cải luộc + sốt mayo</td>
+        <td>🥩 Steak bò thăn (150g) + bông cải hấp</td>
+      </tr>
+      <tr>
+        <td><div class="day-label">Thứ 3</div><span class="kcal-badge">1520 kcal</span></td>
+        <td>🥑 Trứng bác bơ + 1/2 quả bơ</td>
+        <td>🍗 Ức gà áp chảo + salad spinach + dầu oliu</td>
+        <td>🐷 Ba chỉ nướng + bông cải xanh hấp tỏi</td>
+      </tr>
+      <tr>
+        <td><div class="day-label">Thứ 4</div><span class="kcal-badge">1480 kcal</span></td>
+        <td>🧀 Omelet phô mai + cà phê đen</td>
+        <td>🥗 Salad cá ngừ đóng hộp + trứng + mayo + rau xà lách</td>
+        <td>🐟 Cá thu nướng + bí ngòi xào bơ</td>
+      </tr>
+      <tr>
+        <td><div class="day-label">Thứ 5</div><span class="kcal-badge">1540 kcal</span></td>
+        <td>🥚 Trứng ốp la (2 quả) + thịt xông khói (3 lát)</td>
+        <td>🥩 Thăn bò xào cải thìa + sốt oyster ít đường</td>
+        <td>🍗 Gà rang sả ớt + salad rau xanh</td>
+      </tr>
+      <tr>
+        <td><div class="day-label">Thứ 6</div><span class="kcal-badge">1490 kcal</span></td>
+        <td>🫘 Keto smoothie: coconut cream + spinach + protein powder</td>
+        <td>🐷 Sườn nướng mật ong ít đường + rau luộc</td>
+        <td>🦐 Tôm sốt bơ tỏi + súp miso không đường</td>
+      </tr>
+      <tr>
+        <td><div class="day-label">Thứ 7</div><span class="kcal-badge">1600 kcal</span></td>
+        <td>🥚 Trứng scrambled + bơ + phô mai</td>
+        <td>🥩 Bít tết cùng salad và phô mai parmesan</td>
+        <td>🐟 Tôm hùm nướng bơ (hoặc tôm thường) + bơ tươi</td>
+      </tr>
+      <tr>
+        <td><div class="day-label">Chủ nhật</div><span class="kcal-badge">1420 kcal</span></td>
+        <td>☕ Bulletproof coffee + 2 trứng luộc</td>
+        <td>🍗 Ức gà nướng bơ chanh + bắp cải thái mỏng</td>
+        <td>🐟 Cá ngừ sốt cà chua (không đường) + bông cải xanh</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PROGRESS TRACKER -->
+  <div class="section-header">
+    <div class="s-icon green">📈</div>
+    <div><div class="s-title">Kỳ Vọng Kết Quả Theo Tuần</div><div class="s-sub">Hành trình 4 tuần điển hình</div></div>
+  </div>
+  <div class="progress-tracker">
+    <h3>🎯 Lộ trình giảm mỡ 4 tuần Keto</h3>
+    <div class="week-progress">
+      <div class="wp-header"><span class="wp-label">Tuần 1 – Thích Nghi & Detox Nước</span><span class="wp-val">-1.5 đến -2.5kg</span></div>
+      <div class="wp-bar"><div class="wp-fill" style="width: 40%;"></div></div>
+    </div>
+    <div class="week-progress">
+      <div class="wp-header"><span class="wp-label">Tuần 2 – Bắt Đầu Đốt Mỡ Thật</span><span class="wp-val">-0.8 đến -1.2kg</span></div>
+      <div class="wp-bar"><div class="wp-fill" style="width: 65%;"></div></div>
+    </div>
+    <div class="week-progress">
+      <div class="wp-header"><span class="wp-label">Tuần 3 – Tối Ưu Hóa</span><span class="wp-val">-0.5 đến -1kg</span></div>
+      <div class="wp-bar"><div class="wp-fill" style="width: 80%;"></div></div>
+    </div>
+    <div class="week-progress">
+      <div class="wp-header"><span class="wp-label">Tuần 4 – Kết Quả Bền Vững</span><span class="wp-val">-0.3 đến -0.8kg</span></div>
+      <div class="wp-bar"><div class="wp-fill" style="width: 90%;"></div></div>
+    </div>
+    <div class="milestone-row">
+      <div class="milestone"><div class="milestone-icon">💧</div><div class="milestone-title">Giảm viêm</div><div class="milestone-time">Tuần 1</div></div>
+      <div class="milestone"><div class="milestone-icon">🔥</div><div class="milestone-title">Đốt mỡ</div><div class="milestone-time">Tuần 2</div></div>
+      <div class="milestone"><div class="milestone-icon">🧠</div><div class="milestone-title">Não bộ rõ</div><div class="milestone-time">Tuần 3</div></div>
+      <div class="milestone"><div class="milestone-icon">💪</div><div class="milestone-title">Cơ thể mới</div><div class="milestone-time">Tuần 4</div></div>
+    </div>
+  </div>
+
+  <!-- RECIPES -->
+  <div class="section-header">
+    <div class="s-icon amber">👨‍🍳</div>
+    <div><div class="s-title">5 Công Thức Keto Ngon</div><div class="s-sub">Dễ nấu, nhanh chóng và đầy đủ dinh dưỡng</div></div>
+  </div>
+  <div class="recipe-grid">
+    <div class="recipe-card">
+      <div class="recipe-top">🥚</div>
+      <div class="recipe-body">
+        <div class="recipe-name">Trứng Bác Bơ Phô Mai</div>
+        <div class="recipe-meta">
+          <span class="recipe-tag kcal">320 kcal</span>
+          <span class="recipe-tag fat">25g F</span>
+          <span class="recipe-tag protein">18g P</span>
+          <span class="recipe-tag carb">2g C</span>
+        </div>
+        <div class="recipe-desc">Bữa sáng keto kinh điển: nhanh, no lâu và cực ngon.</div>
+        <div class="recipe-steps">
+          <div class="recipe-step"><div class="step-num">1</div>Đánh 3 trứng với muối hạt và tiêu</div>
+          <div class="recipe-step"><div class="step-num">2</div>Làm nóng chảo, cho 1 thìa bơ nhạt vào</div>
+          <div class="recipe-step"><div class="step-num">3</div>Đổ trứng vào, khuấy nhẹ tay ở lửa nhỏ</div>
+          <div class="recipe-step"><div class="step-num">4</div>Rắc phô mai bào khi trứng gần chín</div>
+        </div>
+      </div>
+    </div>
+    <div class="recipe-card">
+      <div class="recipe-top">🥗</div>
+      <div class="recipe-body">
+        <div class="recipe-name">Salad Cá Ngừ Bơ</div>
+        <div class="recipe-meta">
+          <span class="recipe-tag kcal">380 kcal</span>
+          <span class="recipe-tag fat">28g F</span>
+          <span class="recipe-tag protein">26g P</span>
+          <span class="recipe-tag carb">4g C</span>
+        </div>
+        <div class="recipe-desc">Bữa trưa nhanh gọn, không cần nấu, giàu omega-3.</div>
+        <div class="recipe-steps">
+          <div class="recipe-step"><div class="step-num">1</div>Tách cá ngừ hộp, bỏ nước</div>
+          <div class="recipe-step"><div class="step-num">2</div>Thêm ½ bơ nghiền + 1 thìa mayo</div>
+          <div class="recipe-step"><div class="step-num">3</div>Trộn cùng cần tây thái + chanh</div>
+          <div class="recipe-step"><div class="step-num">4</div>Ăn kèm lettuce hoặc salad xà lách</div>
+        </div>
+      </div>
+    </div>
+    <div class="recipe-card">
+      <div class="recipe-top">☕</div>
+      <div class="recipe-body">
+        <div class="recipe-name">Bulletproof Coffee</div>
+        <div class="recipe-meta">
+          <span class="recipe-tag kcal">240 kcal</span>
+          <span class="recipe-tag fat">26g F</span>
+          <span class="recipe-tag protein">0g P</span>
+          <span class="recipe-tag carb">0g C</span>
+        </div>
+        <div class="recipe-desc">Cà phê tăng năng lượng và não bộ cho buổi sáng Keto.</div>
+        <div class="recipe-steps">
+          <div class="recipe-step"><div class="step-num">1</div>Pha 1 ly cà phê đen espresso mạnh</div>
+          <div class="recipe-step"><div class="step-num">2</div>Cho 1 thìa bơ ghee vào</div>
+          <div class="recipe-step"><div class="step-num">3</div>Thêm 1 thìa MCT oil (hoặc dầu dừa)</div>
+          <div class="recipe-step"><div class="step-num">4</div>Blend hoặc khuấy mạnh trong 30 giây</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDE EFFECTS -->
+  <div class="section-header">
+    <div class="s-icon red">⚠️</div>
+    <div><div class="s-title">Keto Flu & Cách Xử Lý</div><div class="s-sub">Các tác dụng phụ ban đầu và giải pháp</div></div>
+  </div>
+  <div class="side-effects-grid">
+    <div class="se-card"><div class="se-title">🤕 Đau đầu</div><div class="se-text">Nguyên nhân: mất nước và điện giải. Giải pháp: uống thêm nước muối khoáng, supplement magie.</div></div>
+    <div class="se-card"><div class="se-title">😴 Mệt mỏi</div><div class="se-text">Bình thường trong 3-5 ngày đầu. Tăng điện giải (natri, kali, magie) giúp giảm nhanh.</div></div>
+    <div class="se-card"><div class="se-title">😵 Chóng mặt</div><div class="se-text">Do huyết áp thấp thoáng qua. Tăng muối ăn nhẹ và đứng dậy từ từ khi thay đổi tư thế.</div></div>
+    <div class="se-card"><div class="se-title">💨 Hơi thở mùi</div><div class="se-text">Acetone từ ketone được thải ra qua hơi thở. Bình thường và tạm thời. Súc miệng nước muối giúp ích.</div></div>
+    <div class="se-card"><div class="se-title">🚽 Táo bón</div><div class="se-text">Ăn thêm rau xanh, hạt chia, uống đủ nước và bổ sung magie citrate nếu cần.</div></div>
+    <div class="se-card"><div class="se-title">😤 Cáu gắt</div><div class="se-text">Do đường huyết điều chỉnh. Ăn đủ calo, không cắt giảm quá đột ngột trong tuần đầu.</div></div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section-header">
+    <div class="s-icon blue">❓</div>
+    <div><div class="s-title">FAQ – Những Câu Hỏi Thường Gặp</div><div class="s-sub">Hỏi đáp chuyên sâu về chế độ Keto</div></div>
+  </div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Keto có an toàn lâu dài không?<span class="toggle">+</span></div>
+      <div class="faq-a">Keto đã được chứng minh an toàn cho người khỏe mạnh trong thời gian lên đến 2 năm. Tuy nhiên, nên tham khảo bác sĩ nếu bạn có tiểu đường type 1, bệnh thận hoặc đang mang thai. Định kỳ kiểm tra xét nghiệm máu mỗi 3-6 tháng là khuyến cáo tiêu chuẩn.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Carb tối đa mỗi ngày để duy trì ketosis?<span class="toggle">+</span></div>
+      <div class="faq-a">Ngưỡng carbs net (carbs tổng – chất xơ) thường là 20-50g/ngày. Người mới bắt đầu nên bắt đầu từ 20g net carbs/ngày để đạt ketosis nhanh hơn, sau đó tăng dần lên 30-50g sau khi đã thích nghi.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Có thể tập gym khi ăn Keto không?<span class="toggle">+</span></div>
+      <div class="faq-a">Hoàn toàn được. Tuy nhiên, hiệu suất tập có thể giảm nhẹ trong 2-3 tuần đầu do cơ thể thích nghi. Sử dụng Targeted Keto (thêm 15-25g carbs nhanh trước tập) hoặc Cyclical Keto (1-2 ngày carb refeed/tuần) nếu tập nặng.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Cần uống bao nhiêu nước khi ăn Keto?<span class="toggle">+</span></div>
+      <div class="faq-a">Tối thiểu 2.5-3.5 lít/ngày vì Keto làm tăng bài tiết nước qua thận. Bổ sung điện giải: 2000-3000mg natri, 1000mg kali, 300-500mg magie mỗi ngày để tránh chuột rút và mệt mỏi.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="post-footer">
+    <p>🧬 Nội dung được xem xét bởi chuyên gia dinh dưỡng <strong>WAO Nutrition Team</strong></p>
+    <p style="margin-top: 8px;">Keto là công cụ mạnh mẽ nhưng cần <strong>kiên trì và hiểu biết đúng đắn</strong>. Luôn tham khảo ý kiến bác sĩ trước khi bắt đầu.</p>
+    <div class="tag-row">
+      <span class="tag">#Keto</span>
+      <span class="tag">#GiảmMỡ</span>
+      <span class="tag">#Ketosis</span>
+      <span class="tag">#LowCarb</span>
+      <span class="tag">#WaoNutrition</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchFoodTab(type) {
+    document.querySelectorAll('.food-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.food-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.food-tab.${type}`).classList.add('active');
+    document.getElementById(`panel-${type}`).classList.add('active');
+  }
+  function toggleFaq(qEl) { qEl.closest('.faq-item').classList.toggle('open'); }
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.wp-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0';
+        setTimeout(() => { el.style.width = w; }, 100);
+      });
+    }, 400);
+  });
+</script>
+</body>
+</html>
